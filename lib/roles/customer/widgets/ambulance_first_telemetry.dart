@@ -49,35 +49,46 @@ class AmbulanceFirstTelemetryCapsule extends StatelessWidget {
         borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusMd),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: _color,
-                  shape: BoxShape.circle,
+          Expanded(
+            flex: 3,
+            child: Row(
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: _color,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                _title,
-                style: AmbulanceFirstTypography.codeSm(
-                  color: AmbulanceFirstColors.onSurface,
-                  weight: FontWeight.w700,
-                ).copyWith(fontSize: 10, letterSpacing: 0.3),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AmbulanceFirstTypography.codeSm(
+                      color: AmbulanceFirstColors.onSurface,
+                      weight: FontWeight.w700,
+                    ).copyWith(fontSize: 10, letterSpacing: 0.3),
+                  ),
+                ),
+              ],
+            ),
           ),
           if (updatedAgo != null && updatedAgo!.isNotEmpty)
-            Text(
-              updatedAgo!,
-              style: AmbulanceFirstTypography.codeSm(
-                color: AmbulanceFirstColors.onSurfaceVariant,
-              ).copyWith(fontSize: 10),
+            Flexible(
+              flex: 2,
+              child: Text(
+                updatedAgo!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+                style: AmbulanceFirstTypography.codeSm(
+                  color: AmbulanceFirstColors.onSurfaceVariant,
+                ).copyWith(fontSize: 10),
+              ),
             ),
         ],
       ),

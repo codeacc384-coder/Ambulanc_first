@@ -44,9 +44,9 @@ class MissionCard extends StatelessWidget {
               border: const Border(bottom: BorderSide(color: TeamLeadTheme.borderSubtle)),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                Expanded(
+                  child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(6),
@@ -57,41 +57,61 @@ class MissionCard extends StatelessWidget {
                       child: const Icon(Icons.emergency_rounded, color: TeamLeadTheme.primary, size: 18),
                     ),
                     const SizedBox(width: 10),
-                    Column(
+                    Expanded(
+                      child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Text(
-                              booking.id,
-                              style: TeamLeadTheme.telemetryPrimary(
-                                color: TeamLeadTheme.primaryDark,
-                                weight: FontWeight.w700,
+                            Expanded(
+                              child: Text(
+                                booking.id,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TeamLeadTheme.telemetryPrimary(
+                                  color: TeamLeadTheme.primaryDark,
+                                  weight: FontWeight.w700,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            StatusBadge(status: booking.status),
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: StatusBadge(status: booking.status),
+                              ),
+                            ),
                             if (booking.priority == 'CRITICAL') ...[
                               const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: TeamLeadTheme.crimsonBg,
-                                  borderRadius: BorderRadius.circular(TeamLeadTheme.radiusSm),
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: TeamLeadTheme.crimsonBg,
+                                      borderRadius: BorderRadius.circular(TeamLeadTheme.radiusSm),
+                                    ),
+                                    child: Text('CODE RED', style: TeamLeadTheme.telemetryMicro(color: TeamLeadTheme.medicalCrimson, weight: FontWeight.w700)),
+                                  ),
                                 ),
-                                child: Text('CODE RED', style: TeamLeadTheme.telemetryMicro(color: TeamLeadTheme.medicalCrimson, weight: FontWeight.w700)),
                               ),
                             ],
                           ],
                         ),
                         Text(
                           '${booking.transportModeLabel} • ${booking.pickupCity.isNotEmpty ? booking.pickupCity : "City Corridor"}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant),
                         ),
                       ],
+                      ),
                     ),
                   ],
+                  ),
                 ),
+                const SizedBox(width: 10),
                 OutlinedButton.icon(
                   onPressed: () => CaseDetailsDialog.show(context, booking),
                   style: OutlinedButton.styleFrom(
@@ -327,10 +347,25 @@ class MissionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('AUTOMATIC LOCATION-DRIVEN PROGRESS', style: TeamLeadTheme.telemetryMicro(color: TeamLeadTheme.textMuted, weight: FontWeight.w700)),
-              Text(booking.driverLocationSharing ? 'GPS LIVE' : 'WAITING FOR DRIVER GPS', style: TeamLeadTheme.telemetryMicro(color: booking.driverLocationSharing ? TeamLeadTheme.operationalEmerald : TeamLeadTheme.textMuted, weight: FontWeight.w700)),
+              Expanded(
+                child: Text(
+                  'AUTOMATIC LOCATION-DRIVEN PROGRESS',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TeamLeadTheme.telemetryMicro(color: TeamLeadTheme.textMuted, weight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  booking.driverLocationSharing ? 'GPS LIVE' : 'WAITING FOR DRIVER GPS',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: TeamLeadTheme.telemetryMicro(color: booking.driverLocationSharing ? TeamLeadTheme.operationalEmerald : TeamLeadTheme.textMuted, weight: FontWeight.w700),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),

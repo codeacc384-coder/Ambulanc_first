@@ -163,10 +163,10 @@ class _CustomerShellState extends State<CustomerShell> {
 
     return AppBar(
       automaticallyImplyLeading: false,
-      titleSpacing: isDesktop ? 20 : 16,
+      titleSpacing: isDesktop ? 20 : 8,
       title: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Ambulance First Brand Mark
           Container(
             width: 32,
             height: 32,
@@ -183,66 +183,86 @@ class _CustomerShellState extends State<CustomerShell> {
             ),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'AMBULANCE FIRST',
-                style: AmbulanceFirstTypography.codeSm(
-                  color: AmbulanceFirstColors.onSurfaceVariant,
-                  weight: FontWeight.w700,
-                ).copyWith(letterSpacing: 1.2, fontSize: 10),
-              ),
-              Text(
-                title,
-                style: AmbulanceFirstTypography.headlineSm(
-                  color: AmbulanceFirstColors.onSurface,
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'AMBULANCE FIRST',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmbulanceFirstTypography.codeSm(
+                    color: AmbulanceFirstColors.onSurfaceVariant,
+                    weight: FontWeight.w700,
+                  ).copyWith(letterSpacing: 1.2, fontSize: 10),
                 ),
-              ),
-            ],
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmbulanceFirstTypography.headlineSm(
+                    color: AmbulanceFirstColors.onSurface,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
       actions: [
         // 1. Emergency SOS Trigger
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: InkWell(
-            onTap: () => EmergencySosDialog.show(context),
-            borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusSm),
-            child: Container(
-              height: 36,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: AmbulanceFirstColors.errorContainer,
-                borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusSm),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.emergency_rounded,
-                    size: 18,
-                    color: AmbulanceFirstColors.medicalCrimson,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'SOS',
-                    style: AmbulanceFirstTypography.codeSm(
+        if (isDesktop)
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: InkWell(
+              onTap: () => EmergencySosDialog.show(context),
+              borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusSm),
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: AmbulanceFirstColors.errorContainer,
+                  borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusSm),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.emergency_rounded,
+                      size: 18,
                       color: AmbulanceFirstColors.medicalCrimson,
-                      weight: FontWeight.w700,
-                    ).copyWith(letterSpacing: 0.5),
-                  ),
-                ],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'SOS',
+                      style: AmbulanceFirstTypography.codeSm(
+                        color: AmbulanceFirstColors.medicalCrimson,
+                        weight: FontWeight.w700,
+                      ).copyWith(letterSpacing: 0.5),
+                    ),
+                  ],
+                ),
               ),
             ),
+          )
+        else
+          IconButton(
+            onPressed: () => EmergencySosDialog.show(context),
+            tooltip: 'Emergency SOS',
+            style: IconButton.styleFrom(
+              backgroundColor: AmbulanceFirstColors.errorContainer,
+              foregroundColor: AmbulanceFirstColors.medicalCrimson,
+              visualDensity: VisualDensity.compact,
+            ),
+            icon: const Icon(Icons.emergency_rounded, size: 20),
           ),
-        ),
 
         // 2. Notification Center with unread indicator
         IconButton(
           onPressed: () => _showNotifications(context),
           tooltip: 'Notifications',
+          visualDensity: VisualDensity.compact,
           icon: Stack(
             children: [
               const Icon(Icons.notifications_outlined, size: 22),
@@ -265,7 +285,7 @@ class _CustomerShellState extends State<CustomerShell> {
 
         // 3. User Avatar Profile Button
         Padding(
-          padding: const EdgeInsets.only(right: 16, left: 4),
+          padding: EdgeInsets.only(right: isDesktop ? 16 : 8, left: 2),
           child: InkWell(
             onTap: () => _showProfileDialog(context),
             borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusPill),
@@ -511,6 +531,8 @@ class _CustomerShellState extends State<CustomerShell> {
             const SizedBox(height: 3),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AmbulanceFirstTypography.labelSm(
                 color: isSelected
                     ? AmbulanceFirstColors.clinicalCobalt

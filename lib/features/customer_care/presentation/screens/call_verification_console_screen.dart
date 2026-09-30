@@ -943,59 +943,63 @@ class _CallVerificationConsoleScreenState
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white.withValues(alpha: 0.25),
-                                ),
-                                child: _isTransmitting
-                                    ? const Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.25),
+                                  ),
+                                  child: _isTransmitting
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.send_rounded,
                                           color: Colors.white,
+                                          size: 18,
                                         ),
-                                      )
-                                    : const Icon(
-                                        Icons.send_rounded,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                              ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'VERIFY BOOKING',
-                                    style: CustomerCareTextStyles.headlineSm
-                                        .copyWith(
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'VERIFY BOOKING',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: CustomerCareTextStyles.headlineSm.copyWith(
                                           color: Colors.white,
                                           fontWeight: FontWeight.w800,
                                           fontSize: 14,
                                         ),
-                                  ),
-                                  Text(
-                                    _isReadyForHandoff
-                                        ? 'Persists verification and refreshes the queue'
-                                        : 'Requires 4/4 business and 6/6 safety confirmations',
-                                    style: CustomerCareTextStyles.labelSm
-                                        .copyWith(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.85,
-                                          ),
+                                      ),
+                                      Text(
+                                        _isReadyForHandoff
+                                            ? 'Persists verification and refreshes the queue'
+                                            : 'Requires 4/4 business and 6/6 safety confirmations',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: CustomerCareTextStyles.labelSm.copyWith(
+                                          color: Colors.white.withValues(alpha: 0.85),
                                         ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           const Icon(
                             Icons.chevron_right,
                             color: Colors.white,

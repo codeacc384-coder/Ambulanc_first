@@ -24,48 +24,54 @@ class TacticalDrawer extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Drawer Header
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: CustomerCareColors.primaryContainer,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.medical_services_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Ambulance First',
-                            style: CustomerCareTextStyles.headlineSm.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: CustomerCareColors.primaryContainer,
-                              fontSize: 15,
-                            ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: CustomerCareColors.primaryContainer,
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          Text(
-                            'Customer Care Ops v4.2',
-                            style: CustomerCareTextStyles.labelSm.copyWith(
-                              color: CustomerCareColors.onSurfaceVariant,
-                            ),
+                          child: const Icon(
+                            Icons.medical_services_rounded,
+                            color: Colors.white,
+                            size: 20,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Ambulance First',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: CustomerCareTextStyles.headlineSm.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: CustomerCareColors.primaryContainer,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              Text(
+                                'Customer Care Ops v4.2',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: CustomerCareTextStyles.labelSm.copyWith(
+                                  color: CustomerCareColors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
@@ -76,7 +82,6 @@ class TacticalDrawer extends StatelessWidget {
             ),
             const Divider(height: 1, color: CustomerCareColors.outlineVariant),
             const SizedBox(height: 10),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Text(
@@ -90,70 +95,75 @@ class TacticalDrawer extends StatelessWidget {
             ),
 
             // Navigation Items
-            _buildDrawerTile(
-              context: context,
-              icon: Icons.grid_view_rounded,
-              title: 'Triage Dashboard',
-              isSelected: currentTab == 0,
-              onTap: () {
-                Navigator.of(context).pop();
-                onSelectTab(0);
-              },
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _buildDrawerTile(
+                    context: context,
+                    icon: Icons.grid_view_rounded,
+                    title: 'Triage Dashboard',
+                    isSelected: currentTab == 0,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onSelectTab(0);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    context: context,
+                    icon: Icons.move_to_inbox_rounded,
+                    title: 'New Inbound Queue',
+                    isSelected: currentTab == 1,
+                    badge: '4',
+                    badgeColor: CustomerCareColors.error,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onSelectTab(1);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    context: context,
+                    icon: Icons.phone_in_talk_rounded,
+                    title: 'Pending Calls / Triage',
+                    isSelected: currentTab == 2,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onSelectTab(2);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    context: context,
+                    icon: Icons.assignment_ind_rounded,
+                    title: 'Team Lead Handovers',
+                    isSelected: currentTab == 3,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onSelectTab(3);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    context: context,
+                    icon: Icons.flight_takeoff_rounded,
+                    title: 'Active Trips & Telemetry',
+                    isSelected: currentTab == 4,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onSelectTab(4);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    context: context,
+                    icon: Icons.inventory_2_rounded,
+                    title: 'All Bookings Archive',
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onOpenArchive();
+                    },
+                  ),
+                ],
+              ),
             ),
-            _buildDrawerTile(
-              context: context,
-              icon: Icons.move_to_inbox_rounded,
-              title: 'New Inbound Queue',
-              isSelected: currentTab == 1,
-              badge: '4',
-              badgeColor: CustomerCareColors.error,
-              onTap: () {
-                Navigator.of(context).pop();
-                onSelectTab(1);
-              },
-            ),
-            _buildDrawerTile(
-              context: context,
-              icon: Icons.phone_in_talk_rounded,
-              title: 'Pending Calls / Triage',
-              isSelected: currentTab == 2,
-              onTap: () {
-                Navigator.of(context).pop();
-                onSelectTab(2);
-              },
-            ),
-            _buildDrawerTile(
-              context: context,
-              icon: Icons.assignment_ind_rounded,
-              title: 'Team Lead Handovers',
-              isSelected: currentTab == 3,
-              onTap: () {
-                Navigator.of(context).pop();
-                onSelectTab(3);
-              },
-            ),
-            _buildDrawerTile(
-              context: context,
-              icon: Icons.flight_takeoff_rounded,
-              title: 'Active Trips & Telemetry',
-              isSelected: currentTab == 4,
-              onTap: () {
-                Navigator.of(context).pop();
-                onSelectTab(4);
-              },
-            ),
-            _buildDrawerTile(
-              context: context,
-              icon: Icons.inventory_2_rounded,
-              title: 'All Bookings Archive',
-              isSelected: false,
-              onTap: () {
-                Navigator.of(context).pop();
-                onOpenArchive();
-              },
-            ),
-
-            const Spacer(),
 
             // Dispatcher Profile Strip in Drawer Footer
             Container(

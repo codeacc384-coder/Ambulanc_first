@@ -20,7 +20,10 @@ class TelemetryRadarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 400;
+        return Container(
       decoration: BoxDecoration(
         color: CustomerCareColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
@@ -30,40 +33,50 @@ class TelemetryRadarCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.airplanemode_active,
-                    size: 18,
-                    color: CustomerCareColors.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
+          if (compact) ...[
+            Row(
+              children: [
+                const Icon(
+                  Icons.airplanemode_active,
+                  size: 18,
+                  color: CustomerCareColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
                     'Active Corridor Airspaces',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: CustomerCareTextStyles.headlineSm.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: CustomerCareColors.surfaceContainer,
-                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(
-                  sector,
-                  style: CustomerCareTextStyles.labelSm.copyWith(
-                    color: CustomerCareColors.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
+              ],
+            ),
+            Align(alignment: Alignment.centerRight, child: _sectorBadge(sector)),
+          ] else
+            Row(
+              children: [
+                const Icon(
+                  Icons.airplanemode_active,
+                  size: 18,
+                  color: CustomerCareColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Active Corridor Airspaces',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: CustomerCareTextStyles.headlineSm.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                _sectorBadge(sector),
+              ],
           ),
           const SizedBox(height: 8),
           InkWell(
@@ -113,30 +126,37 @@ class TelemetryRadarCard extends StatelessWidget {
                         ),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'IN-FLIGHT MEDEVAC',
-                                style: CustomerCareTextStyles.labelSm.copyWith(
-                                  color: CustomerCareColors.onPrimaryContainer,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w700,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'IN-FLIGHT MEDEVAC',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: CustomerCareTextStyles.labelSm.copyWith(
+                                    color: CustomerCareColors.onPrimaryContainer,
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '$flightUnit • $eta',
-                                style: CustomerCareTextStyles.telemetryDisplay.copyWith(
-                                  fontSize: 13.5,
-                                  color: Colors.white,
+                                Text(
+                                  '$flightUnit • $eta',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: CustomerCareTextStyles.telemetryDisplay.copyWith(
+                                    fontSize: 13.5,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           Container(
+                            constraints: const BoxConstraints(maxWidth: 120),
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: CustomerCareColors.secondary,
@@ -144,6 +164,8 @@ class TelemetryRadarCard extends StatelessWidget {
                             ),
                             child: Text(
                               status,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: CustomerCareTextStyles.labelSm.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
@@ -159,6 +181,27 @@ class TelemetryRadarCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        );
+      },
+    );
+  }
+
+  Widget _sectorBadge(String sector) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: CustomerCareColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        sector,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: CustomerCareTextStyles.labelSm.copyWith(
+          color: CustomerCareColors.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

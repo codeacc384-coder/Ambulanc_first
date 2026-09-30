@@ -4,7 +4,6 @@ import '../../../core/models/booking.dart';
 import '../../../core/services/customer_booking_workflow_service.dart';
 import '../../../core/services/shared_booking_store.dart';
 import '../theme/ambulance_first_theme.dart';
-import '../widgets/ambulance_first_booking_id.dart';
 import '../widgets/ambulance_first_button.dart';
 import '../widgets/ambulance_first_card.dart';
 import '../widgets/ambulance_first_states.dart';
@@ -73,22 +72,21 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Page Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Historical Transports Ledger',
-                            style: AmbulanceFirstTypography.headlineMd(color: AmbulanceFirstColors.onSurface),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Past completed transfers, cancelled bookings, and digital tax invoices',
-                            style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant),
-                          ),
-                        ],
+                      Text(
+                        'Historical Transports Ledger',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmbulanceFirstTypography.headlineMd(color: AmbulanceFirstColors.onSurface),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Past completed transfers, cancelled bookings, and digital tax invoices',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -102,13 +100,13 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                       borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusLg),
                       border: Border.all(color: AmbulanceFirstColors.borderSubtle),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceAround,
+                      runSpacing: 12,
+                      spacing: 18,
                       children: [
                         _metricCol('Completed Transfers', '$completedCount', AmbulanceFirstColors.secondary),
-                        Container(width: 1, height: 32, color: AmbulanceFirstColors.borderSubtle),
                         _metricCol('Cumulative Spend', '₹ ${totalSpent.toStringAsFixed(0)}', AmbulanceFirstColors.onSurface),
-                        Container(width: 1, height: 32, color: AmbulanceFirstColors.borderSubtle),
                         _metricCol('Clinical Records', '${history.length}', AmbulanceFirstColors.clinicalCobalt),
                       ],
                     ),
@@ -116,12 +114,12 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                   const SizedBox(height: 16),
 
                   // Filter Chips
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _filterTab('ALL', 'All History'),
-                      const SizedBox(width: 8),
                       _filterTab('COMPLETED', 'Completed Transfers'),
-                      const SizedBox(width: 8),
                       _filterTab('CANCELLED', 'Cancelled / Declined'),
                     ],
                   ),
@@ -201,20 +199,31 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
         children: [
           // Header: ID, Patient Name, Status Badge
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  AmbulanceFirstBookingId(id: booking.id, fontSize: 14),
-                  const SizedBox(width: 8),
-                  Text('·', style: TextStyle(color: AmbulanceFirstColors.onSurfaceVariant)),
-                  const SizedBox(width: 8),
-                  Text(
-                    booking.patientName,
-                    style: AmbulanceFirstTypography.headlineSm(color: AmbulanceFirstColors.onSurface).copyWith(fontSize: 14),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      booking.id.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AmbulanceFirstTypography.codeMd(
+                        color: AmbulanceFirstColors.onSurface,
+                        weight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      booking.patientName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AmbulanceFirstTypography.headlineSm(color: AmbulanceFirstColors.onSurface).copyWith(fontSize: 14),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               AmbulanceFirstStatusBadge(status: booking.status),
             ],
           ),
@@ -227,22 +236,32 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
               color: AmbulanceFirstColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusMd),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.route_rounded, size: 14, color: AmbulanceFirstColors.clinicalCobalt),
-                const SizedBox(width: 8),
-                Expanded(
+                Row(
+                  children: [
+                    const Icon(Icons.route_rounded, size: 14, color: AmbulanceFirstColors.clinicalCobalt),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${booking.pickup} → ${booking.destination}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurface),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Align(
+                  alignment: Alignment.centerRight,
                   child: Text(
-                    '${booking.pickup} → ${booking.destination}',
+                    '${booking.date}, ${booking.time}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurface),
+                    style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${booking.date}, ${booking.time}',
-                  style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant),
                 ),
               ],
             ),
@@ -250,24 +269,32 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
           const SizedBox(height: 8),
 
           // Footer: Crew details, Total Fare & Invoice Action
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 booking.driverName.isNotEmpty
                   ? 'Driver: ${booking.driverName}${booking.vehicleNumber.isNotEmpty ? ' • ${booking.vehicleNumber}' : ''}'
                   : 'Assignment unavailable',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontSize: 11),
               ),
+              const SizedBox(height: 4),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    booking.invoice != null
-                      ? '₹ ${booking.invoice!.total.toStringAsFixed(2)}'
-                      : 'Invoice unavailable',
-                    style: AmbulanceFirstTypography.telemetryNum(
-                      color: isCompleted ? AmbulanceFirstColors.secondary : AmbulanceFirstColors.onSurfaceVariant,
-                      size: 16,
+                  Expanded(
+                    child: Text(
+                      booking.invoice != null
+                        ? '₹ ${booking.invoice!.total.toStringAsFixed(2)}'
+                        : 'Invoice unavailable',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AmbulanceFirstTypography.telemetryNum(
+                        color: isCompleted ? AmbulanceFirstColors.secondary : AmbulanceFirstColors.onSurfaceVariant,
+                        size: 16,
+                      ),
                     ),
                   ),
                   if (booking.invoice != null) ...[

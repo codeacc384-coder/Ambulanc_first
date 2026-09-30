@@ -35,52 +35,62 @@ class TeamLeadHandoverScreen extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.all(14),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.assignment_ind_rounded,
-                          size: 22,
-                          color: CustomerCareColors.primaryContainer,
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Expanded(
+                        child: Row(
                           children: [
-                            Text(
-                              'Team Lead Handover Monitor',
-                              style: CustomerCareTextStyles.headlineSm.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                            const Icon(
+                              Icons.assignment_ind_rounded,
+                              size: 22,
+                              color: CustomerCareColors.primaryContainer,
                             ),
-                            Text(
-                              'Tracking downstream ambulance allocation & quotations',
-                              style: CustomerCareTextStyles.bodySm.copyWith(
-                                color: CustomerCareColors.onSurfaceVariant,
-                                fontSize: 11.5,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Team Lead Handover Monitor',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: CustomerCareTextStyles.headlineSm.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Tracking downstream ambulance allocation & quotations',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: CustomerCareTextStyles.bodySm.copyWith(
+                                      color: CustomerCareColors.onSurfaceVariant,
+                                      fontSize: 11.5,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: CustomerCareColors.primaryFixed,
-                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        '${cases.length} In Pipeline',
-                        style: CustomerCareTextStyles.labelSm.copyWith(
-                          color: CustomerCareColors.onPrimaryFixedVariant,
-                          fontWeight: FontWeight.w700,
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: CustomerCareColors.primaryFixed,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${cases.length} In Pipeline',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: CustomerCareTextStyles.labelSm.copyWith(
+                            color: CustomerCareColors.onPrimaryFixedVariant,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ),
               const SizedBox(height: 12),
 
@@ -166,44 +176,61 @@ class _HandoverMonitorCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      '#${caseItem.id}',
-                      style: CustomerCareTextStyles.telemetryDisplay.copyWith(
-                        fontSize: 14,
-                        color: CustomerCareColors.primary,
-                        fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '#${caseItem.id}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: CustomerCareTextStyles.telemetryDisplay.copyWith(
+                            fontSize: 14,
+                            color: CustomerCareColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: CustomerCareColors.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            caseItem.createdAt,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: CustomerCareTextStyles.labelSm.copyWith(fontSize: 9.5),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: CustomerCareColors.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(4),
+                        color: CustomerCareColors.primaryFixed,
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        caseItem.createdAt,
-                        style: CustomerCareTextStyles.labelSm.copyWith(fontSize: 9.5),
+                        caseItem.statusLabel.toUpperCase(),
+                        maxLines: 1,
+                        style: CustomerCareTextStyles.labelSm.copyWith(
+                          color: CustomerCareColors.onPrimaryFixedVariant,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 9.5,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: CustomerCareColors.primaryFixed,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    caseItem.statusLabel.toUpperCase(),
-                    style: CustomerCareTextStyles.labelSm.copyWith(
-                      color: CustomerCareColors.onPrimaryFixedVariant,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 9.5,
                     ),
                   ),
                 ),
@@ -229,9 +256,9 @@ class _HandoverMonitorCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
+                  Expanded(
+                    child: Row(
                     children: [
                       const Icon(Icons.badge_outlined, size: 14, color: CustomerCareColors.primary),
                       const SizedBox(width: 4),
@@ -243,11 +270,18 @@ class _HandoverMonitorCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                    ),
                   ),
-                  Text(
-                    'Unit: ${caseItem.vehicleNumber?.isNotEmpty == true ? caseItem.vehicleNumber : "Unassigned"}',
-                    style: CustomerCareTextStyles.labelSm.copyWith(
-                      color: CustomerCareColors.onSurfaceVariant,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'Unit: ${caseItem.vehicleNumber?.isNotEmpty == true ? caseItem.vehicleNumber : "Unassigned"}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: CustomerCareTextStyles.labelSm.copyWith(
+                        color: CustomerCareColors.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],

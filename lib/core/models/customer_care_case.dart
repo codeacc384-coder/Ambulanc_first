@@ -83,6 +83,9 @@ class CustomerCareVerificationPayload {
 class CustomerCareCase {
   String id;
   String status;
+  String submissionStatus;
+  String submittedAt;
+  String updatedAt;
 
   /// Origin of the request: CUSTOMER_APP or CUSTOMER_CARE_INBOUND.
   String source;
@@ -97,6 +100,7 @@ class CustomerCareCase {
   bool isChild;
   bool isEmergency;
   String serviceCategory;
+  String ambulanceCategory;
   String pickupAddress;
   String destinationAddress;
   String destinationHospital;
@@ -166,6 +170,9 @@ class CustomerCareCase {
   CustomerCareCase({
     required this.id,
     required this.status,
+    this.submissionStatus = 'PENDING_VERIFICATION',
+    this.submittedAt = '',
+    this.updatedAt = '',
     this.source = 'CUSTOMER_APP',
     required this.customerName,
     required this.mobileNumber,
@@ -178,6 +185,7 @@ class CustomerCareCase {
     required this.isChild,
     required this.isEmergency,
     required this.serviceCategory,
+    this.ambulanceCategory = '',
     required this.pickupAddress,
     required this.destinationAddress,
     required this.destinationHospital,
@@ -241,6 +249,11 @@ class CustomerCareCase {
   }) : auditLogs = auditLogs ?? [];
 
   bool get isInbound => source == 'CUSTOMER_CARE_INBOUND';
+  bool get isDraft => submissionStatus.toUpperCase() == 'DRAFT';
+  bool get isSubmitted =>
+      submissionStatus.toUpperCase() == 'PENDING_VERIFICATION';
+  bool get isSubmissionVerified =>
+      submissionStatus.toUpperCase() == 'VERIFIED' || status == 'VERIFIED';
 
   int get checklistCompletedCount {
     int count = 0;
@@ -321,6 +334,9 @@ class CustomerCareCase {
   CustomerCareCase copy() => CustomerCareCase(
     id: id,
     status: status,
+    submissionStatus: submissionStatus,
+    submittedAt: submittedAt,
+    updatedAt: updatedAt,
     source: source,
     customerName: customerName,
     mobileNumber: mobileNumber,
@@ -333,6 +349,7 @@ class CustomerCareCase {
     isChild: isChild,
     isEmergency: isEmergency,
     serviceCategory: serviceCategory,
+    ambulanceCategory: ambulanceCategory,
     pickupAddress: pickupAddress,
     destinationAddress: destinationAddress,
     destinationHospital: destinationHospital,

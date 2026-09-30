@@ -19,7 +19,7 @@ class Booking {
     this.destinationLongitude,
     this.estimatedDurationMins = 0,
     required this.status,
-    bool? patientOnboardConfirmed = false,
+    this._patientOnboardConfirmed = false,
     required this.amount,
     this.basicFare = 0,
     this.assignedAmbulanceId,
@@ -97,7 +97,7 @@ class Booking {
     this.serviceHours = 0,
     this.serviceCondition = 'Not assessed yet',
     this.homeServiceBillingStatus = 'Visit scheduled',
-  }) : _patientOnboardConfirmed = patientOnboardConfirmed;
+  });
 
   final String id;
   final String pickup;

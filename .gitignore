@@ -49,3 +49,9 @@ app.*.map.json
 
 # Local Supabase configuration (public anon/publishable key only)
 .env
+
+# Flutter generated files
+**/flutter/ephemeral/
+
+# Local AI/agent configuration
+.agents/

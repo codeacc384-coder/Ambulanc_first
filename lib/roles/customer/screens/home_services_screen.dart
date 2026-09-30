@@ -400,24 +400,27 @@ class _HomeServicesScreenState extends State<HomeServicesScreen> {
           hintText: 'Optional care instructions',
         ),
         const SizedBox(height: 14),
-        RadioGroup<String>(
-          groupValue: _scheduleType,
-          onChanged: (value) {
-            if (value != null) setState(() => _scheduleType = value);
-          },
-          child: Column(
-            children: [
-              RadioListTile<String>(
-                value: 'IMMEDIATE',
-                title: const Text('Book as soon as possible'),
-                contentPadding: EdgeInsets.zero,
-              ),
-              RadioListTile<String>(
-                value: 'SCHEDULED',
-                title: const Text('Schedule a visit'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ],
+        Material(
+          color: Colors.transparent,
+          child: RadioGroup<String>(
+            groupValue: _scheduleType,
+            onChanged: (value) {
+              if (value != null) setState(() => _scheduleType = value);
+            },
+            child: Column(
+              children: [
+                RadioListTile<String>(
+                  value: 'IMMEDIATE',
+                  title: const Text('Book as soon as possible'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                RadioListTile<String>(
+                  value: 'SCHEDULED',
+                  title: const Text('Schedule a visit'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
           ),
         ),
         if (_scheduleType == 'SCHEDULED') ...[

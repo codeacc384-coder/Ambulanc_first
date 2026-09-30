@@ -134,13 +134,17 @@ class CallOutcomeSelector extends StatelessWidget {
                         : CustomerCareColors.onSurfaceVariant,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    'Request Cancelled by Family / Attending',
-                    style: CustomerCareTextStyles.labelSm.copyWith(
-                      color: selectedOutcome == 'Cancelled'
-                          ? CustomerCareColors.onErrorContainer
-                          : CustomerCareColors.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      'Request Cancelled by Family / Attending',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: CustomerCareTextStyles.labelSm.copyWith(
+                        color: selectedOutcome == 'Cancelled'
+                            ? CustomerCareColors.onErrorContainer
+                            : CustomerCareColors.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],

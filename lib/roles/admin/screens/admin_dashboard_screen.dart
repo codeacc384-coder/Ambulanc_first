@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../models/admin_models.dart';
 import '../store/admin_store.dart';
 import '../theme/admin_theme.dart';
@@ -36,7 +38,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   List<String> _liveTickerMessages() {
     final active = widget.store.bookings
-        .where((b) => b.status == BookingStatus.inTransit || b.status == BookingStatus.pickupStarted || b.status == BookingStatus.patientPickedUp)
+        .where(
+          (b) =>
+              b.status == BookingStatus.inTransit ||
+              b.status == BookingStatus.pickupStarted ||
+              b.status == BookingStatus.patientPickedUp,
+        )
         .toList();
     if (active.isEmpty) {
       return const ['No active incidents currently recorded in Supabase.'];
@@ -70,10 +77,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       builder: (context, _) {
         final store = widget.store;
         final activeBookings = store.bookings
-            .where((b) =>
-                b.status == BookingStatus.inTransit ||
-                b.status == BookingStatus.pickupStarted ||
-                b.status == BookingStatus.patientPickedUp)
+            .where(
+              (b) =>
+                  b.status == BookingStatus.inTransit ||
+                  b.status == BookingStatus.pickupStarted ||
+                  b.status == BookingStatus.patientPickedUp,
+            )
             .toList();
 
         return SingleChildScrollView(
@@ -177,7 +186,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: Text(
-                _liveTickerMessages()[_tickerIndex % _liveTickerMessages().length],
+                _liveTickerMessages()[_tickerIndex %
+                    _liveTickerMessages().length],
                 key: ValueKey<int>(_tickerIndex),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -192,7 +202,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: Padding(
               padding: const EdgeInsets.all(4),
               child: Icon(
-                _isTickerRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                _isTickerRunning
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
                 size: 16,
                 color: StitchTheme.onSurfaceVariant,
               ),
@@ -217,23 +229,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.payments_rounded, size: 18, color: StitchTheme.primaryContainer),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Revenue & Quotations',
-                    style: StitchTheme.headlineSm(color: StitchTheme.onSurface),
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.payments_rounded,
+                      size: 18,
+                      color: StitchTheme.primaryContainer,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Revenue & Quotations',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: StitchTheme.headlineSm(
+                          color: StitchTheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: StitchTheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
                 ),
-                child: Text('CAD MTD', style: StitchTheme.labelSm(color: StitchTheme.onSurfaceVariant)),
+                child: Text(
+                  'CAD MTD',
+                  style: StitchTheme.labelSm(
+                    color: StitchTheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             ],
           ),
@@ -246,12 +276,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, size: 13, color: StitchTheme.primaryContainer),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 13,
+                  color: StitchTheme.primaryContainer,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     'Statutory Protocol: Quoted ≠ Recognized Revenue until destination signoff.',
-                    style: StitchTheme.labelSm(color: StitchTheme.onSurfaceVariant),
+                    style: StitchTheme.labelSm(
+                      color: StitchTheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -312,32 +348,59 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.monitor_heart_rounded, size: 18, color: StitchTheme.primaryContainer),
-                const SizedBox(width: 6),
-                Text('Live Active Bookings', style: StitchTheme.headlineSm(color: StitchTheme.onSurface)),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: StitchTheme.errorContainer,
-                    borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
+            Expanded(
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  const Icon(
+                    Icons.monitor_heart_rounded,
+                    size: 18,
+                    color: StitchTheme.primaryContainer,
                   ),
-                  child: Text(
-                    '${activeList.length} CRITICAL',
-                    style: StitchTheme.labelSm(color: StitchTheme.onErrorContainer, weight: FontWeight.w700),
+                  Text(
+                    'Live Active Bookings',
+                    style: StitchTheme.headlineSm(color: StitchTheme.onSurface),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: StitchTheme.errorContainer,
+                      borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
+                    ),
+                    child: Text(
+                      '${activeList.length} CRITICAL',
+                      style: StitchTheme.labelSm(
+                        color: StitchTheme.onErrorContainer,
+                        weight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
             TextButton(
               onPressed: () => widget.onNavigateTab(1),
               child: Row(
                 children: [
-                  Text('Stream', style: StitchTheme.labelSm(color: StitchTheme.primaryContainer, weight: FontWeight.w600)),
+                  Text(
+                    'Stream',
+                    style: StitchTheme.labelSm(
+                      color: StitchTheme.primaryContainer,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(width: 2),
-                  const Icon(Icons.arrow_forward_rounded, size: 12, color: StitchTheme.primaryContainer),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 12,
+                    color: StitchTheme.primaryContainer,
+                  ),
                 ],
               ),
             ),
@@ -356,9 +419,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildStaffAvailabilitySummary(AdminStore store) {
-    final availableDocs = store.doctors.where((d) => d.status == StaffStatus.available).length;
-    final availableEmts = store.emts.where((e) => e.status == StaffStatus.available).length;
-    final availableDrivers = store.drivers.where((d) => d.status == StaffStatus.available).length;
+    final availableDocs = store.doctors
+        .where((d) => d.status == StaffStatus.available)
+        .length;
+    final availableEmts = store.emts
+        .where((e) => e.status == StaffStatus.available)
+        .length;
+    final availableDrivers = store.drivers
+        .where((d) => d.status == StaffStatus.available)
+        .length;
 
     return Container(
       padding: const EdgeInsets.all(StitchTheme.spaceMd),
@@ -373,16 +442,38 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.groups_rounded, size: 18, color: StitchTheme.primaryContainer),
-                  const SizedBox(width: 6),
-                  Text('Medical Staff Readiness', style: StitchTheme.headlineSm(color: StitchTheme.onSurface)),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.groups_rounded,
+                      size: 18,
+                      color: StitchTheme.primaryContainer,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Medical Staff Readiness',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: StitchTheme.headlineSm(
+                          color: StitchTheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: () => widget.onNavigateTab(3), // Staff tab
-                child: Text('Manage', style: StitchTheme.labelSm(color: StitchTheme.primaryContainer, weight: FontWeight.w600)),
+                child: Text(
+                  'Manage',
+                  style: StitchTheme.labelSm(
+                    color: StitchTheme.primaryContainer,
+                    weight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -392,7 +483,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             title: 'Doctors',
             available: availableDocs,
             total: store.doctors.length,
-            subtitle: '${store.doctors.length - availableDocs} Assigned or on duty',
+            subtitle:
+                '${store.doctors.length - availableDocs} Assigned or on duty',
           ),
           const Divider(height: 12, color: StitchTheme.borderSubtle),
           _StaffRosterRow(
@@ -400,7 +492,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             title: 'EMTs',
             available: availableEmts,
             total: store.emts.length,
-            subtitle: '${store.emts.length - availableEmts} Assigned on mission',
+            subtitle:
+                '${store.emts.length - availableEmts} Assigned on mission',
           ),
           const Divider(height: 12, color: StitchTheme.borderSubtle),
           _StaffRosterRow(
@@ -428,17 +521,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 4,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.verified_user_rounded, size: 18, color: StitchTheme.primaryContainer),
+                  const Icon(
+                    Icons.verified_user_rounded,
+                    size: 18,
+                    color: StitchTheme.primaryContainer,
+                  ),
                   const SizedBox(width: 6),
-                  Text('Recent Governance & Audit', style: StitchTheme.headlineSm(color: StitchTheme.onSurface)),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 230),
+                    child: Text(
+                      'Recent Governance & Audit',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: StitchTheme.headlineSm(
+                        color: StitchTheme.onSurface,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              Text('ENCRYPTED LOG', style: StitchTheme.labelSm(color: StitchTheme.tertiary, weight: FontWeight.w700)),
+              Text(
+                'ENCRYPTED LOG',
+                style: StitchTheme.labelSm(
+                  color: StitchTheme.tertiary,
+                  weight: FontWeight.w700,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -453,22 +569,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     color: entry.severity == 'CRITICAL'
                         ? StitchTheme.errorContainer
                         : entry.severity == 'WARNING'
-                            ? StitchTheme.secondaryContainer
-                            : StitchTheme.surfaceContainer,
+                        ? StitchTheme.secondaryContainer
+                        : StitchTheme.surfaceContainer,
                     borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
                   ),
                   child: Icon(
                     entry.severity == 'CRITICAL'
                         ? Icons.warning_rounded
                         : entry.severity == 'WARNING'
-                            ? Icons.build_rounded
-                            : Icons.check_circle_rounded,
+                        ? Icons.build_rounded
+                        : Icons.check_circle_rounded,
                     size: 14,
                     color: entry.severity == 'CRITICAL'
                         ? StitchTheme.error
                         : entry.severity == 'WARNING'
-                            ? StitchTheme.secondary
-                            : StitchTheme.tertiary,
+                        ? StitchTheme.secondary
+                        : StitchTheme.tertiary,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -479,11 +595,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(entry.entityId, style: StitchTheme.labelSm(weight: FontWeight.w700)),
-                          Text('${DateTime.now().difference(entry.timestamp).inMinutes}m ago', style: StitchTheme.labelSm(color: StitchTheme.outline)),
+                          Expanded(
+                            child: Text(
+                              entry.entityId,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: StitchTheme.labelSm(
+                                weight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${DateTime.now().difference(entry.timestamp).inMinutes}m ago',
+                            style: StitchTheme.labelSm(
+                              color: StitchTheme.outline,
+                            ),
+                          ),
                         ],
                       ),
-                      Text(entry.details, maxLines: 1, overflow: TextOverflow.ellipsis, style: StitchTheme.bodySm(color: StitchTheme.onSurfaceVariant)),
+                      Text(
+                        entry.details,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: StitchTheme.bodySm(
+                          color: StitchTheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -499,7 +637,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(36),
               side: const BorderSide(color: StitchTheme.borderSubtle),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(StitchTheme.radiusSm)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
+              ),
             ),
           ),
         ],
@@ -532,7 +672,13 @@ class _FinanceBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: StitchTheme.labelSm(color: StitchTheme.outline, weight: FontWeight.w600)),
+          Text(
+            label,
+            style: StitchTheme.labelSm(
+              color: StitchTheme.outline,
+              weight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 2),
           Text(
             value,
@@ -542,7 +688,10 @@ class _FinanceBox extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(subtitle, style: StitchTheme.bodySm(color: StitchTheme.onSurfaceVariant)),
+          Text(
+            subtitle,
+            style: StitchTheme.bodySm(color: StitchTheme.onSurfaceVariant),
+          ),
         ],
       ),
     );
@@ -569,29 +718,56 @@ class _StaffRosterRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Icon(icon, size: 18, color: StitchTheme.primaryContainer),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: StitchTheme.headlineSm()),
-                Text(subtitle, style: StitchTheme.bodySm(color: StitchTheme.outline)),
-              ],
-            ),
-          ],
+        Expanded(
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: StitchTheme.primaryContainer),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: StitchTheme.headlineSm()),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: StitchTheme.bodySm(color: StitchTheme.outline),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
+        const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Row(
               children: [
-                Text('$available ', style: StitchTheme.labelLg(color: StitchTheme.tertiary, weight: FontWeight.w700)),
-                Text('/ $total', style: StitchTheme.bodySm(color: StitchTheme.onSurfaceVariant)),
+                Text(
+                  '$available ',
+                  style: StitchTheme.labelLg(
+                    color: StitchTheme.tertiary,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  '/ $total',
+                  style: StitchTheme.bodySm(
+                    color: StitchTheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
-            Text('Available', style: StitchTheme.labelSm(color: StitchTheme.tertiary, weight: FontWeight.w600)),
+            Text(
+              'Available',
+              style: StitchTheme.labelSm(
+                color: StitchTheme.tertiary,
+                weight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ],
@@ -600,10 +776,7 @@ class _StaffRosterRow extends StatelessWidget {
 }
 
 class _ActiveBookingItem extends StatelessWidget {
-  const _ActiveBookingItem({
-    required this.booking,
-    required this.onTap,
-  });
+  const _ActiveBookingItem({required this.booking, required this.onTap});
 
   final AdminBooking booking;
   final VoidCallback onTap;
@@ -649,23 +822,41 @@ class _ActiveBookingItem extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  '#${booking.id}',
-                                  style: StitchTheme.labelLg(
-                                    color: StitchTheme.onSurface,
-                                    weight: FontWeight.w700,
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      '#${booking.id}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: StitchTheme.labelLg(
+                                        color: StitchTheme.onSurface,
+                                        weight: FontWeight.w700,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '· ${DateTime.now().difference(booking.createdAt).inMinutes}m ago',
-                                  style: StitchTheme.labelSm(color: StitchTheme.outline),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '· ${DateTime.now().difference(booking.createdAt).inMinutes}m ago',
+                                    maxLines: 1,
+                                    style: StitchTheme.labelSm(
+                                      color: StitchTheme.outline,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            StitchStatusBadge.fromBooking(booking.status),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: StitchStatusBadge.fromBooking(
+                                  booking.status,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -678,7 +869,10 @@ class _ActiveBookingItem extends StatelessWidget {
                               backgroundColor: StitchTheme.primaryContainer,
                               child: Text(
                                 booking.patientInitials,
-                                style: StitchTheme.labelSm(color: Colors.white, weight: FontWeight.w700),
+                                style: StitchTheme.labelSm(
+                                  color: Colors.white,
+                                  weight: FontWeight.w700,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -687,12 +881,18 @@ class _ActiveBookingItem extends StatelessWidget {
                                 '${booking.patientName} (${booking.patientAge}y ${booking.patientGender[0]}) · ${booking.patientCondition}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: StitchTheme.bodySm(color: StitchTheme.onSurface, weight: FontWeight.w600),
+                                style: StitchTheme.bodySm(
+                                  color: StitchTheme.onSurface,
+                                  weight: FontWeight.w600,
+                                ),
                               ),
                             ),
                             Text(
                               'ETA: ${booking.etaMinutes}m',
-                              style: StitchTheme.labelSm(color: StitchTheme.error, weight: FontWeight.w700),
+                              style: StitchTheme.labelSm(
+                                color: StitchTheme.error,
+                                weight: FontWeight.w700,
+                              ),
                             ),
                           ],
                         ),
@@ -703,24 +903,40 @@ class _ActiveBookingItem extends StatelessWidget {
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: StitchTheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              StitchTheme.radiusSm,
+                            ),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.navigation_rounded, size: 14, color: StitchTheme.primaryContainer),
+                              const Icon(
+                                Icons.navigation_rounded,
+                                size: 14,
+                                color: StitchTheme.primaryContainer,
+                              ),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   '${booking.pickupLocation} → ${booking.destinationLocation}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: StitchTheme.labelSm(color: StitchTheme.onSurfaceVariant),
+                                  style: StitchTheme.labelSm(
+                                    color: StitchTheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
                               if (booking.ambulanceId != null)
-                                Text(
-                                  booking.ambulanceId!,
-                                  style: StitchTheme.labelSm(color: StitchTheme.primaryContainer, weight: FontWeight.w700),
+                                Flexible(
+                                  child: Text(
+                                    booking.ambulanceId!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.right,
+                                    style: StitchTheme.labelSm(
+                                      color: StitchTheme.primaryContainer,
+                                      weight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),

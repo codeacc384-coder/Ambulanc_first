@@ -165,57 +165,76 @@ class _StitchHeaderState extends State<StitchHeader> {
 
           // Bottom Row: Screen Title + Version + Sync
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text(
-                    widget.title,
-                    style: StitchTheme.headlineSm(
-                      color: StitchTheme.onSurface,
-                      weight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    widget.subtitle,
-                    style: StitchTheme.labelSm(
-                      color: StitchTheme.onSurfaceVariant.withValues(
-                        alpha: 0.7,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              InkWell(
-                onTap:
-                    widget.onSync ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Admin data refreshed.')),
-                      );
-                    },
-                borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 4,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.sync_rounded,
-                        size: 14,
-                        color: StitchTheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Refresh',
-                        style: StitchTheme.labelSm(
-                          color: StitchTheme.onSurfaceVariant,
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: StitchTheme.headlineSm(
+                          color: StitchTheme.onSurface,
+                          weight: FontWeight.w600,
                         ),
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        widget.subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: StitchTheme.labelSm(
+                          color: StitchTheme.onSurfaceVariant.withValues(
+                            alpha: 0.7,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap:
+                        widget.onSync ??
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Admin data refreshed.'),
+                            ),
+                          );
+                        },
+                    borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.sync_rounded,
+                            size: 14,
+                            color: StitchTheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Refresh',
+                            style: StitchTheme.labelSm(
+                              color: StitchTheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

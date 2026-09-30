@@ -64,17 +64,16 @@ class _DriverRosterScreenState extends State<DriverRosterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final title = Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Commercial Driver Personnel Roster', style: TeamLeadTheme.titleMedium(weight: FontWeight.w700)),
-                      Text('$availableCount available on standby • $assignedCount on missions • $offDutyCount off duty', style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
+                      Text('Commercial Driver Personnel Roster', maxLines: constraints.maxWidth < 700 ? 2 : 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.titleMedium(weight: FontWeight.w700)),
+                      Text('$availableCount available on standby • $assignedCount on missions • $offDutyCount off duty', maxLines: 2, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
                     ],
-                  ),
-                  OutlinedButton.icon(
+                  );
+                  final refresh = OutlinedButton.icon(
                     onPressed: () => store.hydrateFromBackend(),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(TeamLeadTheme.radiusSm)),
@@ -82,8 +81,12 @@ class _DriverRosterScreenState extends State<DriverRosterScreen> {
                     ),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
                     label: Text('Refresh Drivers', style: TeamLeadTheme.body(weight: FontWeight.w700)),
-                  ),
-                ],
+                  );
+                  if (constraints.maxWidth < 700) {
+                    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 10), refresh]);
+                  }
+                  return Row(children: [Expanded(child: title), const SizedBox(width: 16), refresh]);
+                },
               ),
               const SizedBox(height: 16),
 
@@ -182,9 +185,9 @@ class _DriverRosterScreenState extends State<DriverRosterScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              Expanded(
+                child: Row(
                 children: [
                   CircleAvatar(
                     radius: 18,
@@ -195,29 +198,33 @@ class _DriverRosterScreenState extends State<DriverRosterScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Column(
+                  Expanded(
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(driver.name, style: TeamLeadTheme.body(weight: FontWeight.w700)),
-                      Text('${driver.experienceYears} yrs experience', style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
+                      Text(driver.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.body(weight: FontWeight.w700)),
+                      Text('${driver.experienceYears} yrs experience', maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
                     ],
+                    ),
                   ),
                 ],
+                ),
               ),
-              StatusBadge(status: driver.status),
+              const SizedBox(width: 8),
+              Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: StatusBadge(status: driver.status))),
             ],
           ),
           const SizedBox(height: 6),
 
           Text('License: ${driver.licenseNumber}', style: TeamLeadTheme.telemetrySecondary(color: TeamLeadTheme.primaryDark)),
-          Text('Phone: ${driver.phone} • Depot: ${driver.depot}', style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
-          Text('Categories: ${driver.supportedCategories.join(", ")}', style: TeamLeadTheme.micro(color: TeamLeadTheme.textMuted)),
+          Text('Phone: ${driver.phone} • Depot: ${driver.depot}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
+          Text('Categories: ${driver.supportedCategories.join(", ")}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.micro(color: TeamLeadTheme.textMuted)),
 
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Completed Missions: ${driver.completedTrips}', style: TeamLeadTheme.telemetryMicro(color: TeamLeadTheme.textMuted)),
+              Expanded(child: Text('Completed Missions: ${driver.completedTrips}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.telemetryMicro(color: TeamLeadTheme.textMuted))),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert_rounded, size: 18, color: TeamLeadTheme.textMuted),
                 onSelected: (newStatus) {

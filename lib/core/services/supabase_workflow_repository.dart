@@ -54,6 +54,34 @@ class SupabaseWorkflowRepository {
     return result.toString();
   }
 
+  /// Creates or updates the authenticated customer's single active draft.
+  Future<Map<String, dynamic>?> getCustomerBookingDraft() async {
+    final result = await _db.rpc('get_customer_booking_draft');
+    if (result == null) return null;
+    return _map(result);
+  }
+
+  /// Creates or updates the authenticated customer's single active draft.
+  Future<String> saveCustomerBookingDraft(Map<String, dynamic> booking) async {
+    final result = await _db.rpc(
+      'save_customer_booking_draft',
+      params: {'p_booking': booking},
+    );
+    return result.toString();
+  }
+
+  /// Saves the latest values and marks the active draft ready for Care review.
+  Future<String> submitCustomerBookingDraft({
+    required String bookingId,
+    required Map<String, dynamic> booking,
+  }) async {
+    final result = await _db.rpc(
+      'submit_customer_booking_draft',
+      params: {'p_booking_id': bookingId, 'p_booking': booking},
+    );
+    return result.toString();
+  }
+
   /// Creates or updates a voice-intake booking that Customer Care can call back.
   Future<String> saveCustomerVoiceBookingDraft({
     required String bookingId,

@@ -915,12 +915,13 @@ class AdminStore extends ChangeNotifier {
     for (final key in keys) {
       final value = row[key];
       if (value is List) return value.map((e) => '$e').toList();
-      if (value is String && value.trim().isNotEmpty)
+      if (value is String && value.trim().isNotEmpty) {
         return value
             .split(',')
             .map((e) => e.trim())
             .where((e) => e.isNotEmpty)
             .toList();
+      }
     }
     return const [];
   }
@@ -1059,16 +1060,18 @@ class AdminStore extends ChangeNotifier {
     }
     if (ambulance.status == FleetStatus.maintenance &&
         newStatus == FleetStatus.available) {
-      if (!checklistPassed)
+      if (!checklistPassed) {
         return (
           false,
           'Clinical Safety Lock: maintenance checklist must be verified.',
         );
-      if (supervisorPin == null || supervisorPin.length < 4)
+      }
+      if (supervisorPin == null || supervisorPin.length < 4) {
         return (
           false,
           'Authorization Lock: valid supervisor authorization is required.',
         );
+      }
     }
 
     try {
@@ -1276,8 +1279,9 @@ class AdminStore extends ChangeNotifier {
     String? certification,
     String? crewType,
   }) async {
-    if (name.trim().isEmpty || email.trim().isEmpty)
+    if (name.trim().isEmpty || email.trim().isEmpty) {
       return (false, 'Name and email are required.');
+    }
     const supportedRoles = {
       'DRIVER',
       'DOCTOR',

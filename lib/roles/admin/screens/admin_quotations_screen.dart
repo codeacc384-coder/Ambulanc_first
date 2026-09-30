@@ -337,19 +337,32 @@ class _QuotationCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      '#${b.quotationId}',
-                      style: StitchTheme.labelMd(weight: FontWeight.w700),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '(#${b.id})',
-                      style: StitchTheme.labelSm(color: StitchTheme.outline),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '#${b.quotationId}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: StitchTheme.labelMd(weight: FontWeight.w700),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          '(#${b.id})',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: StitchTheme.labelSm(
+                            color: StitchTheme.outline,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   money(b.quotationTotal),
                   style: StitchTheme.labelMd(
@@ -362,14 +375,18 @@ class _QuotationCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               '${b.customerName} · ${b.patientName}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: StitchTheme.bodySm(
                 color: StitchTheme.onSurface,
                 weight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 4,
               children: [
                 Text(
                   '${b.serviceCategory} (${b.distanceKm} km)',

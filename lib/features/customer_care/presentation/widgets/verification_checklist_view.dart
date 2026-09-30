@@ -67,25 +67,31 @@ class VerificationChecklistView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Safety Handover Protocol',
-                    style: CustomerCareTextStyles.headlineSm.copyWith(
-                      fontWeight: FontWeight.w700,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Safety Handover Protocol',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: CustomerCareTextStyles.headlineSm.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Complete all 6 items to unlock dispatch pass',
-                    style: CustomerCareTextStyles.labelSm.copyWith(
-                      color: CustomerCareColors.onSurfaceVariant,
+                    Text(
+                      'Complete all 6 items to unlock dispatch pass',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: CustomerCareTextStyles.labelSm.copyWith(
+                        color: CustomerCareColors.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(

@@ -48,14 +48,19 @@ class AmbulanceFirstStatusBadge extends StatelessWidget {
             Icon(style.icon, size: compact ? 12 : 14, color: style.textColor),
             const SizedBox(width: 4),
           ],
-          Text(
-            style.label,
-            style: AmbulanceFirstTypography.codeSm(
-              color: style.textColor,
-              weight: FontWeight.w700,
-            ).copyWith(
-              fontSize: compact ? 9 : 10,
-              letterSpacing: 0.2,
+          Flexible(
+            child: Text(
+              style.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: AmbulanceFirstTypography.codeSm(
+                color: style.textColor,
+                weight: FontWeight.w700,
+              ).copyWith(
+                fontSize: compact ? 9 : 10,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
         ],

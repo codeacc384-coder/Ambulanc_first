@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/models/customer_care_case.dart';
 import '../../../../core/services/customer_care_repository.dart';
@@ -227,7 +228,7 @@ class _CustomerCareDashboardScreenState
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
-                    childAspectRatio: isWide ? 1.6 : 1.75,
+                    childAspectRatio: isWide ? 1.6 : 1.3,
                     children: [
                       KpiQueueCard(
                         title: 'New Inbound',
@@ -393,28 +394,39 @@ class _CustomerCareDashboardScreenState
 
               // 4. Incident Queue Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.emergency_outlined,
-                        size: 18,
-                        color: CustomerCareColors.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Triage Incident Queue',
-                        style: CustomerCareTextStyles.headlineSm.copyWith(
-                          fontWeight: FontWeight.w700,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.emergency_outlined,
+                          size: 18,
+                          color: CustomerCareColors.primary,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Triage Incident Queue',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: CustomerCareTextStyles.headlineSm.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  Text(
-                    repo.isLoading ? 'Syncing...' : 'Synced from Supabase',
-                    style: CustomerCareTextStyles.labelSm.copyWith(
-                      color: CustomerCareColors.onSurfaceVariant,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      repo.isLoading ? 'Syncing...' : 'Synced from Supabase',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: CustomerCareTextStyles.labelSm.copyWith(
+                        color: CustomerCareColors.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -473,6 +485,20 @@ class _CustomerCareDashboardScreenState
                     return TriageIncidentCard(
                       caseItem: item,
                       onCallVerify: () => widget.onNavigateToCallVerify(item),
+                      onCallPhone: () async {
+                        final phone = item.mobileNumber.replaceAll(
+                          RegExp(r'[^0-9+]'),
+                          '',
+                        );
+                        final launched = await launchUrl(
+                          Uri(scheme: 'tel', path: phone),
+                        );
+                        if (!launched) {
+                          widget.onShowToast(
+                            'Unable to open the phone dialer for ${item.mobileNumber}.',
+                          );
+                        }
+                      },
                       onViewDetails: () => widget.onNavigateToDetails(item),
                       onSendToTeamLead: () => _handleHandoff(item),
                     );

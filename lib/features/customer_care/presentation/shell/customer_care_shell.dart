@@ -28,7 +28,6 @@ class CustomerCareShell extends StatefulWidget {
 
 class _CustomerCareShellState extends State<CustomerCareShell> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   int _selectedTabIndex = 0;
   CustomerCareCase? _activeCaseForConsole;
   CustomerCareCase? _activeCaseForDetails;
@@ -44,7 +43,6 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
     }
   }
 
-  // Toast feedback state
   String? _toastMessage;
   bool _showToast = false;
 
@@ -187,30 +185,36 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
                                       ),
                                     ),
                                     const SizedBox(width: 10),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Ambulance First',
-                                          style: CustomerCareTextStyles
-                                              .headlineSm
-                                              .copyWith(
-                                                color: CustomerCareColors
-                                                    .primaryContainer,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 14,
-                                              ),
-                                        ),
-                                        Text(
-                                          'Customer Care Ops',
-                                          style: CustomerCareTextStyles.labelSm
-                                              .copyWith(
-                                                color: CustomerCareColors
-                                                    .onSurfaceVariant,
-                                              ),
-                                        ),
-                                      ],
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Ambulance First',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: CustomerCareTextStyles
+                                                .headlineSm
+                                                .copyWith(
+                                                  color: CustomerCareColors
+                                                      .primaryContainer,
+                                                  fontWeight: FontWeight.w800,
+                                                  fontSize: 14,
+                                                ),
+                                          ),
+                                          Text(
+                                            'Customer Care Ops',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: CustomerCareTextStyles.labelSm
+                                                .copyWith(
+                                                  color: CustomerCareColors
+                                                      .onSurfaceVariant,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),

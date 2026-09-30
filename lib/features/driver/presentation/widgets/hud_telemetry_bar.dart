@@ -27,20 +27,27 @@ class HudTelemetryBar extends StatelessWidget {
   final String networkStatus;
 
   String get _compassHeading {
-    if (heading >= 337.5 || heading < 22.5)
+    if (heading >= 337.5 || heading < 22.5) {
       return '${heading.toStringAsFixed(0)}° N';
-    if (heading >= 22.5 && heading < 67.5)
+    }
+    if (heading >= 22.5 && heading < 67.5) {
       return '${heading.toStringAsFixed(0)}° NE';
-    if (heading >= 67.5 && heading < 112.5)
+    }
+    if (heading >= 67.5 && heading < 112.5) {
       return '${heading.toStringAsFixed(0)}° E';
-    if (heading >= 112.5 && heading < 157.5)
+    }
+    if (heading >= 112.5 && heading < 157.5) {
       return '${heading.toStringAsFixed(0)}° SE';
-    if (heading >= 157.5 && heading < 202.5)
+    }
+    if (heading >= 157.5 && heading < 202.5) {
       return '${heading.toStringAsFixed(0)}° S';
-    if (heading >= 202.5 && heading < 247.5)
+    }
+    if (heading >= 202.5 && heading < 247.5) {
       return '${heading.toStringAsFixed(0)}° SW';
-    if (heading >= 247.5 && heading < 292.5)
+    }
+    if (heading >= 247.5 && heading < 292.5) {
       return '${heading.toStringAsFixed(0)}° WNW';
+    }
     return '${heading.toStringAsFixed(0)}° NW';
   }
 

@@ -8,7 +8,6 @@ import '../../../core/services/supabase_booking_repository.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../../core/services/supabase_workflow_repository.dart';
 import '../theme/ambulance_first_theme.dart';
-import '../widgets/ambulance_first_booking_id.dart';
 import '../widgets/ambulance_first_button.dart';
 import '../widgets/ambulance_first_card.dart';
 import '../widgets/ambulance_first_metric_card.dart';
@@ -178,23 +177,31 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                           color: AmbulanceFirstColors.secondary,
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          'VERIFIED CLINICAL COORDINATOR',
-                          style: AmbulanceFirstTypography.codeSm(
-                            color: AmbulanceFirstColors.onSurfaceVariant,
-                            weight: FontWeight.w700,
-                          ).copyWith(letterSpacing: 0.5, fontSize: 10),
+                        Expanded(
+                          child: Text(
+                            'VERIFIED CLINICAL COORDINATOR',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AmbulanceFirstTypography.codeSm(
+                              color: AmbulanceFirstColors.onSurfaceVariant,
+                              weight: FontWeight.w700,
+                            ).copyWith(letterSpacing: 0.5, fontSize: 10),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       widget.user.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AmbulanceFirstTypography.headlineMd(color: AmbulanceFirstColors.onSurface),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       widget.user.email.isNotEmpty ? widget.user.email : 'Customer profile',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant),
                     ),
                   ],
@@ -338,7 +345,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       mainAxisSpacing: 8,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.45,
+      childAspectRatio: 1.2,
       children: cards,
     );
   }
@@ -356,42 +363,34 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'QUOTATION',
-                    style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    q.id,
-                    style: AmbulanceFirstTypography.codeLg(color: AmbulanceFirstColors.onSurface, weight: FontWeight.w700),
-                  ),
-                ],
+          Text(
+            'QUOTATION · ${q.id}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AmbulanceFirstTypography.codeLg(
+              color: AmbulanceFirstColors.onSurface,
+              weight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AmbulanceFirstColors.errorContainer,
+                borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusPill),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AmbulanceFirstColors.errorContainer,
-                  borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusPill),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.timer_outlined, size: 13, color: AmbulanceFirstColors.onErrorContainer),
-                    const SizedBox(width: 4),
-                    Text(
-                      q.validUntil.isNotEmpty ? q.validUntil : 'Validity unavailable',
-                      style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onErrorContainer, weight: FontWeight.w700).copyWith(fontSize: 10),
-                    ),
-                  ],
-                ),
+              child: Text(
+                q.validUntil.isNotEmpty ? q.validUntil : 'Validity unavailable',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AmbulanceFirstTypography.codeSm(
+                  color: AmbulanceFirstColors.onErrorContainer,
+                  weight: FontWeight.w700,
+                ).copyWith(fontSize: 10),
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 10),
 
@@ -405,29 +404,32 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${booking.patientName} (${booking.patientAge}y / ${booking.patientGender == "Female" ? "F" : "M"})',
-                      style: AmbulanceFirstTypography.headlineSm(color: AmbulanceFirstColors.onSurface).copyWith(fontSize: 14),
-                    ),
-                    Text(
-                      'REF #${booking.id}',
-                      style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant),
-                    ),
-                  ],
+                Text(
+                  '${booking.patientName} (${booking.patientAge}y / ${booking.patientGender == "Female" ? "F" : "M"})',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmbulanceFirstTypography.headlineSm(color: AmbulanceFirstColors.onSurface).copyWith(fontSize: 14),
+                ),
+                Text(
+                  'REF #${booking.id}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     const Icon(Icons.monitor_heart_outlined, size: 14, color: AmbulanceFirstColors.medicalCrimson),
                     const SizedBox(width: 4),
-                    Text(
-                      booking.currentCondition.isNotEmpty
-                          ? booking.currentCondition
-                          : 'Clinical condition unavailable',
-                      style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.medicalCrimson).copyWith(fontWeight: FontWeight.w600, fontSize: 11),
+                    Expanded(
+                      child: Text(
+                        booking.currentCondition.isNotEmpty
+                            ? booking.currentCondition
+                            : 'Clinical condition unavailable',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.medicalCrimson).copyWith(fontWeight: FontWeight.w600, fontSize: 11),
+                      ),
                     ),
                   ],
                 ),
@@ -458,18 +460,18 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
 
           // Service Tier & Pricing Row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.medical_services_outlined, size: 16, color: AmbulanceFirstColors.clinicalCobalt),
-                  const SizedBox(width: 6),
-                  Text(
-                    booking.ambulanceType,
-                    style: AmbulanceFirstTypography.bodyMd(color: AmbulanceFirstColors.onSurface).copyWith(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                ],
+              const Icon(Icons.medical_services_outlined, size: 16, color: AmbulanceFirstColors.clinicalCobalt),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  booking.ambulanceType,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmbulanceFirstTypography.bodyMd(color: AmbulanceFirstColors.onSurface).copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
               ),
+              const SizedBox(width: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -526,28 +528,34 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
         children: [
           // Header: Live dot, Trip ID, Status Pill
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: AmbulanceFirstColors.secondary,
-                      shape: BoxShape.circle,
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AmbulanceFirstColors.secondary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'TRIP #${booking.id}',
-                    style: AmbulanceFirstTypography.codeLg(
-                      color: AmbulanceFirstColors.clinicalCobalt,
-                      weight: FontWeight.w700,
-                    ).copyWith(letterSpacing: -0.3),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'TRIP #${booking.id}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmbulanceFirstTypography.codeLg(
+                          color: AmbulanceFirstColors.clinicalCobalt,
+                          weight: FontWeight.w700,
+                        ).copyWith(letterSpacing: -0.3),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               AmbulanceFirstStatusBadge(status: booking.status),
             ],
           ),
@@ -563,16 +571,21 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
           const SizedBox(height: 10),
 
           // Patient Demographics & Tag
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.start,
+            runSpacing: 8,
+            spacing: 8,
             children: [
-              Expanded(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 260),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       '${booking.patientName} (${booking.patientAge > 0 ? "${booking.patientAge}y" : "4m"} / ${booking.patientGender == "Female" ? "F" : "M"})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AmbulanceFirstTypography.headlineSm(color: AmbulanceFirstColors.onSurface),
                     ),
                     const SizedBox(height: 2),
@@ -580,6 +593,8 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                       booking.relationshipToPatient.isNotEmpty
                           ? booking.relationshipToPatient
                           : 'Accompanied Family Guardian',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant),
                     ),
                   ],
@@ -657,21 +672,19 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
           const SizedBox(height: 8),
 
           // Crew & Vehicle details
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.badge_outlined, size: 14, color: AmbulanceFirstColors.onSurfaceVariant),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Crew: ${booking.emtName.isNotEmpty ? booking.emtName : "Unavailable"} & ${booking.doctorName.isNotEmpty ? booking.doctorName : "Unavailable"}',
-                    style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontSize: 11),
-                  ),
-                ],
+              Text(
+                'Crew: ${booking.emtName.isNotEmpty ? booking.emtName : "Unavailable"} & ${booking.doctorName.isNotEmpty ? booking.doctorName : "Unavailable"}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontSize: 11),
               ),
               Text(
                 booking.vehicleNumber.isNotEmpty ? booking.vehicleNumber : 'Vehicle unavailable',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontSize: 11),
               ),
             ],
@@ -713,64 +726,46 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       urgencyPriority: booking.priority,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       onTap: () => BookingDetailsDialog.show(context, booking: booking),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    AmbulanceFirstBookingId(id: booking.id, fontSize: 13),
-                    const SizedBox(width: 6),
-                    Text('·', style: TextStyle(color: AmbulanceFirstColors.onSurfaceVariant)),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        booking.patientName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AmbulanceFirstTypography.bodyMd(color: AmbulanceFirstColors.onSurface).copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    if (booking.priority == 'CRITICAL') ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: AmbulanceFirstColors.errorContainer,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                        child: Text(
-                          'CRITICAL',
-                          style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.medicalCrimson, weight: FontWeight.w700).copyWith(fontSize: 9),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  booking.currentCondition,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  booking.id.toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant),
+                  style: AmbulanceFirstTypography.codeMd(color: AmbulanceFirstColors.onSurface, weight: FontWeight.w700),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${booking.date}, ${booking.time} · ${booking.ambulanceType}',
-                  style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontSize: 10),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Text(
+            booking.patientName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AmbulanceFirstTypography.bodyMd(color: AmbulanceFirstColors.onSurface).copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            booking.currentCondition,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${booking.date}, ${booking.time} · ${booking.ambulanceType}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontSize: 10),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               AmbulanceFirstStatusBadge(status: booking.status, compact: true),
-              const SizedBox(height: 4),
               Text(
                 '₹ ${booking.amount.toInt()}',
                 style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurface, weight: FontWeight.w700),
@@ -786,52 +781,77 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
   // 6. Patient Transport Dispatch Hub Helper
   // ---------------------------------------------------------------------------
   Widget _buildDispatchDeskHelper(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AmbulanceFirstSpacing.spaceSm),
-      decoration: BoxDecoration(
-        color: AmbulanceFirstColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusLg),
+    final supportIcon = Container(
+      width: 36,
+      height: 36,
+      decoration: const BoxDecoration(
+        color: AmbulanceFirstColors.surfaceContainerLowest,
+        shape: BoxShape.circle,
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: AmbulanceFirstColors.surfaceContainerLowest,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.support_agent_rounded,
-              size: 20,
-              color: AmbulanceFirstColors.clinicalCobalt,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Clinical Dispatch Desk',
-                  style: AmbulanceFirstTypography.headlineSm(color: AmbulanceFirstColors.onSurface).copyWith(fontSize: 13),
-                ),
-                Text(
-                  'Direct priority line for ICU-to-ICU handoffs',
-                  style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-          AmbulanceFirstButton(
-            label: 'Support unavailable',
-            icon: Icons.call,
-            height: 34,
-            variant: AmbulanceFirstButtonVariant.telemetry,
-            onPressed: null,
-          ),
-        ],
+      child: const Icon(
+        Icons.support_agent_rounded,
+        size: 20,
+        color: AmbulanceFirstColors.clinicalCobalt,
       ),
+    );
+    final supportDetails = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Clinical Dispatch Desk',
+          style: AmbulanceFirstTypography.headlineSm(color: AmbulanceFirstColors.onSurface).copyWith(fontSize: 13),
+        ),
+        Text(
+          'Direct priority line for ICU-to-ICU handoffs',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: AmbulanceFirstTypography.bodySm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontSize: 11),
+        ),
+      ],
+    );
+    final supportButton = AmbulanceFirstButton(
+      label: 'Support unavailable',
+      icon: Icons.call,
+      height: 34,
+      variant: AmbulanceFirstButtonVariant.telemetry,
+      onPressed: null,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 420;
+        return Container(
+          padding: const EdgeInsets.all(AmbulanceFirstSpacing.spaceSm),
+          decoration: BoxDecoration(
+            color: AmbulanceFirstColors.surfaceContainer,
+            borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusLg),
+          ),
+          child: isCompact
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        supportIcon,
+                        const SizedBox(width: 12),
+                        Expanded(child: supportDetails),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(width: double.infinity, child: supportButton),
+                  ],
+                )
+              : Row(
+                  children: [
+                    supportIcon,
+                    const SizedBox(width: 12),
+                    Expanded(child: supportDetails),
+                    const SizedBox(width: 8),
+                    supportButton,
+                  ],
+                ),
+        );
+      },
     );
   }
 

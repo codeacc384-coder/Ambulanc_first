@@ -23,18 +23,21 @@ class AmbulanceFirstSectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
+          Expanded(
+            child: Row(
             children: [
               if (icon != null) ...[
                 Icon(icon, size: 18, color: AmbulanceFirstColors.clinicalCobalt),
                 const SizedBox(width: 6),
               ],
-              Text(
-                title,
-                style: AmbulanceFirstTypography.headlineSm(color: AmbulanceFirstColors.onSurface),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmbulanceFirstTypography.headlineSm(color: AmbulanceFirstColors.onSurface),
+                ),
               ),
               if (count != null) ...[
                 const SizedBox(width: 8),
@@ -54,6 +57,7 @@ class AmbulanceFirstSectionHeader extends StatelessWidget {
                 ),
               ],
             ],
+            ),
           ),
           if (actionLabel != null && onActionTap != null)
             InkWell(

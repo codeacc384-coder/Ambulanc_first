@@ -52,9 +52,15 @@ class AmbulanceFirstButton extends StatelessWidget {
             Icon(icon, size: 18, color: _contentColor),
             const SizedBox(width: 8),
           ],
-          Text(
-            label,
-            style: _textStyle,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              softWrap: false,
+              style: _textStyle,
+            ),
           ),
         ],
       );

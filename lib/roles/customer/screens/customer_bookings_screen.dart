@@ -93,7 +93,9 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
             b.status == 'PICKUP_STARTED' ||
             b.status == 'ASSIGNED' ||
             b.status == 'DRIVER_ASSIGNED';
-        if (!active) return false;
+        if (!active) {
+          return false;
+        }
       } else if (_selectedFilter == 'PENDING') {
         final pending =
             b.status == 'NEW' ||
@@ -101,12 +103,17 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
             b.status == 'SENT_TO_TEAM_LEAD' ||
             b.status == 'QUOTATION_SENT' ||
             b.status == 'CUSTOMER_ACCEPTED';
-        if (!pending) return false;
-      } else if (_selectedFilter == 'COMPLETED') {
-        if (b.status != 'SERVICE_COMPLETED') return false;
-      } else if (_selectedFilter == 'CANCELLED') {
-        if (b.status != 'CANCELLED' && b.status != 'CUSTOMER_REJECTED')
+        if (!pending) {
           return false;
+        }
+      } else if (_selectedFilter == 'COMPLETED') {
+        if (b.status != 'SERVICE_COMPLETED') {
+          return false;
+        }
+      } else if (_selectedFilter == 'CANCELLED') {
+        if (b.status != 'CANCELLED' && b.status != 'CUSTOMER_REJECTED') {
+          return false;
+        }
       }
 
       // 2. Search Filter
@@ -121,8 +128,9 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
             !matchPatient &&
             !matchPickup &&
             !matchDest &&
-            !matchAmbulance)
+            !matchAmbulance) {
           return false;
+        }
       }
 
       return true;
@@ -139,6 +147,7 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
         final horizontalPadding = isDesktop
             ? AmbulanceFirstSpacing.margin
             : AmbulanceFirstSpacing.marginMobile;
+        final compactHeader = constraints.maxWidth < 640;
 
         return SingleChildScrollView(
           padding: EdgeInsets.symmetric(
@@ -152,35 +161,67 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Page Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'My Transport Bookings',
-                            style: AmbulanceFirstTypography.headlineMd(
-                              color: AmbulanceFirstColors.onSurface,
+                  compactHeader
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'My Transport Bookings',
+                              style: AmbulanceFirstTypography.headlineMd(
+                                color: AmbulanceFirstColors.onSurface,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Track, review, and manage all your emergency & inter-facility requests',
-                            style: AmbulanceFirstTypography.bodySm(
-                              color: AmbulanceFirstColors.onSurfaceVariant,
+                            const SizedBox(height: 6),
+                            Text(
+                              'Track, review, and manage all your emergency & inter-facility requests',
+                              style: AmbulanceFirstTypography.bodySm(
+                                color: AmbulanceFirstColors.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      AmbulanceFirstButton(
-                        label: 'BOOK AMBULANCE',
-                        icon: Icons.add_circle_outline_rounded,
-                        onPressed: widget.onBookNewAmbulance,
-                        variant: AmbulanceFirstButtonVariant.primary,
-                      ),
-                    ],
-                  ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: AmbulanceFirstButton(
+                                label: 'BOOK AMBULANCE',
+                                icon: Icons.add_circle_outline_rounded,
+                                onPressed: widget.onBookNewAmbulance,
+                                variant: AmbulanceFirstButtonVariant.primary,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'My Transport Bookings',
+                                    style: AmbulanceFirstTypography.headlineMd(
+                                      color: AmbulanceFirstColors.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Track, review, and manage all your emergency & inter-facility requests',
+                                    style: AmbulanceFirstTypography.bodySm(
+                                      color: AmbulanceFirstColors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            AmbulanceFirstButton(
+                              label: 'BOOK AMBULANCE',
+                              icon: Icons.add_circle_outline_rounded,
+                              onPressed: widget.onBookNewAmbulance,
+                              variant: AmbulanceFirstButtonVariant.primary,
+                            ),
+                          ],
+                        ),
                   const SizedBox(height: 16),
 
                   // Search Bar & Filter Chips
@@ -308,25 +349,30 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         AmbulanceFirstBookingId(id: booking.id, fontSize: 14),
-                        const SizedBox(width: 8),
-                        Text(
+                        const Text(
                           '·',
                           style: TextStyle(
                             color: AmbulanceFirstColors.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          booking.patientName,
-                          style: AmbulanceFirstTypography.headlineSm(
-                            color: AmbulanceFirstColors.onSurface,
-                          ).copyWith(fontSize: 14),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 180),
+                          child: Text(
+                            booking.patientName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AmbulanceFirstTypography.headlineSm(
+                              color: AmbulanceFirstColors.onSurface,
+                            ).copyWith(fontSize: 14),
+                          ),
                         ),
-                        if (booking.priority == 'CRITICAL') ...[
-                          const SizedBox(width: 6),
+                        if (booking.priority == 'CRITICAL')
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
@@ -346,12 +392,13 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
                               ).copyWith(fontSize: 9),
                             ),
                           ),
-                        ],
                       ],
                     ),
                     const SizedBox(height: 3),
                     Text(
                       '${booking.ambulanceType} • ${booking.date} at ${booking.time}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AmbulanceFirstTypography.bodySm(
                         color: AmbulanceFirstColors.onSurfaceVariant,
                       ),
@@ -359,6 +406,7 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               AmbulanceFirstStatusBadge(status: booking.status),
             ],
           ),
@@ -373,32 +421,42 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
                 AmbulanceFirstSpacing.radiusMd,
               ),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.navigation_outlined,
-                  size: 14,
-                  color: AmbulanceFirstColors.clinicalCobalt,
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.navigation_outlined,
+                      size: 14,
+                      color: AmbulanceFirstColors.clinicalCobalt,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${booking.pickup} → ${booking.destination}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmbulanceFirstTypography.bodySm(
+                          color: AmbulanceFirstColors.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Expanded(
+                const SizedBox(height: 4),
+                Align(
+                  alignment: Alignment.centerRight,
                   child: Text(
-                    '${booking.pickup} → ${booking.destination}',
+                    booking.distanceKm > 0
+                        ? '${booking.distanceKm} km'
+                        : 'Distance unavailable',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AmbulanceFirstTypography.bodySm(
+                    style: AmbulanceFirstTypography.codeSm(
                       color: AmbulanceFirstColors.onSurface,
+                      weight: FontWeight.w600,
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  booking.distanceKm > 0
-                      ? '${booking.distanceKm} km'
-                      : 'Distance unavailable',
-                  style: AmbulanceFirstTypography.codeSm(
-                    color: AmbulanceFirstColors.onSurface,
-                    weight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -457,28 +515,35 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
 
           // Footer: Milestone or Crew + Total Amount
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    booking.status == 'IN_TRANSIT'
-                        ? Icons.directions_run_rounded
-                        : Icons.info_outline_rounded,
-                    size: 14,
-                    color: AmbulanceFirstColors.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    booking.tripMilestone.isNotEmpty
-                        ? booking.tripMilestone
-                        : booking.customerStatusLabel,
-                    style: AmbulanceFirstTypography.bodySm(
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(
+                      booking.status == 'IN_TRANSIT'
+                          ? Icons.directions_run_rounded
+                          : Icons.info_outline_rounded,
+                      size: 14,
                       color: AmbulanceFirstColors.onSurfaceVariant,
-                    ).copyWith(fontSize: 11),
-                  ),
-                ],
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        booking.tripMilestone.isNotEmpty
+                            ? booking.tripMilestone
+                            : booking.customerStatusLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmbulanceFirstTypography.bodySm(
+                          color: AmbulanceFirstColors.onSurfaceVariant,
+                        ).copyWith(fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               _bookingPrice(booking),
             ],
           ),

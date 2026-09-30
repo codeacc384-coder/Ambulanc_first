@@ -905,15 +905,17 @@ class SupabaseBookingRepository {
       throw FormatException('$rpcName returned malformed data.');
     }
     return value.map((row) {
-      if (row is! Map)
+      if (row is! Map) {
         throw FormatException('$rpcName returned malformed data.');
+      }
       return Map<String, dynamic>.from(row);
     }).toList();
   }
 
   Map<String, dynamic> _asMap(dynamic value, String rpcName) {
-    if (value is! Map)
+    if (value is! Map) {
       throw FormatException('$rpcName returned malformed data.');
+    }
     return Map<String, dynamic>.from(value);
   }
 

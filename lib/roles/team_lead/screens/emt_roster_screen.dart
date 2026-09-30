@@ -65,17 +65,16 @@ class _EmtRosterScreenState extends State<EmtRosterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final title = Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Emergency Medical Technicians & Paramedics', style: TeamLeadTheme.titleMedium(weight: FontWeight.w700)),
-                      Text('$availableCount available on active standby • $pediatricCount pediatric (PALS) certified', style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
+                      Text('Emergency Medical Technicians & Paramedics', maxLines: constraints.maxWidth < 700 ? 2 : 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.titleMedium(weight: FontWeight.w700)),
+                      Text('$availableCount available on active standby • $pediatricCount pediatric (PALS) certified', maxLines: 2, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
                     ],
-                  ),
-                  OutlinedButton.icon(
+                  );
+                  final refresh = OutlinedButton.icon(
                     onPressed: () => store.hydrateFromBackend(),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(TeamLeadTheme.radiusSm)),
@@ -83,8 +82,12 @@ class _EmtRosterScreenState extends State<EmtRosterScreen> {
                     ),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
                     label: Text('Refresh EMTs', style: TeamLeadTheme.body(weight: FontWeight.w700)),
-                  ),
-                ],
+                  );
+                  if (constraints.maxWidth < 700) {
+                    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 10), refresh]);
+                  }
+                  return Row(children: [Expanded(child: title), const SizedBox(width: 16), refresh]);
+                },
               ),
               const SizedBox(height: 16),
 
@@ -182,9 +185,9 @@ class _EmtRosterScreenState extends State<EmtRosterScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              Expanded(
+                child: Row(
                 children: [
                   CircleAvatar(
                     radius: 18,
@@ -195,22 +198,26 @@ class _EmtRosterScreenState extends State<EmtRosterScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Column(
+                  Expanded(
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(emt.name, style: TeamLeadTheme.body(weight: FontWeight.w700)),
-                      Text('${emt.experienceYears} yrs clinical experience', style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
+                      Text(emt.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.body(weight: FontWeight.w700)),
+                      Text('${emt.experienceYears} yrs clinical experience', maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
                     ],
+                    ),
                   ),
                 ],
+                ),
               ),
-              StatusBadge(status: emt.status),
+              const SizedBox(width: 8),
+              Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: StatusBadge(status: emt.status))),
             ],
           ),
           const SizedBox(height: 6),
 
           Text(emt.qualification, style: TeamLeadTheme.supportingBody(color: TeamLeadTheme.primaryDark, weight: FontWeight.w600)),
-          Text('Depot: ${emt.depot} • Phone: ${emt.phone}', style: TeamLeadTheme.small(color: TeamLeadTheme.textMuted)),
+          Text('Depot: ${emt.depot} • Phone: ${emt.phone}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.small(color: TeamLeadTheme.textMuted)),
 
           const SizedBox(height: 6),
           Row(

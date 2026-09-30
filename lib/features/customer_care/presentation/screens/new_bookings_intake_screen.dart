@@ -1,5 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../../../core/models/customer_care_case.dart';
 import '../../../../core/services/customer_care_repository.dart';
 import '../../theme/customer_care_colors.dart';
@@ -16,7 +19,8 @@ class NewBookingsIntakeScreen extends StatefulWidget {
   final ValueChanged<String> onShowToast;
 
   @override
-  State<NewBookingsIntakeScreen> createState() => _NewBookingsIntakeScreenState();
+  State<NewBookingsIntakeScreen> createState() =>
+      _NewBookingsIntakeScreenState();
 }
 
 class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
@@ -49,12 +53,15 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
 
     return cases.where((c) {
       // Must be new or contact pending
-      final isNew = c.status == 'NEW' || c.status == 'CUSTOMER_CARE_CONTACT_PENDING';
+      final isNew =
+          c.status == 'NEW' || c.status == 'CUSTOMER_CARE_CONTACT_PENDING';
       if (!isNew) return false;
 
       // Filter chips
       if (_selectedFilter == 'Code Red' && !c.isCodeRed) return false;
-      if (_selectedFilter == 'ICU/Ventilator' && !c.icu && !c.ventilator) return false;
+      if (_selectedFilter == 'ICU/Ventilator' && !c.icu && !c.ventilator) {
+        return false;
+      }
       if (_selectedFilter == 'Pediatric' && !c.pediatric) return false;
 
       // Search text
@@ -63,8 +70,14 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
         final matchesPatient = c.patientName.toLowerCase().contains(query);
         final matchesCaller = c.customerName.toLowerCase().contains(query);
         final matchesPhone = c.mobileNumber.toLowerCase().contains(query);
-        final matchesHospital = c.destinationHospital.toLowerCase().contains(query);
-        if (!matchesId && !matchesPatient && !matchesCaller && !matchesPhone && !matchesHospital) {
+        final matchesHospital = c.destinationHospital.toLowerCase().contains(
+          query,
+        );
+        if (!matchesId &&
+            !matchesPatient &&
+            !matchesCaller &&
+            !matchesPhone &&
+            !matchesHospital) {
           return false;
         }
       }
@@ -81,7 +94,11 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
       listenable: repo,
       builder: (context, _) {
         final allNewCases = repo.allCases
-            .where((c) => c.status == 'NEW' || c.status == 'CUSTOMER_CARE_CONTACT_PENDING')
+            .where(
+              (c) =>
+                  c.status == 'NEW' ||
+                  c.status == 'CUSTOMER_CARE_CONTACT_PENDING',
+            )
             .toList();
         final filteredCases = _getFilteredCases(repo.allCases);
 
@@ -129,29 +146,40 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'RAPID RESPONSE MANDATE',
-                                    style: CustomerCareTextStyles.labelSm.copyWith(
-                                      color: CustomerCareColors.error,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.5,
+                                  Expanded(
+                                    child: Text(
+                                      'RAPID RESPONSE MANDATE',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: CustomerCareTextStyles.labelSm
+                                          .copyWith(
+                                            color: CustomerCareColors.error,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.5,
+                                          ),
                                     ),
                                   ),
+                                  const SizedBox(width: 6),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.8),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
                                       'SOP 04-B',
-                                      style: CustomerCareTextStyles.labelSm.copyWith(
-                                        color: CustomerCareColors.error,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 9.5,
-                                      ),
+                                      style: CustomerCareTextStyles.labelSm
+                                          .copyWith(
+                                            color: CustomerCareColors.error,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 9.5,
+                                          ),
                                     ),
                                   ),
                                 ],
@@ -192,8 +220,12 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
                       child: LinearProgressIndicator(
                         value: 0.65,
                         minHeight: 4,
-                        backgroundColor: CustomerCareColors.error.withValues(alpha: 0.2),
-                        valueColor: const AlwaysStoppedAnimation<Color>(CustomerCareColors.error),
+                        backgroundColor: CustomerCareColors.error.withValues(
+                          alpha: 0.2,
+                        ),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          CustomerCareColors.error,
+                        ),
                       ),
                     ),
                   ],
@@ -203,42 +235,56 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
 
               // 2. Header & Timer
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Urgent Intake Queue',
-                        style: CustomerCareTextStyles.headlineSm.copyWith(
-                          fontWeight: FontWeight.w800,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Urgent Intake Queue',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: CustomerCareTextStyles.headlineSm.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                      Text(
-                        '${allNewCases.length} Inbound Requests Pending Initial Customer Care Contact',
-                        style: CustomerCareTextStyles.bodySm.copyWith(
-                          color: CustomerCareColors.onSurfaceVariant,
-                          fontSize: 11.5,
+                        Text(
+                          '${allNewCases.length} Inbound Requests Pending Initial Customer Care Contact',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: CustomerCareTextStyles.bodySm.copyWith(
+                            color: CustomerCareColors.onSurfaceVariant,
+                            fontSize: 11.5,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: CustomerCareColors.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.sync, size: 14, color: CustomerCareColors.primaryContainer),
+                        const Icon(
+                          Icons.sync,
+                          size: 14,
+                          color: CustomerCareColors.primaryContainer,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '00:${_timerSeconds.toString().padLeft(2, "0")}s',
-                          style: CustomerCareTextStyles.telemetryDisplay.copyWith(
-                            fontSize: 12,
-                            color: CustomerCareColors.primary,
-                          ),
+                          style: CustomerCareTextStyles.telemetryDisplay
+                              .copyWith(
+                                fontSize: 12,
+                                color: CustomerCareColors.primary,
+                              ),
                         ),
                       ],
                     ),
@@ -252,14 +298,20 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
                 decoration: BoxDecoration(
                   color: CustomerCareColors.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: CustomerCareColors.outlineVariant, width: 0.8),
+                  border: Border.all(
+                    color: CustomerCareColors.outlineVariant,
+                    width: 0.8,
+                  ),
                 ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (value) async {
                     setState(() {});
                     try {
-                      await CustomerCareRepository.instance.load(filter: 'NEW', search: value);
+                      await CustomerCareRepository.instance.load(
+                        filter: 'NEW',
+                        search: value,
+                      );
                     } catch (error) {
                       widget.onShowToast('Search failed: $error');
                     }
@@ -284,7 +336,10 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
                 ),
               ),
@@ -295,7 +350,10 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildIntakeFilterChip('All New', allNewCases.length.toString()),
+                    _buildIntakeFilterChip(
+                      'All New',
+                      allNewCases.length.toString(),
+                    ),
                     const SizedBox(width: 6),
                     _buildIntakeFilterChip(
                       'Code Red',
@@ -305,7 +363,10 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
                     const SizedBox(width: 6),
                     _buildIntakeFilterChip(
                       'ICU/Ventilator',
-                      allNewCases.where((c) => c.icu || c.ventilator).length.toString(),
+                      allNewCases
+                          .where((c) => c.icu || c.ventilator)
+                          .length
+                          .toString(),
                     ),
                     const SizedBox(width: 6),
                     _buildIntakeFilterChip(
@@ -325,7 +386,10 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
                   decoration: BoxDecoration(
                     color: CustomerCareColors.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: CustomerCareColors.outlineVariant, width: 0.8),
+                    border: Border.all(
+                      color: CustomerCareColors.outlineVariant,
+                      width: 0.8,
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -363,8 +427,19 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
                     return _NewIntakeCard(
                       caseItem: item,
                       onStartCallVerify: () => widget.onStartCallVerify(item),
-                      onCallPhone: () {
-                        widget.onShowToast('Dialing caller ${item.mobileNumber}...');
+                      onCallPhone: () async {
+                        final phone = item.mobileNumber.replaceAll(
+                          RegExp(r'[^0-9+]'),
+                          '',
+                        );
+                        final launched = await launchUrl(
+                          Uri(scheme: 'tel', path: phone),
+                        );
+                        if (!launched) {
+                          widget.onShowToast(
+                            'Unable to open the phone dialer for ${item.mobileNumber}.',
+                          );
+                        }
                       },
                     );
                   },
@@ -431,7 +506,9 @@ class _NewBookingsIntakeScreenState extends State<NewBookingsIntakeScreen> {
               child: Text(
                 count,
                 style: CustomerCareTextStyles.labelSm.copyWith(
-                  color: isSelected ? Colors.white : CustomerCareColors.onSurfaceVariant,
+                  color: isSelected
+                      ? Colors.white
+                      : CustomerCareColors.onSurfaceVariant,
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
                 ),
@@ -461,7 +538,10 @@ class _NewIntakeCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: CustomerCareColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: CustomerCareColors.outlineVariant, width: 0.8),
+        border: Border.all(
+          color: CustomerCareColors.outlineVariant,
+          width: 0.8,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -478,7 +558,9 @@ class _NewIntakeCard extends StatelessWidget {
           Container(
             height: 3.5,
             width: double.infinity,
-            color: caseItem.isCodeRed ? CustomerCareColors.error : CustomerCareColors.primaryContainer,
+            color: caseItem.isCodeRed
+                ? CustomerCareColors.error
+                : CustomerCareColors.primaryContainer,
           ),
           Padding(
             padding: const EdgeInsets.all(12),
@@ -487,58 +569,126 @@ class _NewIntakeCard extends StatelessWidget {
               children: [
                 // Header Row
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          '#${caseItem.id}',
-                          style: CustomerCareTextStyles.telemetryDisplay.copyWith(
-                            fontSize: 14,
-                            color: CustomerCareColors.primary,
-                            fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '#${caseItem.id}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: CustomerCareTextStyles.telemetryDisplay
+                                  .copyWith(
+                                    fontSize: 14,
+                                    color: CustomerCareColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              '• Updated ${caseItem.updatedAt.isEmpty ? caseItem.createdAt : caseItem.updatedAt}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: CustomerCareTextStyles.labelSm.copyWith(
+                                color: CustomerCareColors.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (caseItem.isCodeRed) ...[
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: CustomerCareColors.errorContainer,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: CustomerCareColors.error,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'CODE RED • URGENT',
+                                  style: CustomerCareTextStyles.labelSm.copyWith(
+                                    color: CustomerCareColors.onErrorContainer,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                      ),
+                    ],
+                  ],
+                ),
+                if (caseItem.isDraft) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: CustomerCareColors.warningContainer,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'DRAFT — CUSTOMER IS FILLING DETAILS',
+                      style: CustomerCareTextStyles.labelSm.copyWith(
+                        color: CustomerCareColors.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ] else if (caseItem.isSubmitted) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 2,
+                    children: [
+                      Text(
+                        'PENDING VERIFICATION',
+                        style: CustomerCareTextStyles.labelSm.copyWith(
+                          color: CustomerCareColors.warning,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      if (caseItem.submittedAt.isNotEmpty) ...[
                         Text(
-                          '• ${caseItem.createdAt}',
+                          'Submitted ${caseItem.submittedAt}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: CustomerCareTextStyles.labelSm.copyWith(
                             color: CustomerCareColors.onSurfaceVariant,
                           ),
                         ),
                       ],
-                    ),
-                    if (caseItem.isCodeRed)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: CustomerCareColors.errorContainer,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: CustomerCareColors.error,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'CODE RED • URGENT',
-                              style: CustomerCareTextStyles.labelSm.copyWith(
-                                color: CustomerCareColors.onErrorContainer,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 9,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 6),
 
                 // Patient Info & Medical Scenario
@@ -573,8 +723,9 @@ class _NewIntakeCard extends StatelessWidget {
                                     color: caseItem.isCodeRed
                                         ? CustomerCareColors.error
                                         : CustomerCareColors.onSurfaceVariant,
-                                    fontWeight:
-                                        caseItem.isCodeRed ? FontWeight.w600 : FontWeight.w400,
+                                    fontWeight: caseItem.isCodeRed
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -590,58 +741,77 @@ class _NewIntakeCard extends StatelessWidget {
 
                 // Caller Strip
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: CustomerCareColors.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.person,
-                            size: 15,
-                            color: CustomerCareColors.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Caller: ${caseItem.customerName} (${caseItem.relationship})',
-                            style: CustomerCareTextStyles.bodySm.copyWith(
-                              fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.person,
+                              size: 15,
+                              color: CustomerCareColors.onSurfaceVariant,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Caller: ${caseItem.customerName} (${caseItem.relationship})',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: CustomerCareTextStyles.bodySm.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            caseItem.mobileNumber,
-                            style: CustomerCareTextStyles.telemetryDisplay.copyWith(
-                              fontSize: 11,
-                              color: CustomerCareColors.primaryContainer,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: onCallPhone,
-                            icon: const Icon(Icons.call, size: 12),
-                            label: const Text('CALL NOW'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: CustomerCareColors.secondary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              textStyle: CustomerCareTextStyles.labelSm.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 9.5,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                caseItem.mobileNumber,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: CustomerCareTextStyles.telemetryDisplay.copyWith(
+                                  fontSize: 11,
+                                  color: CustomerCareColors.primaryContainer,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: onCallPhone,
+                              icon: const Icon(Icons.call, size: 12),
+                              label: const Text('CALL NOW'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: CustomerCareColors.secondary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                textStyle: CustomerCareTextStyles.labelSm.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 9.5,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -650,25 +820,40 @@ class _NewIntakeCard extends StatelessWidget {
 
                 // Route Snippet
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
-                    color: CustomerCareColors.surfaceContainerHigh.withValues(alpha: 0.5),
+                    color: CustomerCareColors.surfaceContainerHigh.withValues(
+                      alpha: 0.5,
+                    ),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.local_hospital, size: 13, color: CustomerCareColors.primary),
+                      const Icon(
+                        Icons.local_hospital,
+                        size: 13,
+                        color: CustomerCareColors.primary,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           caseItem.pickupAddress,
-                          style: CustomerCareTextStyles.bodySm.copyWith(fontSize: 11),
+                          style: CustomerCareTextStyles.bodySm.copyWith(
+                            fontSize: 11,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(Icons.arrow_forward, size: 12, color: CustomerCareColors.outline),
+                        child: Icon(
+                          Icons.arrow_forward,
+                          size: 12,
+                          color: CustomerCareColors.outline,
+                        ),
                       ),
                       Expanded(
                         child: Text(
@@ -683,7 +868,9 @@ class _NewIntakeCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        caseItem.distanceKm > 0 ? '${caseItem.distanceKm} km' : 'Route unavailable',
+                        caseItem.distanceKm > 0
+                            ? '${caseItem.distanceKm} km'
+                            : 'Route unavailable',
                         style: CustomerCareTextStyles.labelSm.copyWith(
                           color: CustomerCareColors.primary,
                           fontWeight: FontWeight.w700,
@@ -695,14 +882,28 @@ class _NewIntakeCard extends StatelessWidget {
                 const SizedBox(height: 8),
 
                 // Equipment Requirement Chips
+                if (caseItem.ambulanceCategory.isNotEmpty) ...[
+                  Text(
+                    'Ambulance: ${caseItem.ambulanceCategory}',
+                    style: CustomerCareTextStyles.bodySm.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
                 Wrap(
                   spacing: 5,
                   runSpacing: 4,
                   children: [
                     if (caseItem.oxygen) _buildChip('O2 Therapy'),
                     if (caseItem.icu) _buildChip('ICU Spec', isAlert: true),
+                    if (caseItem.ventilator) _buildChip('Ventilator'),
+                    if (caseItem.cardiacMonitor) _buildChip('Cardiac Monitor'),
                     if (caseItem.doctor) _buildChip('Physician Required'),
                     if (caseItem.emt) _buildChip('ACLS'),
+                    if (caseItem.attendant) _buildChip('Medical Attendant'),
+                    if (caseItem.stretcher) _buildChip('Stretcher'),
+                    if (caseItem.wheelchair) _buildChip('Wheelchair'),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -711,7 +912,11 @@ class _NewIntakeCard extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: onStartCallVerify,
                   icon: const Icon(Icons.phone_forwarded, size: 16),
-                  label: const Text('START CALL & VERIFY'),
+                  label: Text(
+                    caseItem.isDraft
+                        ? 'OPEN DRAFT & CALL CUSTOMER'
+                        : 'START CALL & VERIFY',
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: CustomerCareColors.primaryContainer,
                     foregroundColor: Colors.white,
@@ -744,7 +949,9 @@ class _NewIntakeCard extends StatelessWidget {
       child: Text(
         label,
         style: CustomerCareTextStyles.labelSm.copyWith(
-          color: isAlert ? CustomerCareColors.onErrorContainer : CustomerCareColors.onSurfaceVariant,
+          color: isAlert
+              ? CustomerCareColors.onErrorContainer
+              : CustomerCareColors.onSurfaceVariant,
           fontWeight: FontWeight.w600,
           fontSize: 9.5,
         ),

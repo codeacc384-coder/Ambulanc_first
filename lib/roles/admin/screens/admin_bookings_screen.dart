@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/admin_models.dart';
 import '../store/admin_store.dart';
 import '../theme/admin_theme.dart';
@@ -41,7 +42,9 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
         final filtered = allBookings.where((b) {
           // Search filter
           if (q.isNotEmpty) {
-            final text = '${b.id} ${b.patientName} ${b.customerName} ${b.pickupLocation} ${b.destinationLocation} ${b.serviceCategory} ${b.ambulanceId ?? ""} ${b.driverName ?? ""}'.toLowerCase();
+            final text =
+                '${b.id} ${b.patientName} ${b.customerName} ${b.pickupLocation} ${b.destinationLocation} ${b.serviceCategory} ${b.ambulanceId ?? ""} ${b.driverName ?? ""}'
+                    .toLowerCase();
             if (!text.contains(q)) return false;
           }
 
@@ -52,20 +55,26 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                 b.status != BookingStatus.patientPickedUp) {
               return false;
             }
-          } else if (_selectedStatusFilter == 'NEW' && b.status != BookingStatus.newBooking) {
+          } else if (_selectedStatusFilter == 'NEW' &&
+              b.status != BookingStatus.newBooking) {
             return false;
-          } else if (_selectedStatusFilter == 'ASSIGNED' && b.status != BookingStatus.assigned) {
+          } else if (_selectedStatusFilter == 'ASSIGNED' &&
+              b.status != BookingStatus.assigned) {
             return false;
-          } else if (_selectedStatusFilter == 'QUOTATION' && b.status != BookingStatus.quotationSent) {
+          } else if (_selectedStatusFilter == 'QUOTATION' &&
+              b.status != BookingStatus.quotationSent) {
             return false;
-          } else if (_selectedStatusFilter == 'COMPLETED' && b.status != BookingStatus.serviceCompleted) {
+          } else if (_selectedStatusFilter == 'COMPLETED' &&
+              b.status != BookingStatus.serviceCompleted) {
             return false;
-          } else if (_selectedStatusFilter == 'CANCELLED' && b.status != BookingStatus.cancelled) {
+          } else if (_selectedStatusFilter == 'CANCELLED' &&
+              b.status != BookingStatus.cancelled) {
             return false;
           }
 
           // Category filter
-          if (_selectedCategoryFilter != 'ALL' && b.serviceCategory != _selectedCategoryFilter) {
+          if (_selectedCategoryFilter != 'ALL' &&
+              b.serviceCategory != _selectedCategoryFilter) {
             return false;
           }
 
@@ -88,20 +97,37 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.local_shipping_rounded, size: 20, color: StitchTheme.primaryContainer),
+                            const Icon(
+                              Icons.local_shipping_rounded,
+                              size: 20,
+                              color: StitchTheme.primaryContainer,
+                            ),
                             const SizedBox(width: 8),
-                            Text('All Bookings', style: StitchTheme.headlineMd(color: StitchTheme.onSurface)),
+                            Text(
+                              'All Bookings',
+                              style: StitchTheme.headlineMd(
+                                color: StitchTheme.onSurface,
+                              ),
+                            ),
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: StitchTheme.tertiaryFixed,
-                            borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              StitchTheme.radiusSm,
+                            ),
                           ),
                           child: Text(
                             'LIVE TELEMETRY',
-                            style: StitchTheme.labelSm(color: StitchTheme.onTertiaryFixed, weight: FontWeight.w700),
+                            style: StitchTheme.labelSm(
+                              color: StitchTheme.onTertiaryFixed,
+                              weight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
@@ -109,7 +135,9 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                     const SizedBox(height: 4),
                     Text(
                       'Search, monitor, and dispatch all active ambulance and medevac transport streams.',
-                      style: StitchTheme.bodySm(color: StitchTheme.onSurfaceVariant),
+                      style: StitchTheme.bodySm(
+                        color: StitchTheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -120,7 +148,10 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                           child: _ActionButton(
                             icon: Icons.file_download_outlined,
                             label: 'Export',
-                            onTap: () => showStitchToast(context, 'Exporting dispatch log to CSV...'),
+                            onTap: () => showStitchToast(
+                              context,
+                              'Exporting dispatch log to CSV...',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -128,19 +159,40 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                           child: _ActionButton(
                             icon: Icons.sync_rounded,
                             label: 'Sync Now',
-                            onTap: () async { await widget.store.refresh(); if (!context.mounted) return; showStitchToast(context, widget.store.errorMessage == null ? 'Booking data refreshed from Supabase.' : 'Booking refresh failed.', isError: widget.store.errorMessage != null); },
+                            onTap: () async {
+                              await widget.store.refresh();
+                              if (!context.mounted) return;
+                              showStitchToast(
+                                context,
+                                widget.store.errorMessage == null
+                                    ? 'Booking data refreshed from Supabase.'
+                                    : 'Booking refresh failed.',
+                                isError: widget.store.errorMessage != null,
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => showStitchToast(context, 'Admin booking creation is not connected to the controlled booking RPC yet.', isError: true),
-                            icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
+                            onPressed: () => showStitchToast(
+                              context,
+                              'Admin booking creation is not connected to the controlled booking RPC yet.',
+                              isError: true,
+                            ),
+                            icon: const Icon(
+                              Icons.add_circle_outline_rounded,
+                              size: 16,
+                            ),
                             label: const Text('Create'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: StitchTheme.primaryContainer,
                               foregroundColor: StitchTheme.onPrimary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(StitchTheme.radiusSm)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  StitchTheme.radiusSm,
+                                ),
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 8),
                             ),
                           ),
@@ -162,9 +214,16 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        hintText: 'Search ID, Patient, Customer, Destination...',
-                        hintStyle: StitchTheme.bodySm(color: StitchTheme.outline),
-                        prefixIcon: const Icon(Icons.search_rounded, size: 20, color: StitchTheme.onSurfaceVariant),
+                        hintText:
+                            'Search ID, Patient, Customer, Destination...',
+                        hintStyle: StitchTheme.bodySm(
+                          color: StitchTheme.outline,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          size: 20,
+                          color: StitchTheme.onSurfaceVariant,
+                        ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.close_rounded, size: 18),
@@ -176,14 +235,25 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                             : null,
                         filled: true,
                         fillColor: StitchTheme.surfaceContainerLowest,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
-                          borderSide: const BorderSide(color: StitchTheme.borderSubtle),
+                          borderRadius: BorderRadius.circular(
+                            StitchTheme.radiusSm,
+                          ),
+                          borderSide: const BorderSide(
+                            color: StitchTheme.borderSubtle,
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
-                          borderSide: const BorderSide(color: StitchTheme.borderSubtle),
+                          borderRadius: BorderRadius.circular(
+                            StitchTheme.radiusSm,
+                          ),
+                          borderSide: const BorderSide(
+                            color: StitchTheme.borderSubtle,
+                          ),
                         ),
                       ),
                     ),
@@ -193,8 +263,20 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('TRIAGE & MISSION STATE', style: StitchTheme.labelSm(color: StitchTheme.outline, weight: FontWeight.w700)),
-                        Text('Showing ${filtered.length} of ${allBookings.length}', style: StitchTheme.labelSm(color: StitchTheme.primaryContainer, weight: FontWeight.w700)),
+                        Text(
+                          'TRIAGE & MISSION STATE',
+                          style: StitchTheme.labelSm(
+                            color: StitchTheme.outline,
+                            weight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          'Showing ${filtered.length} of ${allBookings.length}',
+                          style: StitchTheme.labelSm(
+                            color: StitchTheme.primaryContainer,
+                            weight: FontWeight.w700,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -206,7 +288,8 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                             label: 'All',
                             count: '${allBookings.length}',
                             isSelected: _selectedStatusFilter == 'ALL',
-                            onTap: () => setState(() => _selectedStatusFilter = 'ALL'),
+                            onTap: () =>
+                                setState(() => _selectedStatusFilter = 'ALL'),
                           ),
                           const SizedBox(width: 6),
                           _FilterPill(
@@ -214,35 +297,48 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                             count: '${widget.store.activeTripsCount}',
                             isSelected: _selectedStatusFilter == 'ACTIVE',
                             hasPulse: true,
-                            onTap: () => setState(() => _selectedStatusFilter = 'ACTIVE'),
+                            onTap: () => setState(
+                              () => _selectedStatusFilter = 'ACTIVE',
+                            ),
                           ),
                           const SizedBox(width: 6),
                           _FilterPill(
                             label: 'NEW',
-                            count: '${allBookings.where((b) => b.status == BookingStatus.newBooking).length}',
+                            count:
+                                '${allBookings.where((b) => b.status == BookingStatus.newBooking).length}',
                             isSelected: _selectedStatusFilter == 'NEW',
-                            onTap: () => setState(() => _selectedStatusFilter = 'NEW'),
+                            onTap: () =>
+                                setState(() => _selectedStatusFilter = 'NEW'),
                           ),
                           const SizedBox(width: 6),
                           _FilterPill(
                             label: 'ASSIGNED',
-                            count: '${allBookings.where((b) => b.status == BookingStatus.assigned).length}',
+                            count:
+                                '${allBookings.where((b) => b.status == BookingStatus.assigned).length}',
                             isSelected: _selectedStatusFilter == 'ASSIGNED',
-                            onTap: () => setState(() => _selectedStatusFilter = 'ASSIGNED'),
+                            onTap: () => setState(
+                              () => _selectedStatusFilter = 'ASSIGNED',
+                            ),
                           ),
                           const SizedBox(width: 6),
                           _FilterPill(
                             label: 'QUOTATION',
-                            count: '${allBookings.where((b) => b.status == BookingStatus.quotationSent).length}',
+                            count:
+                                '${allBookings.where((b) => b.status == BookingStatus.quotationSent).length}',
                             isSelected: _selectedStatusFilter == 'QUOTATION',
-                            onTap: () => setState(() => _selectedStatusFilter = 'QUOTATION'),
+                            onTap: () => setState(
+                              () => _selectedStatusFilter = 'QUOTATION',
+                            ),
                           ),
                           const SizedBox(width: 6),
                           _FilterPill(
                             label: 'COMPLETED',
-                            count: '${allBookings.where((b) => b.status == BookingStatus.serviceCompleted).length}',
+                            count:
+                                '${allBookings.where((b) => b.status == BookingStatus.serviceCompleted).length}',
                             isSelected: _selectedStatusFilter == 'COMPLETED',
-                            onTap: () => setState(() => _selectedStatusFilter = 'COMPLETED'),
+                            onTap: () => setState(
+                              () => _selectedStatusFilter = 'COMPLETED',
+                            ),
                           ),
                         ],
                       ),
@@ -254,30 +350,55 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          Text('Class: ', style: StitchTheme.labelSm(color: StitchTheme.outline)),
+                          Text(
+                            'Class: ',
+                            style: StitchTheme.labelSm(
+                              color: StitchTheme.outline,
+                            ),
+                          ),
                           const SizedBox(width: 4),
                           _CategoryPill(
                             label: 'ROAD',
                             isSelected: _selectedCategoryFilter == 'ROAD',
-                            onTap: () => setState(() => _selectedCategoryFilter = _selectedCategoryFilter == 'ROAD' ? 'ALL' : 'ROAD'),
+                            onTap: () => setState(
+                              () => _selectedCategoryFilter =
+                                  _selectedCategoryFilter == 'ROAD'
+                                  ? 'ALL'
+                                  : 'ROAD',
+                            ),
                           ),
                           const SizedBox(width: 6),
                           _CategoryPill(
                             label: 'AIR MEDEVAC',
                             isSelected: _selectedCategoryFilter == 'AIR',
-                            onTap: () => setState(() => _selectedCategoryFilter = _selectedCategoryFilter == 'AIR' ? 'ALL' : 'AIR'),
+                            onTap: () => setState(
+                              () => _selectedCategoryFilter =
+                                  _selectedCategoryFilter == 'AIR'
+                                  ? 'ALL'
+                                  : 'AIR',
+                            ),
                           ),
                           const SizedBox(width: 6),
                           _CategoryPill(
                             label: 'RAIL',
                             isSelected: _selectedCategoryFilter == 'RAILWAY',
-                            onTap: () => setState(() => _selectedCategoryFilter = _selectedCategoryFilter == 'RAILWAY' ? 'ALL' : 'RAILWAY'),
+                            onTap: () => setState(
+                              () => _selectedCategoryFilter =
+                                  _selectedCategoryFilter == 'RAILWAY'
+                                  ? 'ALL'
+                                  : 'RAILWAY',
+                            ),
                           ),
                           const SizedBox(width: 6),
                           _CategoryPill(
                             label: 'DEAD BODY',
                             isSelected: _selectedCategoryFilter == 'DEAD_BODY',
-                            onTap: () => setState(() => _selectedCategoryFilter = _selectedCategoryFilter == 'DEAD_BODY' ? 'ALL' : 'DEAD_BODY'),
+                            onTap: () => setState(
+                              () => _selectedCategoryFilter =
+                                  _selectedCategoryFilter == 'DEAD_BODY'
+                                  ? 'ALL'
+                                  : 'DEAD_BODY',
+                            ),
                           ),
                         ],
                       ),
@@ -293,11 +414,23 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                   alignment: Alignment.center,
                   child: Column(
                     children: [
-                      const Icon(Icons.assignment_late_outlined, size: 48, color: StitchTheme.outline),
+                      const Icon(
+                        Icons.assignment_late_outlined,
+                        size: 48,
+                        color: StitchTheme.outline,
+                      ),
                       const SizedBox(height: 12),
-                      Text('No bookings match your filters', style: StitchTheme.headlineSm(color: StitchTheme.onSurface)),
+                      Text(
+                        'No bookings match your filters',
+                        style: StitchTheme.headlineSm(
+                          color: StitchTheme.onSurface,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text('Try resetting the search keywords or status filter.', style: StitchTheme.bodySm()),
+                      Text(
+                        'Try resetting the search keywords or status filter.',
+                        style: StitchTheme.bodySm(),
+                      ),
                       const SizedBox(height: 12),
                       OutlinedButton(
                         onPressed: () {
@@ -314,7 +447,9 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                 )
               else
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: StitchTheme.margin),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: StitchTheme.margin,
+                  ),
                   child: Column(
                     children: [
                       for (final booking in filtered) ...[
@@ -337,7 +472,11 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
 }
 
 class _ActionButton extends StatelessWidget {
-  const _ActionButton({required this.icon, required this.label, required this.onTap});
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
   final IconData icon;
   final String label;
   final VoidCallback onTap;
@@ -359,7 +498,13 @@ class _ActionButton extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: StitchTheme.secondary),
             const SizedBox(width: 4),
-            Text(label, style: StitchTheme.labelSm(color: StitchTheme.onSurface, weight: FontWeight.w600)),
+            Text(
+              label,
+              style: StitchTheme.labelSm(
+                color: StitchTheme.onSurface,
+                weight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -390,7 +535,9 @@ class _FilterPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: isSelected ? StitchTheme.primaryContainer : StitchTheme.surfaceContainerHigh,
+          color: isSelected
+              ? StitchTheme.primaryContainer
+              : StitchTheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
         ),
         child: Row(
@@ -400,7 +547,10 @@ class _FilterPill extends StatelessWidget {
               Container(
                 width: 6,
                 height: 6,
-                decoration: const BoxDecoration(color: StitchTheme.error, shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: StitchTheme.error,
+                  shape: BoxShape.circle,
+                ),
               ),
               const SizedBox(width: 4),
             ],
@@ -415,7 +565,9 @@ class _FilterPill extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.white.withValues(alpha: 0.25) : StitchTheme.surfaceContainerHighest,
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.25)
+                    : StitchTheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(2),
               ),
               child: Text(
@@ -434,7 +586,11 @@ class _FilterPill extends StatelessWidget {
 }
 
 class _CategoryPill extends StatelessWidget {
-  const _CategoryPill({required this.label, required this.isSelected, required this.onTap});
+  const _CategoryPill({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
@@ -447,13 +603,17 @@ class _CategoryPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
-          color: isSelected ? StitchTheme.surfaceContainer : StitchTheme.surfaceContainerLow,
+          color: isSelected
+              ? StitchTheme.surfaceContainer
+              : StitchTheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
         ),
         child: Text(
           label,
           style: StitchTheme.labelSm(
-            color: isSelected ? StitchTheme.primaryContainer : StitchTheme.onSurfaceVariant,
+            color: isSelected
+                ? StitchTheme.primaryContainer
+                : StitchTheme.onSurfaceVariant,
             weight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
@@ -494,8 +654,8 @@ class _BookingCard extends StatelessWidget {
                 color: booking.urgencyLevel == 'CRITICAL'
                     ? StitchTheme.error
                     : booking.urgencyLevel == 'HIGH'
-                        ? StitchTheme.warning
-                        : StitchTheme.primaryContainer,
+                    ? StitchTheme.warning
+                    : StitchTheme.primaryContainer,
               ),
 
               // Card Body
@@ -509,20 +669,54 @@ class _BookingCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text('#${booking.id}', style: StitchTheme.labelLg(weight: FontWeight.w700)),
-                                  const SizedBox(width: 4),
-                                  Text('· ${DateTime.now().difference(booking.createdAt).inMinutes}m ago', style: StitchTheme.labelSm(color: StitchTheme.outline)),
-                                ],
-                              ),
-                              Text(booking.customerName, style: StitchTheme.labelSm(color: StitchTheme.primaryContainer, weight: FontWeight.w600)),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        '#${booking.id}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: StitchTheme.labelLg(
+                                          weight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '· ${DateTime.now().difference(booking.createdAt).inMinutes}m ago',
+                                      maxLines: 1,
+                                      style: StitchTheme.labelSm(
+                                        color: StitchTheme.outline,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  booking.customerName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: StitchTheme.labelSm(
+                                    color: StitchTheme.primaryContainer,
+                                    weight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          StitchStatusBadge.fromBooking(booking.status),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerRight,
+                              child: StitchStatusBadge.fromBooking(
+                                booking.status,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -533,19 +727,39 @@ class _BookingCard extends StatelessWidget {
                           CircleAvatar(
                             radius: 13,
                             backgroundColor: StitchTheme.primaryContainer,
-                            child: Text(booking.patientInitials, style: StitchTheme.labelSm(color: Colors.white, weight: FontWeight.w700)),
+                            child: Text(
+                              booking.patientInitials,
+                              style: StitchTheme.labelSm(
+                                color: Colors.white,
+                                weight: FontWeight.w700,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('${booking.patientName} (${booking.patientAge}y ${booking.patientGender[0]})', style: StitchTheme.bodySm(color: StitchTheme.onSurface, weight: FontWeight.w600)),
-                                Text(booking.patientCondition, style: StitchTheme.bodySm(color: StitchTheme.onSurfaceVariant)),
+                                Text(
+                                  '${booking.patientName} (${booking.patientAge}y ${booking.patientGender[0]})',
+                                  style: StitchTheme.bodySm(
+                                    color: StitchTheme.onSurface,
+                                    weight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  booking.patientCondition,
+                                  style: StitchTheme.bodySm(
+                                    color: StitchTheme.onSurfaceVariant,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                          Text(money(booking.quotationTotal), style: StitchTheme.labelMd(weight: FontWeight.w700)),
+                          Text(
+                            money(booking.quotationTotal),
+                            style: StitchTheme.labelMd(weight: FontWeight.w700),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -555,18 +769,26 @@ class _BookingCard extends StatelessWidget {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: StitchTheme.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            StitchTheme.radiusSm,
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.near_me_rounded, size: 13, color: StitchTheme.primaryContainer),
+                            const Icon(
+                              Icons.near_me_rounded,
+                              size: 13,
+                              color: StitchTheme.primaryContainer,
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 '${booking.pickupLocation} → ${booking.destinationLocation}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: StitchTheme.labelSm(color: StitchTheme.onSurfaceVariant),
+                                style: StitchTheme.labelSm(
+                                  color: StitchTheme.onSurfaceVariant,
+                                ),
                               ),
                             ),
                           ],
@@ -575,32 +797,59 @@ class _BookingCard extends StatelessWidget {
                       const SizedBox(height: 8),
 
                       // Footer Actions: 360 View & Quick status
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        runSpacing: 8,
                         children: [
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               if (booking.ambulanceId != null) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: StitchTheme.surfaceContainer,
                                     borderRadius: BorderRadius.circular(2),
                                   ),
-                                  child: Text(booking.ambulanceId!, style: StitchTheme.labelSm(weight: FontWeight.w700)),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 120,
+                                    ),
+                                    child: Text(
+                                      booking.ambulanceId!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: StitchTheme.labelSm(
+                                        weight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(width: 6),
                               ],
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: booking.paymentStatus == 'PAID' ? StitchTheme.tertiaryFixed.withValues(alpha: 0.6) : StitchTheme.secondaryContainer,
+                                  color: booking.paymentStatus == 'PAID'
+                                      ? StitchTheme.tertiaryFixed.withValues(
+                                          alpha: 0.6,
+                                        )
+                                      : StitchTheme.secondaryContainer,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                                 child: Text(
                                   booking.paymentStatus,
                                   style: StitchTheme.labelSm(
-                                    color: booking.paymentStatus == 'PAID' ? StitchTheme.tertiary : StitchTheme.onSecondaryContainer,
+                                    color: booking.paymentStatus == 'PAID'
+                                        ? StitchTheme.tertiary
+                                        : StitchTheme.onSecondaryContainer,
                                     weight: FontWeight.w700,
                                   ),
                                 ),
@@ -609,13 +858,23 @@ class _BookingCard extends StatelessWidget {
                           ),
                           ElevatedButton.icon(
                             onPressed: onTap360,
-                            icon: const Icon(Icons.visibility_rounded, size: 14),
+                            icon: const Icon(
+                              Icons.visibility_rounded,
+                              size: 14,
+                            ),
                             label: const Text('360° View'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: StitchTheme.primaryContainer,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(StitchTheme.radiusSm)),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  StitchTheme.radiusSm,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               minimumSize: const Size(0, 30),
                             ),
                           ),

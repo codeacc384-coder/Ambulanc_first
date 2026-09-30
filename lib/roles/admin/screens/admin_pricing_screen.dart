@@ -71,9 +71,13 @@ class _AdminPricingScreenState extends State<AdminPricingScreen> {
                               color: StitchTheme.primaryContainer,
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              'Pricing & Rate Card Engine',
-                              style: StitchTheme.headlineMd(),
+                            Flexible(
+                              child: Text(
+                                'Pricing & Rate Card Engine',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: StitchTheme.headlineMd(),
+                              ),
                             ),
                           ],
                         ),
@@ -104,38 +108,39 @@ class _AdminPricingScreenState extends State<AdminPricingScreen> {
                       alignment: WrapAlignment.spaceBetween,
                       runSpacing: 8,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: StitchTheme.tertiaryFixed,
-                                borderRadius: BorderRadius.circular(
-                                  StitchTheme.radiusSm,
-                                ),
-                              ),
-                              child: Text(
-                                'ACTIVE VERSION: ${active.versionId}',
-                                style: StitchTheme.labelSm(
-                                  color: StitchTheme.onTertiaryFixed,
-                                  weight: FontWeight.w700,
-                                ),
-                              ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: StitchTheme.tertiaryFixed,
+                            borderRadius: BorderRadius.circular(
+                              StitchTheme.radiusSm,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Effective: ${active.effectiveDate}',
-                              style: StitchTheme.labelSm(
-                                color: StitchTheme.outline,
-                              ),
+                          ),
+                          child: Text(
+                            'ACTIVE VERSION: ${active.versionId}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: StitchTheme.labelSm(
+                              color: StitchTheme.onTertiaryFixed,
+                              weight: FontWeight.w700,
                             ),
-                          ],
+                          ),
+                        ),
+                        Text(
+                          'Effective: ${active.effectiveDate}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: StitchTheme.labelSm(
+                            color: StitchTheme.outline,
+                          ),
                         ),
                         Text(
                           active.approvedBy,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: StitchTheme.labelSm(
                             color: StitchTheme.tertiary,
                             weight: FontWeight.w600,
@@ -284,6 +289,7 @@ class _AdminPricingScreenState extends State<AdminPricingScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
+                            isExpanded: true,
                             initialValue: _calcCategory,
                             decoration: const InputDecoration(
                               labelText: 'Category',
@@ -313,6 +319,7 @@ class _AdminPricingScreenState extends State<AdminPricingScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: DropdownButtonFormField<String>(
+                            isExpanded: true,
                             initialValue: _calcSubType,
                             decoration: const InputDecoration(
                               labelText: 'Acuity Subtype',

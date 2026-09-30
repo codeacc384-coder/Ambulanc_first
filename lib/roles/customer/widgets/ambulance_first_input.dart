@@ -39,10 +39,14 @@ class AmbulanceFirstTextInput extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              label,
-              style: AmbulanceFirstTypography.labelMd(color: AmbulanceFirstColors.onSurface).copyWith(
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AmbulanceFirstTypography.labelMd(color: AmbulanceFirstColors.onSurface).copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             if (isRequired)
@@ -102,10 +106,14 @@ class AmbulanceFirstDropdown<T> extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              label,
-              style: AmbulanceFirstTypography.labelMd(color: AmbulanceFirstColors.onSurface).copyWith(
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AmbulanceFirstTypography.labelMd(color: AmbulanceFirstColors.onSurface).copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             if (isRequired)
@@ -118,6 +126,7 @@ class AmbulanceFirstDropdown<T> extends StatelessWidget {
         const SizedBox(height: 6),
         DropdownButtonFormField<T>(
           initialValue: value,
+          isExpanded: true,
           items: items,
           onChanged: onChanged,
           validator: validator,

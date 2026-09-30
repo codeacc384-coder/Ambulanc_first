@@ -11,15 +11,11 @@ import '../../../core/services/shared_booking_store.dart';
 import '../../../core/services/supabase_booking_repository.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../../core/services/supabase_workflow_repository.dart';
-import '../../../core/services/route_telemetry_service.dart';
 import '../../../core/services/live_road_route_service.dart';
 import '../../../core/services/driver_navigation_service.dart';
 import '../theme/ambulance_first_theme.dart';
-import '../widgets/ambulance_first_booking_id.dart';
 import '../widgets/ambulance_first_card.dart';
 import '../widgets/ambulance_first_states.dart';
-import '../widgets/ambulance_first_status_badge.dart';
-import '../widgets/ambulance_first_telemetry.dart';
 import '../widgets/ambulance_first_timeline.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../widgets/customer_google_trip_map.dart';
@@ -169,14 +165,6 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
         patientOnboardConfirmed: booking.patientOnboardConfirmed,
       ) ==
       LiveTripLeg.pickup;
-
-  String _gpsUpdateLabel(DateTime? updatedAt) {
-    if (updatedAt == null) return 'Unavailable';
-    final age = DateTime.now().difference(updatedAt);
-    if (age.inSeconds < 60) return '${age.inSeconds.clamp(0, 59)}s ago';
-    if (age.inMinutes < 60) return '${age.inMinutes}m ago';
-    return '${age.inHours}h ago';
-  }
 
   Future<void> _refreshRoadRoute(Booking booking, {bool force = false}) async {
     // Invalidate an older response whenever a newer telemetry refresh arrives;
@@ -412,25 +400,30 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
                 children: [
                   // Header
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Active Mission Tracking',
-                            style: AmbulanceFirstTypography.headlineMd(
-                              color: AmbulanceFirstColors.onSurface,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Active Mission Tracking',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AmbulanceFirstTypography.headlineMd(
+                                color: AmbulanceFirstColors.onSurface,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Live GPS vector telemetry, patient telemetry, and crew communication',
-                            style: AmbulanceFirstTypography.bodySm(
-                              color: AmbulanceFirstColors.onSurfaceVariant,
+                            const SizedBox(height: 2),
+                            Text(
+                              'Live GPS vector telemetry, patient telemetry, and crew communication',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AmbulanceFirstTypography.bodySm(
+                                color: AmbulanceFirstColors.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       if (trips.length > 1)
                         DropdownButton<Booking>(
@@ -506,438 +499,6 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
       booking: booking,
       route: route,
       isPickupLeg: isPickupLeg,
-    );
-  }
-
-  /// Retained temporarily as a visual fallback reference while the Google Maps
-  /// package is rolled out. It is no longer used by the active-trip UI.
-  Widget _buildLegacyMapCanvas(Booking b) {
-    // Booking telemetry is canonical. The pickup and hospital coordinates are
-    // fixed booking locations, never inferred from either user's handset.
-    final hasAmbulanceLocation = DriverNavigationService.hasValidCoordinates(
-      b.driverLatitude,
-      b.driverLongitude,
-    );
-    final hasTelemetry =
-        hasAmbulanceLocation &&
-        LiveRoadRouteService.hasFreshDriverLocation(b.driverLocationUpdatedAt);
-    final isPickupLeg = _isPickupLeg(b);
-    final route =
-        _liveRoadRoute?.legKey ==
-            '${b.id}:${isPickupLeg ? 'PICKUP' : 'HOSPITAL'}'
-        ? _liveRoadRoute
-        : null;
-    final atPickup =
-        hasTelemetry &&
-        b.pickupLatitude != null &&
-        b.pickupLongitude != null &&
-        RouteTelemetryService.withinArrivalThreshold(
-          fromLatitude: b.driverLatitude!,
-          fromLongitude: b.driverLongitude!,
-          toLatitude: b.pickupLatitude!,
-          toLongitude: b.pickupLongitude!,
-        );
-    return AmbulanceFirstCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Telemetry Top Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    AmbulanceFirstBookingId(id: b.id, fontSize: 14),
-                    const SizedBox(width: 8),
-                    AmbulanceFirstStatusBadge(status: b.status),
-                  ],
-                ),
-                Text(
-                  b.vehicleNumber,
-                  style: AmbulanceFirstTypography.codeSm(
-                    color: AmbulanceFirstColors.clinicalCobalt,
-                    weight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-
-          // Live Route Canvas
-          Container(
-            height: 320,
-            color: AmbulanceFirstColors.surfaceContainerHigh.withValues(
-              alpha: 0.4,
-            ),
-            child: Stack(
-              children: [
-                // Map-coordinate canvas. Route geometry is rendered only when
-                // the routing provider returned a genuine road polyline.
-                CustomPaint(
-                  size: const Size(double.infinity, 320),
-                  painter: _RouteGridPainter(
-                    booking: b,
-                    hasTelemetry: hasTelemetry,
-                    routeGeometry: route?.geometry ?? const [],
-                  ),
-                ),
-
-                // Live Coordinates & Telemetry Overlay Box (Top Left)
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AmbulanceFirstColors.surfaceContainerLowest
-                          .withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(
-                        AmbulanceFirstSpacing.radiusSm,
-                      ),
-                      border: Border.all(
-                        color: AmbulanceFirstColors.borderSubtle,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: hasTelemetry
-                                    ? AmbulanceFirstColors.telemetryLive
-                                    : AmbulanceFirstColors.telemetryUnavailable,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              hasTelemetry &&
-                                      b.driverLatitude != null &&
-                                      b.driverLongitude != null
-                                  ? (isPickupLeg && atPickup
-                                        ? 'AT PICKUP LOCATION'
-                                        : 'GPS LOCK: ${b.driverLatitude}°, ${b.driverLongitude}°')
-                                  : hasAmbulanceLocation
-                                  ? 'GPS STALE: ${b.driverLatitude}°, ${b.driverLongitude}°'
-                                  : 'GPS UNAVAILABLE',
-                              style: AmbulanceFirstTypography.codeSm(
-                                color: AmbulanceFirstColors.onSurface,
-                                weight: FontWeight.w700,
-                              ).copyWith(fontSize: 10),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          hasTelemetry
-                              ? (isPickupLeg && atPickup
-                                    ? 'Arrived at pickup · Distance: 0 km'
-                                    : 'Velocity: ${b.driverSpeedKmh > 0 ? "${b.driverSpeedKmh.toInt()} km/h" : "Unavailable"} · Heading: ${b.driverHeading != 0 ? "${b.driverHeading.toStringAsFixed(0)}°" : "Unavailable"}')
-                              : hasAmbulanceLocation
-                              ? 'Last update: ${_gpsUpdateLabel(b.driverLocationUpdatedAt)}'
-                              : 'Location unavailable',
-                          style: AmbulanceFirstTypography.codeSm(
-                            color: AmbulanceFirstColors.onSurfaceVariant,
-                          ).copyWith(fontSize: 9),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Ambulance Vehicle Marker (projected from live GPS)
-                if (hasAmbulanceLocation &&
-                    b.driverLatitude != null &&
-                    b.driverLongitude != null)
-                  Positioned.fill(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final position = _projectMapPoint(
-                          b,
-                          b.driverLatitude!,
-                          b.driverLongitude!,
-                          constraints.biggest,
-                          additionalCoordinates: route?.geometry ?? const [],
-                        );
-                        return Stack(
-                          children: [
-                            Positioned(
-                              left: (position.dx - 24)
-                                  .clamp(8.0, constraints.maxWidth - 56.0)
-                                  .toDouble(),
-                              top: (position.dy - 30)
-                                  .clamp(8.0, constraints.maxHeight - 70.0)
-                                  .toDouble(),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          AmbulanceFirstColors.clinicalCobalt,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AmbulanceFirstColors
-                                              .clinicalCobalt
-                                              .withValues(alpha: 0.3),
-                                          blurRadius: 12,
-                                          spreadRadius: 3,
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.airport_shuttle_rounded,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color:
-                                            AmbulanceFirstColors.clinicalCobalt,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      b.vehicleNumber,
-                                      style: AmbulanceFirstTypography.codeSm(
-                                        color:
-                                            AmbulanceFirstColors.clinicalCobalt,
-                                        weight: FontWeight.w700,
-                                      ).copyWith(fontSize: 9),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-
-                // Confirmed pickup marker: visible throughout both legs.
-                if (b.pickupLatitude != null && b.pickupLongitude != null)
-                  Positioned.fill(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final pickupPosition = _projectMapPoint(
-                          b,
-                          b.pickupLatitude!,
-                          b.pickupLongitude!,
-                          constraints.biggest,
-                          additionalCoordinates: route?.geometry ?? const [],
-                        );
-                        return Stack(
-                          children: [
-                            Positioned(
-                              left: (pickupPosition.dx - 24)
-                                  .clamp(
-                                    8.0,
-                                    (constraints.maxWidth - 190.0).clamp(
-                                      8.0,
-                                      constraints.maxWidth,
-                                    ),
-                                  )
-                                  .toDouble(),
-                              top: (pickupPosition.dy - 28)
-                                  .clamp(
-                                    8.0,
-                                    (constraints.maxHeight - 74.0).clamp(
-                                      8.0,
-                                      constraints.maxHeight,
-                                    ),
-                                  )
-                                  .toDouble(),
-                              child: _mapPin(
-                                title: 'PICKUP',
-                                name: b.pickup,
-                                color: AmbulanceFirstColors.telemetryLive,
-                                icon: Icons.person_pin_circle_rounded,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  )
-                else
-                  Positioned(
-                    top: 30,
-                    right: 30,
-                    child: _mapPin(
-                      title: 'PICKUP UNAVAILABLE',
-                      name: b.pickup,
-                      color: AmbulanceFirstColors.telemetryUnavailable,
-                      icon: Icons.location_off_rounded,
-                    ),
-                  ),
-
-                // Confirmed hospital marker: visible throughout both legs.
-                if (b.destinationLatitude != null &&
-                    b.destinationLongitude != null)
-                  Positioned.fill(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final hospitalPosition = _projectMapPoint(
-                          b,
-                          b.destinationLatitude!,
-                          b.destinationLongitude!,
-                          constraints.biggest,
-                          additionalCoordinates: route?.geometry ?? const [],
-                        );
-                        return Stack(
-                          children: [
-                            Positioned(
-                              left: (hospitalPosition.dx - 24)
-                                  .clamp(8.0, constraints.maxWidth - 190.0)
-                                  .toDouble(),
-                              top: (hospitalPosition.dy - 28)
-                                  .clamp(8.0, constraints.maxHeight - 74.0)
-                                  .toDouble(),
-                              child: _mapPin(
-                                title: 'HOSPITAL',
-                                name: b.destination,
-                                color: AmbulanceFirstColors.secondary,
-                                icon: Icons.local_hospital_rounded,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  )
-                else
-                  Positioned(
-                    top: 78,
-                    right: 30,
-                    child: _mapPin(
-                      title: 'HOSPITAL UNAVAILABLE',
-                      name: b.destination,
-                      color: AmbulanceFirstColors.telemetryUnavailable,
-                      icon: Icons.location_off_rounded,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Dynamic 3-Metric Tile (ETA, Speed, Assigned Unit)
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                AmbulanceFirstMissionTile(
-                  etaMinutes: route?.etaMinutes,
-                  speedKmh: b.driverSpeedKmh > 0 ? b.driverSpeedKmh : null,
-                  isLive: hasTelemetry,
-                  unitName: b.vehicleNumber.isNotEmpty
-                      ? b.vehicleNumber
-                      : b.ambulanceDisplayName,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.route_rounded,
-                      size: 14,
-                      color: AmbulanceFirstColors.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        route != null
-                            ? 'ROAD DISTANCE TO ${isPickupLeg ? 'PICKUP' : 'HOSPITAL'}: '
-                                  '${route.distanceKm.toStringAsFixed(2)} km · '
-                                  'ETA ${route.etaMinutes} min · ${route.provider}'
-                            : _isRefreshingRoute
-                            ? 'Calculating road route to ${isPickupLeg ? 'pickup' : 'hospital'}…'
-                            : 'Road route unavailable · Waiting for route data',
-                        textAlign: TextAlign.center,
-                        style: AmbulanceFirstTypography.codeSm(
-                          color: AmbulanceFirstColors.onSurfaceVariant,
-                        ).copyWith(fontSize: 10),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _mapPin({
-    required String title,
-    required String name,
-    required Color color,
-    required IconData icon,
-  }) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 180),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AmbulanceFirstSpacing.radiusSm),
-        border: Border.all(color: color, width: 1.5),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: AmbulanceFirstTypography.codeSm(
-                    color: color,
-                    weight: FontWeight.w700,
-                  ).copyWith(fontSize: 8),
-                ),
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AmbulanceFirstTypography.bodySm(
-                    color: AmbulanceFirstColors.onSurface,
-                  ).copyWith(fontSize: 10, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1038,19 +599,24 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     'Patient Clinical Dossier',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: AmbulanceFirstTypography.labelMd(
                       color: AmbulanceFirstColors.onSurface,
                     ).copyWith(fontWeight: FontWeight.w700),
                   ),
-                  TextButton(
-                    onPressed: () =>
-                        BookingDetailsDialog.show(context, booking: b),
-                    child: const Text('FULL DOSSIER'),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () =>
+                          BookingDetailsDialog.show(context, booking: b),
+                      child: const Text('FULL DOSSIER'),
+                    ),
                   ),
                 ],
               ),
@@ -1328,142 +894,4 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
   }
 }
 
-Offset _projectMapPoint(
-  Booking booking,
-  double latitude,
-  double longitude,
-  Size size, {
-  List<RoutePoint> additionalCoordinates = const [],
-}) {
-  final coordinates = <({double latitude, double longitude})>[
-    if (booking.pickupLatitude != null && booking.pickupLongitude != null)
-      (latitude: booking.pickupLatitude!, longitude: booking.pickupLongitude!),
-    if (booking.driverLatitude != null && booking.driverLongitude != null)
-      (latitude: booking.driverLatitude!, longitude: booking.driverLongitude!),
-    if (booking.destinationLatitude != null &&
-        booking.destinationLongitude != null)
-      (
-        latitude: booking.destinationLatitude!,
-        longitude: booking.destinationLongitude!,
-      ),
-    ...additionalCoordinates.map(
-      (point) => (latitude: point.latitude, longitude: point.longitude),
-    ),
-  ];
 
-  if (coordinates.length < 2) {
-    return Offset(size.width * 0.5, size.height * 0.5);
-  }
-
-  final minLatitude = coordinates
-      .map((point) => point.latitude)
-      .reduce((a, b) => a < b ? a : b);
-  final maxLatitude = coordinates
-      .map((point) => point.latitude)
-      .reduce((a, b) => a > b ? a : b);
-  final minLongitude = coordinates
-      .map((point) => point.longitude)
-      .reduce((a, b) => a < b ? a : b);
-  final maxLongitude = coordinates
-      .map((point) => point.longitude)
-      .reduce((a, b) => a > b ? a : b);
-  final latitudeRange = maxLatitude - minLatitude;
-  final longitudeRange = maxLongitude - minLongitude;
-
-  // Keep short local routes visible even when the two endpoints are nearly
-  // identical, as happens during same-device GPS testing.
-  final normalizedX = longitudeRange == 0
-      ? 0.5
-      : (longitude - minLongitude) / longitudeRange;
-  final normalizedY = latitudeRange == 0
-      ? 0.5
-      : 1 - ((latitude - minLatitude) / latitudeRange);
-  const horizontalInset = 60.0;
-  const verticalInset = 50.0;
-  return Offset(
-    horizontalInset +
-        normalizedX.clamp(0.0, 1.0).toDouble() *
-            (size.width - horizontalInset * 2),
-    verticalInset +
-        normalizedY.clamp(0.0, 1.0).toDouble() *
-            (size.height - verticalInset * 2),
-  );
-}
-
-class _RouteGridPainter extends CustomPainter {
-  _RouteGridPainter({
-    required this.booking,
-    required this.hasTelemetry,
-    required this.routeGeometry,
-  });
-
-  final Booking booking;
-  final bool hasTelemetry;
-  final List<RoutePoint> routeGeometry;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final gridPaint = Paint()
-      ..color = AmbulanceFirstColors.borderSubtle.withValues(alpha: 0.5)
-      ..strokeWidth = 1;
-    for (double x = 0; x < size.width; x += 40) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    }
-    for (double y = 0; y < size.height; y += 40) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
-
-    if (!hasTelemetry ||
-        booking.driverLatitude == null ||
-        booking.driverLongitude == null)
-      return;
-
-    // Never draw a straight line and present it as a road route. The route
-    // remains unavailable until the routing provider supplies road geometry.
-    if (routeGeometry.isEmpty) return;
-    final routePoints = routeGeometry;
-    final path = Path();
-    for (var i = 0; i < routePoints.length; i++) {
-      final point = routePoints[i];
-      final offset = _projectMapPoint(
-        booking,
-        point.latitude,
-        point.longitude,
-        size,
-        additionalCoordinates: routePoints,
-      );
-      if (i == 0) {
-        path.moveTo(offset.dx, offset.dy);
-      } else {
-        path.lineTo(offset.dx, offset.dy);
-      }
-    }
-
-    final underlay = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 7
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
-    final routePaint = Paint()
-      ..color = AmbulanceFirstColors.clinicalCobalt
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
-    canvas.drawPath(path, underlay);
-    canvas.drawPath(path, routePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _RouteGridPainter oldDelegate) =>
-      oldDelegate.booking.driverLatitude != booking.driverLatitude ||
-      oldDelegate.booking.driverLongitude != booking.driverLongitude ||
-      oldDelegate.booking.pickupLatitude != booking.pickupLatitude ||
-      oldDelegate.booking.pickupLongitude != booking.pickupLongitude ||
-      oldDelegate.booking.destinationLatitude != booking.destinationLatitude ||
-      oldDelegate.booking.destinationLongitude !=
-          booking.destinationLongitude ||
-      oldDelegate.hasTelemetry != hasTelemetry ||
-      oldDelegate.routeGeometry != routeGeometry;
-}

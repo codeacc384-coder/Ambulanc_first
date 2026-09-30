@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,6 +20,10 @@ class CustomerCareRepository extends ChangeNotifier {
   Map<String, dynamic> _dashboard = <String, dynamic>{};
   List<Map<String, dynamic>> _notifications = <Map<String, dynamic>>[];
   List<CustomerCareCase> _activeTrips = <CustomerCareCase>[];
+  RealtimeChannel? _bookingRealtimeChannel;
+  Timer? _bookingRefreshTimer;
+  String _lastFilter = 'ALL';
+  String _lastSearch = '';
   bool isLoading = false;
   String? errorMessage;
 
@@ -69,6 +75,9 @@ class CustomerCareRepository extends ChangeNotifier {
 
   Future<void> load({String filter = 'ALL', String search = ''}) async {
     _requireSession();
+    _lastFilter = filter;
+    _lastSearch = search;
+    _subscribeToBookingChanges();
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -84,18 +93,8 @@ class CustomerCareRepository extends ChangeNotifier {
       ]);
       _dashboard = _asMap(results[0], 'get_customer_care_dashboard');
       _requireDashboardKeys(_dashboard);
-      debugPrint('CC DASHBOARD RAW BOOKINGS: ${results[1]}');
       final rawBookings = _asRows(results[1], 'get_customer_care_bookings');
-      for (final row in rawBookings) {
-        if (row['id']?.toString() == _diagnosticBookingId ||
-            row['booking_id']?.toString() == _diagnosticBookingId) {
-          debugPrint('CC DASHBOARD RAW BK-0A067BDA657E: $row');
-          debugPrint('CC DASHBOARD RAW STATUS: ${row['status']}');
-        }
-      }
       _cases = rawBookings.map(_mapCase).toList();
-      final cachedCase = getCaseById(_diagnosticBookingId);
-      debugPrint('CC CACHE STATUS FOR BK-0A067BDA657E: ${cachedCase?.status}');
       _notifications = _asRows(results[2], 'get_customer_care_notifications');
       _activeTrips = _asRows(
         results[3],
@@ -108,6 +107,60 @@ class CustomerCareRepository extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  void _subscribeToBookingChanges() {
+    if (_bookingRealtimeChannel != null || !SupabaseService.isInitialized) {
+      return;
+    }
+    _bookingRealtimeChannel = _db
+        .channel('customer-care-booking-drafts')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'bookings',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'status',
+            value: 'NEW',
+          ),
+          callback: (_) => _queueBookingRefresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'bookings',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'status',
+            value: 'VERIFIED',
+          ),
+          callback: (_) => _queueBookingRefresh(),
+        )
+        .subscribe();
+  }
+
+  void _queueBookingRefresh() {
+    _bookingRefreshTimer?.cancel();
+    _bookingRefreshTimer = Timer(
+      const Duration(milliseconds: 300),
+      () => load(filter: _lastFilter, search: _lastSearch).catchError((
+        Object error,
+      ) {
+        debugPrint('CUSTOMER CARE REALTIME REFRESH ERROR: $error');
+      }),
+    );
+  }
+
+  @override
+  void dispose() {
+    _bookingRefreshTimer?.cancel();
+    final channel = _bookingRealtimeChannel;
+    if (channel != null) {
+      _db.removeChannel(channel);
+      _bookingRealtimeChannel = null;
+    }
+    super.dispose();
   }
 
   Future<void> refresh() => load();
@@ -254,8 +307,7 @@ class CustomerCareRepository extends ChangeNotifier {
       // an unpersisted verification.
       await load();
       final refreshedCase = getCaseById(verification.bookingId);
-      final verifiedStatus =
-          refreshedCase?.status.trim().toUpperCase() ?? '';
+      final verifiedStatus = refreshedCase?.status.trim().toUpperCase() ?? '';
       debugPrint('DEBUG CC CANONICAL STATUS AFTER VERIFY: $verifiedStatus');
       if (verifiedStatus != 'VERIFIED') {
         await _debugDirectBookingRead(verification.bookingId);
@@ -298,8 +350,7 @@ class CustomerCareRepository extends ChangeNotifier {
       // persisted workflow state from bookings.status.
       await load();
       final refreshedCase = getCaseById(bookingId);
-      final handedOffStatus =
-          refreshedCase?.status.trim().toUpperCase() ?? '';
+      final handedOffStatus = refreshedCase?.status.trim().toUpperCase() ?? '';
       debugPrint('DEBUG CC CANONICAL STATUS AFTER HANDOFF: $handedOffStatus');
       if (handedOffStatus != 'SENT_TO_TEAM_LEAD') {
         await _debugDirectBookingRead(bookingId);
@@ -335,6 +386,15 @@ class CustomerCareRepository extends ChangeNotifier {
     return CustomerCareCase(
       id: _string(row['id'] ?? row['booking_id']),
       status: status,
+      submissionStatus: _string(
+        row['submission_status'],
+        fallback: status == 'VERIFIED' ? 'VERIFIED' : 'PENDING_VERIFICATION',
+      ),
+      submittedAt: _string(row['submitted_at']),
+      updatedAt: _string(
+        row['updated_at'],
+        fallback: _string(row['created_at']),
+      ),
       source: _string(row['source'], fallback: 'CUSTOMER_APP'),
       customerName: _string(row['customer_name']),
       mobileNumber: _string(row['customer_phone'] ?? row['mobile_number']),
@@ -354,6 +414,7 @@ class CustomerCareRepository extends ChangeNotifier {
           priority == 'CRITICAL' ||
           priority == 'CRITICAL_CODE_RED',
       serviceCategory: _string(row['service_category']),
+      ambulanceCategory: _ambulanceCategoryFromRow(row),
       pickupAddress: _string(row['pickup_address']),
       destinationAddress: _string(row['destination_address']),
       destinationHospital: _string(row['destination_hospital']),
@@ -436,6 +497,21 @@ class CustomerCareRepository extends ChangeNotifier {
       checkReceivingBedSecured: _bool(row['check_receiving_bed_secured']),
       checkRoutePriorityCleared: _bool(row['check_route_priority_cleared']),
     );
+  }
+
+  String _ambulanceCategoryFromRow(Map<String, dynamic> row) {
+    final explicit = _string(row['ambulance_type']);
+    if (explicit.isNotEmpty) return explicit;
+    switch (_string(row['service_subtype']).toUpperCase()) {
+      case 'BASIC_OXYGEN':
+        return 'Oxygen Ambulance (BLS)';
+      case 'ADVANCED_ICU':
+        return 'ICU Ambulance (ALS)';
+      case 'PEDIATRIC_ICU':
+        return 'NICU Ambulance (PICU/NICU)';
+      default:
+        return _string(row['service_category']);
+    }
   }
 
   void _requireSession() {

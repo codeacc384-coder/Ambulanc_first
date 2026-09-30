@@ -93,6 +93,8 @@ class AmbulanceFirstMetricCard extends StatelessWidget {
             children: [
               Text(
                 value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: AmbulanceFirstTypography.telemetryNum(
                   color: valueColor ?? AmbulanceFirstColors.onSurface,
                   size: 22,

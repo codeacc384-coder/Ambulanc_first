@@ -38,14 +38,19 @@ class AmbulanceFirstBookingId extends StatelessWidget {
           ),
           const SizedBox(width: 4),
         ],
-        Text(
-          formatted,
-          style: AmbulanceFirstTypography.codeMd(
-            color: effectiveColor,
-            weight: isBold ? FontWeight.w700 : FontWeight.w600,
-          ).copyWith(
-            fontSize: fontSize,
-            letterSpacing: -0.2,
+        Flexible(
+          child: Text(
+            formatted,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            softWrap: false,
+            style: AmbulanceFirstTypography.codeMd(
+              color: effectiveColor,
+              weight: isBold ? FontWeight.w700 : FontWeight.w600,
+            ).copyWith(
+              fontSize: fontSize,
+              letterSpacing: -0.2,
+            ),
           ),
         ),
       ],

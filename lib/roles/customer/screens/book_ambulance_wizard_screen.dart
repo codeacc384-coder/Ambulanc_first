@@ -263,6 +263,7 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
     );
   }
 
+  // ignore: unused_element
   Future<void> _showVoiceBookingDialog() async {
     _voiceTranscript = '';
     _voiceStatus = 'Start to answer the booking questions by voice.';
@@ -1518,8 +1519,11 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    alignment: _currentStep > 0
+                        ? WrapAlignment.spaceBetween
+                        : WrapAlignment.end,
+                    runSpacing: 8,
                     children: [
                       if (_currentStep > 0)
                         AmbulanceFirstButton(
@@ -1608,14 +1612,7 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        AmbulanceFirstButton(
-          label: 'FILL DETAILS BY VOICE',
-          icon: Icons.mic_rounded,
-          fullWidth: true,
-          onPressed: _showVoiceBookingDialog,
-          variant: AmbulanceFirstButtonVariant.ghost,
-        ),
-        const SizedBox(height: 24),
+      
         _stepHeader(
           'Select Service Type',
           'Choose how the patient or body will be transported.',
@@ -1889,26 +1886,44 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
           hintText: 'Enter contact full name',
         ),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: AmbulanceFirstTextInput(
+        if (isDesktop)
+          Row(
+            children: [
+              Expanded(
+                child: AmbulanceFirstTextInput(
+                  label: 'Mobile Phone',
+                  controller: _customerPhoneCtrl,
+                  isRequired: true,
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AmbulanceFirstTextInput(
+                  label: 'Email Address',
+                  controller: _customerEmailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+              ),
+            ],
+          )
+        else
+          Column(
+            children: [
+              AmbulanceFirstTextInput(
                 label: 'Mobile Phone',
                 controller: _customerPhoneCtrl,
                 isRequired: true,
                 keyboardType: TextInputType.phone,
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AmbulanceFirstTextInput(
+              const SizedBox(height: 14),
+              AmbulanceFirstTextInput(
                 label: 'Email Address',
                 controller: _customerEmailCtrl,
                 keyboardType: TextInputType.emailAddress,
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         const SizedBox(height: 14),
         AmbulanceFirstDropdown<String>(
           label: 'Relationship to Patient',
@@ -2019,15 +2034,18 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
           },
         ),
         const SizedBox(height: 12),
-        CheckboxListTile(
-          value: _isEmergency,
-          onChanged: (value) => setState(() => _isEmergency = value ?? false),
-          title: const Text('Emergency Priority Dispatch (Code Red)'),
-          subtitle: const Text(
-            'Marks the booking as CRITICAL for operational triage.',
+        Material(
+          color: Colors.transparent,
+          child: CheckboxListTile(
+            value: _isEmergency,
+            onChanged: (value) => setState(() => _isEmergency = value ?? false),
+            title: const Text('Emergency Priority Dispatch (Code Red)'),
+            subtitle: const Text(
+              'Marks the booking as CRITICAL for operational triage.',
+            ),
+            contentPadding: EdgeInsets.zero,
+            activeColor: AmbulanceFirstColors.medicalCrimson,
           ),
-          contentPadding: EdgeInsets.zero,
-          activeColor: AmbulanceFirstColors.medicalCrimson,
         ),
       ],
     );
@@ -2288,26 +2306,29 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
           'Choose immediate response or schedule the service.',
         ),
         const SizedBox(height: 16),
-        RadioGroup<String>(
-          groupValue: _scheduleType,
-          onChanged: (value) {
-            if (value != null) setState(() => _scheduleType = value);
-          },
-          child: Column(
-            children: [
-              RadioListTile<String>(
-                value: 'IMMEDIATE',
-                title: const Text('Immediate'),
-                subtitle: const Text(
-                  'Process as soon as the request is submitted.',
+        Material(
+          color: Colors.transparent,
+          child: RadioGroup<String>(
+            groupValue: _scheduleType,
+            onChanged: (value) {
+              if (value != null) setState(() => _scheduleType = value);
+            },
+            child: Column(
+              children: [
+                RadioListTile<String>(
+                  value: 'IMMEDIATE',
+                  title: const Text('Immediate'),
+                  subtitle: const Text(
+                    'Process as soon as the request is submitted.',
+                  ),
                 ),
-              ),
-              RadioListTile<String>(
-                value: 'SCHEDULED',
-                title: const Text('Scheduled'),
-                subtitle: const Text('Choose a future date and time.'),
-              ),
-            ],
+                RadioListTile<String>(
+                  value: 'SCHEDULED',
+                  title: const Text('Scheduled'),
+                  subtitle: const Text('Choose a future date and time.'),
+                ),
+              ],
+            ),
           ),
         ),
         if (_scheduleType == 'SCHEDULED') ...[
@@ -2315,39 +2336,45 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
           Row(
             children: [
               Expanded(
-                child: ListTile(
-                  title: const Text('Date'),
-                  subtitle: Text(
-                    '${_scheduledDate.day}/${_scheduledDate.month}/${_scheduledDate.year}',
+                child: Material(
+                  color: Colors.transparent,
+                  child: ListTile(
+                    title: const Text('Date'),
+                    subtitle: Text(
+                      '${_scheduledDate.day}/${_scheduledDate.month}/${_scheduledDate.year}',
+                    ),
+                    trailing: const Icon(Icons.calendar_today_rounded),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _scheduledDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 90)),
+                      );
+                      if (picked != null) {
+                        setState(() => _scheduledDate = picked);
+                      }
+                    },
                   ),
-                  trailing: const Icon(Icons.calendar_today_rounded),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _scheduledDate,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 90)),
-                    );
-                    if (picked != null) {
-                      setState(() => _scheduledDate = picked);
-                    }
-                  },
                 ),
               ),
               Expanded(
-                child: ListTile(
-                  title: const Text('Time'),
-                  subtitle: Text(_scheduledTime.format(context)),
-                  trailing: const Icon(Icons.access_time_rounded),
-                  onTap: () async {
-                    final picked = await showTimePicker(
-                      context: context,
-                      initialTime: _scheduledTime,
-                    );
-                    if (picked != null) {
-                      setState(() => _scheduledTime = picked);
-                    }
-                  },
+                child: Material(
+                  color: Colors.transparent,
+                  child: ListTile(
+                    title: const Text('Time'),
+                    subtitle: Text(_scheduledTime.format(context)),
+                    trailing: const Icon(Icons.access_time_rounded),
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: _scheduledTime,
+                      );
+                      if (picked != null) {
+                        setState(() => _scheduledTime = picked);
+                      }
+                    },
+                  ),
                 ),
               ),
             ],

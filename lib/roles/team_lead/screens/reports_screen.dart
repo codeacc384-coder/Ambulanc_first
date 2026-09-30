@@ -57,27 +57,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header & Timeframe Selector
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Operations Telemetry & Performance Reports', style: TeamLeadTheme.titleMedium(weight: FontWeight.w700)),
-                      Text('Clinical SLA monitoring, dispatch velocity, fleet readiness, and audit logs', style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      _timeChip('TODAY', 'Today'),
-                      const SizedBox(width: 6),
-                      _timeChip('WEEK', 'This Week'),
-                      const SizedBox(width: 6),
-                      _timeChip('MONTH', 'Month to Date'),
-                    ],
-                  ),
-                ],
-              ),
+              _reportsHeader(),
               const SizedBox(height: 20),
 
               // KPI Row
@@ -173,6 +153,56 @@ class _ReportsScreenState extends State<ReportsScreen> {
       backgroundColor: TeamLeadTheme.surfaceLowest,
       onSelected: (v) {
         if (v) setState(() => _selectedRange = key);
+      },
+    );
+  }
+
+  Widget _reportsHeader() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final chips = Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            _timeChip('TODAY', 'Today'),
+            _timeChip('WEEK', 'This Week'),
+            _timeChip('MONTH', 'Month to Date'),
+          ],
+        );
+
+        final title = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Operations Telemetry & Performance Reports',
+              maxLines: constraints.maxWidth < 600 ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+              style: TeamLeadTheme.titleMedium(weight: FontWeight.w700),
+            ),
+            Text(
+              'Clinical SLA monitoring, dispatch velocity, fleet readiness, and audit logs',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant),
+            ),
+          ],
+        );
+
+        if (constraints.maxWidth < 800) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [title, const SizedBox(height: 10), chips],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: title),
+            const SizedBox(width: 16),
+            chips,
+          ],
+        );
       },
     );
   }

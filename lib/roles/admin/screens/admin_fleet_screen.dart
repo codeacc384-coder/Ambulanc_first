@@ -76,7 +76,10 @@ class _AdminFleetScreenState extends State<AdminFleetScreen> {
                       children: [
                         SizedBox(
                           width: constraints.maxWidth > 520
-                              ? constraints.maxWidth - 220
+                              ? (constraints.maxWidth - 220).clamp(
+                                  0.0,
+                                  double.infinity,
+                                )
                               : constraints.maxWidth,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,65 +142,66 @@ class _AdminFleetScreenState extends State<AdminFleetScreen> {
               const SizedBox(height: StitchTheme.spaceMd),
 
               // 2. KPI Metric Row
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width >= 880
-                        ? (MediaQuery.of(context).size.width - 96) / 4
-                        : MediaQuery.of(context).size.width - 40,
-                    child: _FleetKpiTile(
-                      label: 'TOTAL FLEET',
-                      value: '${store.totalAmbulancesCount}',
-                      unit: 'units',
-                      barPct: 1.0,
-                      barColor: StitchTheme.primaryContainer,
-                    ),
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width >= 880
-                        ? (MediaQuery.of(context).size.width - 96) / 4
-                        : MediaQuery.of(context).size.width - 40,
-                    child: _FleetKpiTile(
-                      label: 'AVAILABLE',
-                      value: '${store.availableAmbulancesCount}',
-                      unit: '${store.fleetAvailabilityPercentage.round()}%',
-                      barPct: store.fleetAvailabilityPercentage / 100,
-                      barColor: StitchTheme.tertiary,
-                    ),
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width >= 880
-                        ? (MediaQuery.of(context).size.width - 96) / 4
-                        : MediaQuery.of(context).size.width - 40,
-                    child: _FleetKpiTile(
-                      label: 'ON MISSION',
-                      value: '${store.activeMissionAmbulancesCount}',
-                      unit: 'Active',
-                      barPct: store.totalAmbulancesCount > 0
-                          ? store.activeMissionAmbulancesCount /
-                                store.totalAmbulancesCount
-                          : 0.0,
-                      barColor: StitchTheme.primaryContainer,
-                    ),
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width >= 880
-                        ? (MediaQuery.of(context).size.width - 96) / 4
-                        : MediaQuery.of(context).size.width - 40,
-                    child: _FleetKpiTile(
-                      label: 'SERVICE',
-                      value: '${store.maintenanceAmbulancesCount}',
-                      unit: 'Maint',
-                      barPct: store.totalAmbulancesCount > 0
-                          ? store.maintenanceAmbulancesCount /
-                                store.totalAmbulancesCount
-                          : 0.0,
-                      barColor: StitchTheme.secondary,
-                    ),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth >= 880;
+                  final tileWidth = isWide
+                      ? (constraints.maxWidth - 18) / 4
+                      : constraints.maxWidth;
+
+                  return Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      SizedBox(
+                        width: tileWidth,
+                        child: _FleetKpiTile(
+                          label: 'TOTAL FLEET',
+                          value: '${store.totalAmbulancesCount}',
+                          unit: 'units',
+                          barPct: 1.0,
+                          barColor: StitchTheme.primaryContainer,
+                        ),
+                      ),
+                      SizedBox(
+                        width: tileWidth,
+                        child: _FleetKpiTile(
+                          label: 'AVAILABLE',
+                          value: '${store.availableAmbulancesCount}',
+                          unit: '${store.fleetAvailabilityPercentage.round()}%',
+                          barPct: store.fleetAvailabilityPercentage / 100,
+                          barColor: StitchTheme.tertiary,
+                        ),
+                      ),
+                      SizedBox(
+                        width: tileWidth,
+                        child: _FleetKpiTile(
+                          label: 'ON MISSION',
+                          value: '${store.activeMissionAmbulancesCount}',
+                          unit: 'Active',
+                          barPct: store.totalAmbulancesCount > 0
+                              ? store.activeMissionAmbulancesCount /
+                                    store.totalAmbulancesCount
+                              : 0.0,
+                          barColor: StitchTheme.primaryContainer,
+                        ),
+                      ),
+                      SizedBox(
+                        width: tileWidth,
+                        child: _FleetKpiTile(
+                          label: 'SERVICE',
+                          value: '${store.maintenanceAmbulancesCount}',
+                          unit: 'Maint',
+                          barPct: store.totalAmbulancesCount > 0
+                              ? store.maintenanceAmbulancesCount /
+                                    store.totalAmbulancesCount
+                              : 0.0,
+                          barColor: StitchTheme.secondary,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: StitchTheme.spaceMd),
 
@@ -626,38 +630,62 @@ class _AmbulanceCard extends StatelessWidget {
                 children: [
                   // Header: CallSign, Model, and Status Badge
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(a.callSign, style: StitchTheme.headlineSm()),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 1,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: StitchTheme.surfaceContainer,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                                child: Text(
-                                  a.vehicleCadNo,
-                                  style: StitchTheme.labelSm(
-                                    weight: FontWeight.w700,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    a.callSign,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: StitchTheme.headlineSm(),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(a.platform, style: StitchTheme.bodySm()),
-                        ],
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 1,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: StitchTheme.surfaceContainer,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                    child: Text(
+                                      a.vehicleCadNo,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: StitchTheme.labelSm(
+                                        weight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              a.platform,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: StitchTheme.bodySm(),
+                            ),
+                          ],
+                        ),
                       ),
-                      StitchStatusBadge.fromFleet(a.status),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: StitchStatusBadge.fromFleet(a.status),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -672,23 +700,30 @@ class _AmbulanceCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: StitchTheme.primaryContainer,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              a.currentLocation,
-                              style: StitchTheme.labelSm(
-                                color: StitchTheme.onSurface,
-                                weight: FontWeight.w600,
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 14,
+                                color: StitchTheme.primaryContainer,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  a.currentLocation,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: StitchTheme.labelSm(
+                                    color: StitchTheme.onSurface,
+                                    weight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         if (a.activeIncidentId != null)
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -834,8 +869,10 @@ class _AmbulanceCard extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   // Card Bottom Actions
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    runSpacing: 6,
+                    spacing: 8,
                     children: [
                       TextButton.icon(
                         onPressed: onToggleTelemetry,

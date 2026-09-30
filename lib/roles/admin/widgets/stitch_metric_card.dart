@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/admin_theme.dart';
 
 class StitchMetricCard extends StatelessWidget {
@@ -48,11 +49,15 @@ class StitchMetricCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title.toUpperCase(),
-                  style: StitchTheme.labelSm(
-                    color: StitchTheme.onSurfaceVariant,
-                    weight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    title.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: StitchTheme.labelSm(
+                      color: StitchTheme.onSurfaceVariant,
+                      weight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 Container(
@@ -138,60 +143,76 @@ class StitchFleetReadinessCard extends StatelessWidget {
           border: Border.all(color: StitchTheme.borderSubtle),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'FLEET AVAILABILITY & READINESS',
-                  style: StitchTheme.labelSm(
-                    color: StitchTheme.onSurfaceVariant,
-                    weight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'FLEET AVAILABILITY & READINESS',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: StitchTheme.labelSm(
+                      color: StitchTheme.onSurfaceVariant,
+                      weight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '$availableCount',
-                      style: StitchTheme.displayLgMobile(
-                        color: StitchTheme.onSurface,
-                        weight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      ' / $totalCount Units',
-                      style: StitchTheme.headlineSm(
-                        color: StitchTheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: StitchTheme.tertiaryFixed,
-                        borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
-                      ),
-                      child: Text(
-                        '$pctInt% Ready',
-                        style: StitchTheme.labelSm(
-                          color: StitchTheme.onTertiaryFixed,
-                          weight: FontWeight.w600,
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '$availableCount',
+                          style: StitchTheme.displayLgMobile(
+                            color: StitchTheme.onSurface,
+                            weight: FontWeight.w700,
+                          ),
                         ),
-                      ),
+                        Text(
+                          ' / $totalCount Units',
+                          style: StitchTheme.headlineSm(
+                            color: StitchTheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: StitchTheme.tertiaryFixed,
+                            borderRadius: BorderRadius.circular(
+                              StitchTheme.radiusSm,
+                            ),
+                          ),
+                          child: Text(
+                            '$pctInt% Ready',
+                            style: StitchTheme.labelSm(
+                              color: StitchTheme.onTertiaryFixed,
+                              weight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${totalCount - availableCount} units offline (maintenance, holds, in depot)',
-                  style: StitchTheme.bodySm(color: StitchTheme.outline),
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${totalCount - availableCount} units offline (maintenance, holds, in depot)',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: StitchTheme.bodySm(color: StitchTheme.outline),
+                  ),
+                ],
+              ),
             ),
+
+            const SizedBox(width: 12),
 
             // Circular Progress Indicator
             SizedBox(
@@ -204,7 +225,9 @@ class StitchFleetReadinessCard extends StatelessWidget {
                     value: pct,
                     strokeWidth: 4.5,
                     backgroundColor: StitchTheme.surfaceContainerHigh,
-                    valueColor: const AlwaysStoppedAnimation<Color>(StitchTheme.tertiary),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      StitchTheme.tertiary,
+                    ),
                   ),
                   Text(
                     '$pctInt%',

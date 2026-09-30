@@ -121,35 +121,42 @@ class _AllBookingsArchiveScreenState extends State<AllBookingsArchiveScreen> {
                 ),
                 padding: const EdgeInsets.all(14),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.inventory_2_rounded,
-                          size: 22,
-                          color: CustomerCareColors.primaryContainer,
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Master Bookings Archive',
-                              style: CustomerCareTextStyles.headlineSm.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.inventory_2_rounded,
+                            size: 22,
+                            color: CustomerCareColors.primaryContainer,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Master Bookings Archive',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: CustomerCareTextStyles.headlineSm.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  'Complete database of historical, active & verified cases',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: CustomerCareTextStyles.bodySm.copyWith(
+                                    color: CustomerCareColors.onSurfaceVariant,
+                                    fontSize: 11.5,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              'Complete database of historical, active & verified cases',
-                              style: CustomerCareTextStyles.bodySm.copyWith(
-                                color: CustomerCareColors.onSurfaceVariant,
-                                fontSize: 11.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                     TextButton(
                       onPressed: _clearFilters,
@@ -364,43 +371,60 @@ class _ArchiveCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      '#${caseItem.id}',
-                      style: CustomerCareTextStyles.telemetryDisplay.copyWith(
-                        fontSize: 14,
-                        color: CustomerCareColors.primary,
-                        fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '#${caseItem.id}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: CustomerCareTextStyles.telemetryDisplay.copyWith(
+                            fontSize: 14,
+                            color: CustomerCareColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: CustomerCareColors.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            caseItem.createdAt,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: CustomerCareTextStyles.labelSm.copyWith(fontSize: 9.5),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: CustomerCareColors.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        caseItem.createdAt,
-                        style: CustomerCareTextStyles.labelSm.copyWith(fontSize: 9.5),
+                        caseItem.statusLabel.toUpperCase(),
+                        maxLines: 1,
+                        style: CustomerCareTextStyles.labelSm.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 9,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: CustomerCareColors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    caseItem.statusLabel.toUpperCase(),
-                    style: CustomerCareTextStyles.labelSm.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 9,
                     ),
                   ),
                 ),
@@ -421,13 +445,16 @@ class _ArchiveCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Service: ${caseItem.serviceCategory} • Acuity: ${caseItem.priorityLabel}',
-                  style: CustomerCareTextStyles.labelSm.copyWith(
-                    color: CustomerCareColors.onSurfaceVariant,
-                    fontSize: 10,
+                Expanded(
+                  child: Text(
+                    'Service: ${caseItem.serviceCategory} • Acuity: ${caseItem.priorityLabel}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: CustomerCareTextStyles.labelSm.copyWith(
+                      color: CustomerCareColors.onSurfaceVariant,
+                      fontSize: 10,
+                    ),
                   ),
                 ),
                 const Icon(Icons.chevron_right, size: 18, color: CustomerCareColors.outline),

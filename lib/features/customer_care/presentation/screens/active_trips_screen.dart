@@ -49,25 +49,32 @@ class ActiveTripsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.radar,
-                              size: 20,
-                              color: CustomerCareColors.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Active Ambulance Mission Monitoring',
-                              style: CustomerCareTextStyles.headlineSm.copyWith(
-                                fontWeight: FontWeight.w700,
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.radar,
+                                size: 20,
+                                color: CustomerCareColors.primary,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Active Ambulance Mission Monitoring',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: CustomerCareTextStyles.headlineSm.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
+                          constraints: const BoxConstraints(maxWidth: 90),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 3,
@@ -78,6 +85,8 @@ class ActiveTripsScreen extends StatelessWidget {
                           ),
                           child: Text(
                             '${displayCases.length} En-Route',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: CustomerCareTextStyles.labelSm.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
@@ -105,35 +114,46 @@ class ActiveTripsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: CustomerCareColors.secondary,
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 7,
+                                  height: 7,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: CustomerCareColors.secondary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                displayCases.isEmpty
-                                    ? 'GPS unavailable'
-                                    : 'GPS data from backend',
-                                style: CustomerCareTextStyles.labelSm.copyWith(
-                                  color: CustomerCareColors.secondary,
-                                  fontWeight: FontWeight.w700,
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    displayCases.isEmpty
+                                        ? 'GPS unavailable'
+                                        : 'GPS data from backend',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: CustomerCareTextStyles.labelSm.copyWith(
+                                      color: CustomerCareColors.secondary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          Text(
-                            'CAD Feed: Supabase',
-                            style: CustomerCareTextStyles.labelSm.copyWith(
-                              color: CustomerCareColors.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'CAD Feed: Supabase',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.right,
+                              style: CustomerCareTextStyles.labelSm.copyWith(
+                                color: CustomerCareColors.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],

@@ -125,9 +125,13 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                               color: StitchTheme.primaryContainer,
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              'Analytics & Operational Reports',
-                              style: StitchTheme.headlineMd(),
+                            Expanded(
+                              child: Text(
+                                'Analytics & Operational Reports',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: StitchTheme.headlineMd(),
+                              ),
                             ),
                           ],
                         ),

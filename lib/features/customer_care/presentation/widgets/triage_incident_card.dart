@@ -36,6 +36,7 @@ class TriageIncidentCard extends StatelessWidget {
     final status = caseItem.status.toUpperCase();
     final isVerified = status == 'VERIFIED';
     final isSentToTeamLead = status == 'SENT_TO_TEAM_LEAD';
+    final isDraft = caseItem.isDraft;
 
     return Container(
       decoration: BoxDecoration(
@@ -69,40 +70,101 @@ class TriageIncidentCard extends StatelessWidget {
                   children: [
                     // Header Row: Booking ID + Timestamp + Urgency Pill
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
+                        Expanded(
+                          child: Row(
                           children: [
-                            Text(
-                              '#${caseItem.id}',
-                              style: CustomerCareTextStyles.labelLg.copyWith(
-                                color: CustomerCareColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5,
-                                vertical: 1.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: CustomerCareColors.surfaceContainerHigh,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                caseItem.createdAt,
-                                style: CustomerCareTextStyles.labelSm.copyWith(
-                                  color: CustomerCareColors.onSurfaceVariant,
-                                  fontSize: 9.5,
+                              Flexible(
+                                child: Text(
+                                  '#${caseItem.id}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: CustomerCareTextStyles.labelLg.copyWith(
+                                    color: CustomerCareColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
+                              ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 1.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: CustomerCareColors.surfaceContainerHigh,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'Updated ${_formatTimestamp(caseItem.updatedAt.isEmpty ? caseItem.createdAt : caseItem.updatedAt)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: CustomerCareTextStyles.labelSm.copyWith(
+                                      color: CustomerCareColors.onSurfaceVariant,
+                                      fontSize: 9.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: _buildStatusBadge(accent, isVerified),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (isDraft) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: CustomerCareColors.warningContainer,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'DRAFT — CUSTOMER IS FILLING DETAILS',
+                          style: CustomerCareTextStyles.labelSm.copyWith(
+                            color: CustomerCareColors.onSurface,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ] else if (caseItem.isSubmitted) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 2,
+                        children: [
+                          Text(
+                            'PENDING VERIFICATION',
+                            style: CustomerCareTextStyles.labelSm.copyWith(
+                              color: CustomerCareColors.warning,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          if (caseItem.submittedAt.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              'Submitted ${_formatTimestamp(caseItem.submittedAt)}',
+                              style: CustomerCareTextStyles.labelSm.copyWith(
+                                color: CustomerCareColors.onSurfaceVariant,
                               ),
                             ),
                           ],
-                        ),
-                        _buildStatusBadge(accent, isVerified),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 1),
                     Text(
                       caseItem.dispatchTier,
@@ -216,15 +278,19 @@ class TriageIncidentCard extends StatelessWidget {
 
                     // Patient & Clinical Scenario
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${caseItem.patientName}, ${caseItem.age}${caseItem.gender.isNotEmpty ? caseItem.gender[0].toUpperCase() : ""}',
-                          style: CustomerCareTextStyles.bodyLg.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: CustomerCareColors.onSurface,
+                        Expanded(
+                          child: Text(
+                            '${caseItem.patientName}, ${caseItem.age}${caseItem.gender.isNotEmpty ? caseItem.gender[0].toUpperCase() : ""}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: CustomerCareTextStyles.bodyLg.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: CustomerCareColors.onSurface,
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,
@@ -234,15 +300,22 @@ class TriageIncidentCard extends StatelessWidget {
                             color: CustomerCareColors.surfaceContainerHigh,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Text(
-                            caseItem.serviceCategory == 'AIR'
-                                ? 'Air Medevac'
-                                : (caseItem.icu
-                                      ? 'ACLS Unit'
-                                      : 'Patient Transport'),
-                            style: CustomerCareTextStyles.labelSm.copyWith(
-                              color: CustomerCareColors.primary,
-                              fontWeight: FontWeight.w700,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 130),
+                            child: Text(
+                              caseItem.ambulanceCategory.isNotEmpty
+                                  ? caseItem.ambulanceCategory
+                                  : caseItem.serviceCategory == 'AIR'
+                                  ? 'Air Medevac'
+                                  : (caseItem.icu
+                                        ? 'ACLS Unit'
+                                        : 'Patient Transport'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: CustomerCareTextStyles.labelSm.copyWith(
+                                color: CustomerCareColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ),
@@ -279,6 +352,15 @@ class TriageIncidentCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (caseItem.specialInstructions.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'Customer notes: ${caseItem.specialInstructions}',
+                        style: CustomerCareTextStyles.bodySm.copyWith(
+                          color: CustomerCareColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 8),
 
                     // Requirement Badges
@@ -293,10 +375,15 @@ class TriageIncidentCard extends StatelessWidget {
                         if (caseItem.icu) _buildReqBadge('ICU Setup'),
                         if (caseItem.ventilator)
                           _buildReqBadge('Ventilator Ready'),
+                        if (caseItem.cardiacMonitor)
+                          _buildReqBadge('Cardiac Monitor'),
                         if (caseItem.doctor) _buildReqBadge('Doctor Escort'),
                         if (caseItem.pediatric)
                           _buildReqBadge('Pediatric Incubator'),
                         if (caseItem.emt) _buildReqBadge('Lead Paramedic'),
+                        if (caseItem.attendant) _buildReqBadge('Attendant'),
+                        if (caseItem.stretcher) _buildReqBadge('Stretcher'),
+                        if (caseItem.wheelchair) _buildReqBadge('Wheelchair'),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -353,13 +440,17 @@ class TriageIncidentCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Text(
-                            caseItem.distanceKm > 0
-                                ? '${caseItem.distanceKm} km'
-                                : 'Route unavailable',
-                            style: CustomerCareTextStyles.labelSm.copyWith(
-                              color: CustomerCareColors.primary,
-                              fontWeight: FontWeight.w700,
+                          Flexible(
+                            child: Text(
+                              caseItem.distanceKm > 0
+                                  ? '${caseItem.distanceKm} km'
+                                  : 'Route unavailable',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: CustomerCareTextStyles.labelSm.copyWith(
+                                color: CustomerCareColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ],
@@ -429,6 +520,31 @@ class TriageIncidentCard extends StatelessWidget {
                           ),
                         ),
                       )
+                    else if (isDraft)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: onCallVerify,
+                              icon: const Icon(Icons.call, size: 16),
+                              label: const Text('Call Customer / Open Draft'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    CustomerCareColors.warningContainer,
+                                foregroundColor: CustomerCareColors.onSurface,
+                                elevation: 0,
+                                textStyle: CustomerCareTextStyles.labelSm
+                                    .copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed: onViewDetails,
+                            child: const Text('Details'),
+                          ),
+                        ],
+                      )
                     else
                       Row(
                         children: [
@@ -491,6 +607,20 @@ class TriageIncidentCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge(Color accent, bool isVerified) {
+    if (caseItem.isDraft) {
+      return _statusPill(
+        'DRAFT',
+        CustomerCareColors.warningContainer,
+        CustomerCareColors.onSurface,
+      );
+    }
+    if (caseItem.isSubmitted && !isVerified) {
+      return _statusPill(
+        'PENDING VERIFICATION',
+        CustomerCareColors.warningContainer,
+        CustomerCareColors.onSurface,
+      );
+    }
     if (caseItem.isCodeRed) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -574,6 +704,32 @@ class TriageIncidentCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _statusPill(String label, Color background, Color foreground) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        style: CustomerCareTextStyles.labelSm.copyWith(
+          color: foreground,
+          fontWeight: FontWeight.w800,
+          fontSize: 9,
+        ),
+      ),
+    );
+  }
+
+  String _formatTimestamp(String value) {
+    final timestamp = DateTime.tryParse(value)?.toLocal();
+    if (timestamp == null) return 'time unavailable';
+    final hour = timestamp.hour.toString().padLeft(2, '0');
+    final minute = timestamp.minute.toString().padLeft(2, '0');
+    return '${timestamp.day}/${timestamp.month}/${timestamp.year} $hour:$minute';
   }
 
   Widget _buildReqBadge(String label) {

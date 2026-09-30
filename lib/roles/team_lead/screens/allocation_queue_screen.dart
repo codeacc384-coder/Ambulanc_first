@@ -301,16 +301,22 @@ class _AllocationQueueScreenState extends State<AllocationQueueScreen> {
               '${booking.patientName} • '
               '${booking.serviceCategory}'
               '${booking.serviceSubtype == null ? '' : ' • ${booking.serviceSubtype}'}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 5),
             Text(
               '${booking.pickup} → ${booking.destination}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 5),
             Text(
               '${booking.distanceKm.toStringAsFixed(2)} km • '
               '${_requirements(booking)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Color(0xFF667085)),
             ),
             const SizedBox(height: 8),

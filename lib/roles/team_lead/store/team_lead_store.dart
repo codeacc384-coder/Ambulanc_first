@@ -728,24 +728,31 @@ class TeamLeadStore extends ChangeNotifier {
   // Capability matching helper for Ambulances
   bool checkAmbulanceCompatibility(AmbulanceUnit ambulance, Booking booking) {
     if (booking.transportMode == 'DEAD_BODY_TRANSFER' &&
-        !ambulance.hasCapability('FREEZER'))
+        !ambulance.hasCapability('FREEZER')) {
       return false;
+    }
     if (booking.icuRequired && !ambulance.hasCapability('ICU')) return false;
-    if (booking.ventilatorRequired && !ambulance.hasCapability('VENTILATOR'))
+    if (booking.ventilatorRequired && !ambulance.hasCapability('VENTILATOR')) {
       return false;
-    if (booking.oxygenRequired && !ambulance.hasCapability('OXYGEN'))
+    }
+    if (booking.oxygenRequired && !ambulance.hasCapability('OXYGEN')) {
       return false;
+    }
     if (booking.cardiacMonitorRequired &&
-        !ambulance.hasCapability('CARDIAC_MONITOR'))
+        !ambulance.hasCapability('CARDIAC_MONITOR')) {
       return false;
-    if (booking.stretcherRequired && !ambulance.hasCapability('STRETCHER'))
+    }
+    if (booking.stretcherRequired && !ambulance.hasCapability('STRETCHER')) {
       return false;
-    if (booking.wheelchairRequired && !ambulance.hasCapability('WHEELCHAIR'))
+    }
+    if (booking.wheelchairRequired && !ambulance.hasCapability('WHEELCHAIR')) {
       return false;
+    }
     if (booking.pediatricPatient &&
         !ambulance.hasCapability('PICU') &&
-        !ambulance.hasCapability('PEDIATRIC'))
+        !ambulance.hasCapability('PEDIATRIC')) {
       return false;
+    }
     return true;
   }
 

@@ -134,32 +134,25 @@ class _CustomerQuotationsScreenState
                   // ----------------------------------------------------------------
                   // HEADER
                   // ----------------------------------------------------------------
-                  Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Quotations & Billing Approval',
-                            style:
-                                AmbulanceFirstTypography.headlineMd(
-                              color:
-                                  AmbulanceFirstColors.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Review itemized cost sheets, clinical equipment rates, and authorize dispatch',
-                            style:
-                                AmbulanceFirstTypography.bodySm(
-                              color: AmbulanceFirstColors
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Quotations & Billing Approval',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmbulanceFirstTypography.headlineMd(
+                          color: AmbulanceFirstColors.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Review itemized cost sheets, clinical equipment rates, and authorize dispatch',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmbulanceFirstTypography.bodySm(
+                          color: AmbulanceFirstColors.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -169,18 +162,18 @@ class _CustomerQuotationsScreenState
                   // ----------------------------------------------------------------
                   // FILTER
                   // ----------------------------------------------------------------
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _filterTab(
                         'PENDING',
                         'Pending Sign-off',
                       ),
-                      const SizedBox(width: 8),
                       _filterTab(
                         'ACCEPTED',
                         'Accepted',
                       ),
-                      const SizedBox(width: 8),
                       _filterTab(
                         'ALL',
                         'All Quotes',
@@ -315,79 +308,67 @@ class _CustomerQuotationsScreenState
           // ----------------------------------------------------------------
           // HEADER ROW
           // ----------------------------------------------------------------
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
-                  AmbulanceFirstBookingId(
-                    id: q.id,
-                    prefix: 'QUOTE',
-                    fontSize: 14,
+                  Expanded(
+                    child: AmbulanceFirstBookingId(
+                      id: q.id,
+                      prefix: 'QUOTE',
+                      fontSize: 14,
+                    ),
                   ),
-
                   if (version != null) ...[
                     const SizedBox(width: 6),
                     Text(
                       'v$version',
-                      style:
-                          AmbulanceFirstTypography.codeSm(
-                        color: AmbulanceFirstColors
-                            .onSurfaceVariant,
+                      style: AmbulanceFirstTypography.codeSm(
+                        color: AmbulanceFirstColors.onSurfaceVariant,
                       ),
                     ),
                   ],
-
                   const SizedBox(width: 8),
-
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 6,
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
                       color: isPending
-                          ? AmbulanceFirstColors
-                              .warningContainer
+                          ? AmbulanceFirstColors.warningContainer
                           : isAccepted
-                              ? AmbulanceFirstColors
-                                  .secondaryContainer
-                              : AmbulanceFirstColors
-                                  .surfaceContainer,
-                      borderRadius:
-                          BorderRadius.circular(
+                              ? AmbulanceFirstColors.secondaryContainer
+                              : AmbulanceFirstColors.surfaceContainer,
+                      borderRadius: BorderRadius.circular(
                         AmbulanceFirstSpacing.radiusPill,
                       ),
                     ),
                     child: Text(
                       q.status,
-                      style:
-                          AmbulanceFirstTypography.codeSm(
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AmbulanceFirstTypography.codeSm(
                         color: isPending
                             ? AmbulanceFirstColors.onWarning
                             : isAccepted
-                                ? AmbulanceFirstColors
-                                    .onSecondaryContainer
-                                : AmbulanceFirstColors
-                                    .onSurfaceVariant,
+                                ? AmbulanceFirstColors.onSecondaryContainer
+                                : AmbulanceFirstColors.onSurfaceVariant,
                         weight: FontWeight.w700,
-                      ).copyWith(
-                        fontSize: 10,
-                      ),
+                      ).copyWith(fontSize: 10),
                     ),
                   ),
                 ],
               ),
-
-              Text(
-                '₹ ${q.finalAmount.toStringAsFixed(2)}',
-                style:
-                    AmbulanceFirstTypography.telemetryNum(
-                  color:
-                      AmbulanceFirstColors.onSurface,
-                  size: 20,
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '₹ ${q.finalAmount.toStringAsFixed(2)}',
+                  style: AmbulanceFirstTypography.telemetryNum(
+                    color: AmbulanceFirstColors.onSurface,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -412,38 +393,21 @@ class _CustomerQuotationsScreenState
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${booking.patientName} (${booking.patientAge}y / ${booking.patientGender})',
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            AmbulanceFirstTypography
-                                .headlineSm(
-                          color:
-                              AmbulanceFirstColors
-                                  .onSurface,
-                        ).copyWith(
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    Text(
-                      'REF #${booking.id}',
-                      style:
-                          AmbulanceFirstTypography.codeSm(
-                        color:
-                            AmbulanceFirstColors
-                                .onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '${booking.patientName} (${booking.patientAge}y / ${booking.patientGender})',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmbulanceFirstTypography.headlineSm(
+                    color: AmbulanceFirstColors.onSurface,
+                  ).copyWith(fontSize: 13),
+                ),
+                Text(
+                  'REF #${booking.id}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmbulanceFirstTypography.codeSm(
+                    color: AmbulanceFirstColors.onSurfaceVariant,
+                  ),
                 ),
 
                 const SizedBox(height: 4),

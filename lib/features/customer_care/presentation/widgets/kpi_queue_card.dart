@@ -56,95 +56,156 @@ class KpiQueueCard extends StatelessWidget {
           ],
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Accent Line
-            Container(
-              height: 3.5,
-              width: double.infinity,
-              color: accentColor,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        title.toUpperCase(),
-                        style: CustomerCareTextStyles.labelSm.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.6,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 160;
+            final indicator = hasPulse
+                ? Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: accentColor,
+                      boxShadow: [
+                        BoxShadow(
+                          color: accentColor.withValues(alpha: 0.5),
+                          blurRadius: 4,
+                          spreadRadius: 1,
                         ),
-                      ),
-                      if (hasPulse)
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: accentColor,
-                            boxShadow: [
-                              BoxShadow(
-                                color: accentColor.withValues(alpha: 0.5),
-                                blurRadius: 4,
-                                spreadRadius: 1,
+                      ],
+                    ),
+                  )
+                : icon != null
+                ? Icon(icon, size: 16, color: accentColor)
+                : const SizedBox.shrink();
+
+            final countText = Text(
+              count,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: CustomerCareTextStyles.telemetryDisplay.copyWith(
+                fontSize: 22,
+                color: CustomerCareColors.onSurface,
+              ),
+            );
+            final badge = Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              decoration: BoxDecoration(
+                color: badgeBgColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                badgeText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: CustomerCareTextStyles.labelSm.copyWith(
+                  color: badgeFgColor,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            );
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 3.5,
+                  width: double.infinity,
+                  color: accentColor,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: compact
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      title.toUpperCase(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: CustomerCareTextStyles.labelSm.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  indicator,
+                                ],
+                              ),
+                              countText,
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: constraints.maxWidth,
+                                ),
+                                child: badge,
+                              ),
+                              Text(
+                                subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: CustomerCareTextStyles.labelSm.copyWith(
+                                  color: hasPulse
+                                      ? accentColor
+                                      : CustomerCareColors.onSurfaceVariant,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      title.toUpperCase(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: CustomerCareTextStyles.labelSm.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.6,
+                                      ),
+                                    ),
+                                  ),
+                                  indicator,
+                                ],
+                              ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  countText,
+                                  const SizedBox(width: 8),
+                                  Flexible(child: badge),
+                                ],
+                              ),
+                              Text(
+                                subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: CustomerCareTextStyles.labelSm.copyWith(
+                                  color: hasPulse
+                                      ? accentColor
+                                      : CustomerCareColors.onSurfaceVariant,
+                                  fontSize: 10,
+                                ),
                               ),
                             ],
                           ),
-                        )
-                      else if (icon != null)
-                        Icon(icon, size: 16, color: accentColor),
-                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        count,
-                        style: CustomerCareTextStyles.telemetryDisplay.copyWith(
-                          fontSize: 22,
-                          color: CustomerCareColors.onSurface,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: badgeBgColor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          badgeText,
-                          style: CustomerCareTextStyles.labelSm.copyWith(
-                            color: badgeFgColor,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: CustomerCareTextStyles.labelSm.copyWith(
-                      color: hasPulse ? accentColor : CustomerCareColors.onSurfaceVariant,
-                      fontSize: 10,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

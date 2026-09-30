@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../theme/customer_care_colors.dart';
 import '../../theme/customer_care_text_styles.dart';
 
@@ -17,7 +18,7 @@ class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget 
   final String agentName;
 
   @override
-  Size get preferredSize => const Size.fromHeight(102);
+  Size get preferredSize => const Size.fromHeight(120);
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +26,20 @@ class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget 
       color: CustomerCareColors.surfaceContainerLowest,
       child: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            // Top Primary Navigation Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // AppBar can receive a transient collapsed constraint during web resize.
+            if (constraints.maxHeight < 80 || constraints.maxWidth < 100) {
+              return const SizedBox.shrink();
+            }
+
+            final isCompact = constraints.maxWidth < 340;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Row(
                     children: [
                       IconButton(
                         icon: const Icon(Icons.menu, size: 22),
@@ -56,65 +62,71 @@ class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget 
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Ambulance First',
-                            style: CustomerCareTextStyles.headlineSm.copyWith(
-                              color: CustomerCareColors.primaryContainer,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14,
-                              height: 1.1,
-                            ),
-                          ),
-                          Text(
-                            'Agent: $agentName',
-                            style: CustomerCareTextStyles.labelSm.copyWith(
-                              color: CustomerCareColors.onSurfaceVariant,
-                              fontSize: 9.5,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      // On-duty badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                        decoration: BoxDecoration(
-                          color: CustomerCareColors.secondaryContainer.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: CustomerCareColors.secondary,
+                            Text(
+                              'Ambulance First',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: CustomerCareTextStyles.headlineSm.copyWith(
+                                color: CustomerCareColors.primaryContainer,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                height: 1.1,
                               ),
                             ),
-                            const SizedBox(width: 4),
                             Text(
-                              'ON-DUTY',
+                              'Agent: $agentName',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: CustomerCareTextStyles.labelSm.copyWith(
-                                color: CustomerCareColors.onSecondaryFixedVariant,
-                                fontWeight: FontWeight.w800,
+                                color: CustomerCareColors.onSurfaceVariant,
                                 fontSize: 9.5,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      // Notifications
+                      if (!isCompact) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                          decoration: BoxDecoration(
+                            color: CustomerCareColors.secondaryContainer.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: CustomerCareColors.secondary,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'ON-DUTY',
+                                style: CustomerCareTextStyles.labelSm.copyWith(
+                                  color: CustomerCareColors.onSecondaryFixedVariant,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 9.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(width: 2),
                       IconButton(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints.tightFor(width: 40, height: 40),
                         icon: Stack(
                           clipBehavior: Clip.none,
                           children: [
@@ -145,22 +157,15 @@ class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget 
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-
-            // Emergency Dispatch Hotline Strip
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: CustomerCareColors.primaryContainer,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+                ),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: CustomerCareColors.primaryContainer,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
                     children: [
                       Icon(
                         Icons.emergency_rounded,
@@ -168,39 +173,44 @@ class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget 
                         color: CustomerCareColors.errorContainer,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        'Dispatch: 1800-AMBULANCE (Priority 1)',
-                        style: CustomerCareTextStyles.labelSm.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 11,
+                      Expanded(
+                        child: Text(
+                          'Dispatch: 1800-AMBULANCE (Priority 1)',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: CustomerCareTextStyles.labelSm.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: onCallHotline,
+                        borderRadius: BorderRadius.circular(4),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: CustomerCareColors.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'CALL',
+                            style: CustomerCareTextStyles.labelSm.copyWith(
+                              color: CustomerCareColors.primaryContainer,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 10,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  InkWell(
-                    onTap: onCallHotline,
-                    borderRadius: BorderRadius.circular(4),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-                      decoration: BoxDecoration(
-                        color: CustomerCareColors.surfaceContainerLowest,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'CALL',
-                        style: CustomerCareTextStyles.labelSm.copyWith(
-                          color: CustomerCareColors.primaryContainer,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

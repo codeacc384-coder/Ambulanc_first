@@ -58,46 +58,50 @@ class _AdminAuditScreenState extends State<AdminAuditScreen> {
                   borderRadius: BorderRadius.circular(StitchTheme.radiusLg),
                   border: Border.all(color: StitchTheme.borderSubtle),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.verified_user_rounded,
-                              size: 20,
-                              color: StitchTheme.primaryContainer,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Audit Trail & Governance',
-                              style: StitchTheme.headlineMd(),
-                            ),
-                          ],
+                        const Icon(
+                          Icons.verified_user_rounded,
+                          size: 20,
+                          color: StitchTheme.primaryContainer,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Administrative event history loaded from the Supabase audit ledger.',
-                          style: StitchTheme.bodySm(),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Audit Trail & Governance',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: StitchTheme.headlineMd(),
+                          ),
                         ),
                       ],
                     ),
-                    IconButton.outlined(
-                      icon: const Icon(Icons.refresh_rounded, size: 18),
-                      onPressed: () async {
-                        await widget.store.refresh();
-                        if (!context.mounted) return;
-                        showStitchToast(
-                          context,
-                          widget.store.errorMessage == null
-                              ? 'Audit data refreshed from Supabase.'
-                              : 'Audit refresh failed.',
-                          isError: widget.store.errorMessage != null,
-                        );
-                      },
+                    const SizedBox(height: 2),
+                    Text(
+                      'Administrative event history loaded from the Supabase audit ledger.',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: StitchTheme.bodySm(),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton.outlined(
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        onPressed: () async {
+                          await widget.store.refresh();
+                          if (!context.mounted) return;
+                          showStitchToast(
+                            context,
+                            widget.store.errorMessage == null
+                                ? 'Audit data refreshed from Supabase.'
+                                : 'Audit refresh failed.',
+                            isError: widget.store.errorMessage != null,
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),

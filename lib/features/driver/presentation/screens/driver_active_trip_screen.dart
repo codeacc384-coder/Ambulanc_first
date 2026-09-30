@@ -230,8 +230,8 @@ class DriverActiveTripScreen extends StatelessWidget {
         ? RouteTelemetryService.distanceKm(
             fromLatitude: driver.latitude!,
             fromLongitude: driver.longitude!,
-            toLatitude: targetLatitude!,
-            toLongitude: targetLongitude!,
+            toLatitude: targetLatitude,
+            toLongitude: targetLongitude,
           )
         : b.estimatedDistanceKm;
     final etaMinutes = hasTargetCoordinates || remainingKm > 0.05

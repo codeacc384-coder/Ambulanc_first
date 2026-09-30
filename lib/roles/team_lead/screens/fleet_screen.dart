@@ -72,17 +72,26 @@ class _FleetScreenState extends State<FleetScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Top Action Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final title = Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Ambulance Fleet Registry & Readiness', style: TeamLeadTheme.titleMedium(weight: FontWeight.w700)),
-                      Text('${ambulances.length} registered vehicles across central & regional depots', style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
+                      Text(
+                        'Ambulance Fleet Registry & Readiness',
+                        maxLines: constraints.maxWidth < 700 ? 2 : 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TeamLeadTheme.titleMedium(weight: FontWeight.w700),
+                      ),
+                      Text(
+                        '${ambulances.length} registered vehicles across central & regional depots',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant),
+                      ),
                     ],
-                  ),
-                  OutlinedButton.icon(
+                  );
+                  final refresh = OutlinedButton.icon(
                     onPressed: () => store.hydrateFromBackend(),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(TeamLeadTheme.radiusSm)),
@@ -90,8 +99,23 @@ class _FleetScreenState extends State<FleetScreen> {
                     ),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
                     label: Text('Refresh Live Fleet', style: TeamLeadTheme.body(weight: FontWeight.w700)),
-                  ),
-                ],
+                  );
+
+                  if (constraints.maxWidth < 700) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [title, const SizedBox(height: 10), refresh],
+                    );
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(child: title),
+                      const SizedBox(width: 16),
+                      refresh,
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
 
@@ -238,9 +262,9 @@ class _FleetScreenState extends State<FleetScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              Expanded(
+                child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(6),
@@ -251,22 +275,26 @@ class _FleetScreenState extends State<FleetScreen> {
                     child: const Icon(Icons.airport_shuttle_rounded, color: TeamLeadTheme.primary, size: 18),
                   ),
                   const SizedBox(width: 8),
-                  Column(
+                  Expanded(
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(unit.name, style: TeamLeadTheme.body(weight: FontWeight.w700)),
-                      Text(unit.registrationNumber, style: TeamLeadTheme.telemetrySecondary(color: TeamLeadTheme.primaryDark, weight: FontWeight.w600)),
+                      Text(unit.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.body(weight: FontWeight.w700)),
+                      Text(unit.registrationNumber, maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.telemetrySecondary(color: TeamLeadTheme.primaryDark, weight: FontWeight.w600)),
                     ],
+                    ),
                   ),
                 ],
+                ),
               ),
-              StatusBadge(status: unit.status),
+              const SizedBox(width: 8),
+              Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: StatusBadge(status: unit.status))),
             ],
           ),
           const SizedBox(height: 6),
 
-          Text('${unit.model} • ${unit.category}', style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
-          Text('Depot: ${unit.baseStation}', style: TeamLeadTheme.small(color: TeamLeadTheme.textMuted)),
+          Text('${unit.model} • ${unit.category}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant)),
+          Text('Depot: ${unit.baseStation}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TeamLeadTheme.small(color: TeamLeadTheme.textMuted)),
 
           const SizedBox(height: 6),
           // Capabilities wrap
@@ -288,9 +316,13 @@ class _FleetScreenState extends State<FleetScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                unit.assignedBookingId != null ? 'Booking: ${unit.assignedBookingId}' : 'Standby in Depot',
-                style: TeamLeadTheme.telemetryMicro(color: unit.assignedBookingId != null ? TeamLeadTheme.primary : TeamLeadTheme.textMuted),
+              Expanded(
+                child: Text(
+                  unit.assignedBookingId != null ? 'Booking: ${unit.assignedBookingId}' : 'Standby in Depot',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TeamLeadTheme.telemetryMicro(color: unit.assignedBookingId != null ? TeamLeadTheme.primary : TeamLeadTheme.textMuted),
+                ),
               ),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert_rounded, size: 18, color: TeamLeadTheme.textMuted),
