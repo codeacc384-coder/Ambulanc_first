@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/services/doctor_repository.dart';
+import '../../../shared/booking_date_time_formatter.dart';
 import '../../../shared/theme/app_colors.dart';
 
 class DoctorBookingScreen extends StatefulWidget {
@@ -52,20 +53,43 @@ class _DoctorBookingScreenState extends State<DoctorBookingScreen> {
 
     if (selected == null) {
       return ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         children: [
           Text('Assigned patients', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
           Text('Select a booking to inspect patient and clinical data.'),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           if (widget.bookings.isEmpty)
             const Card(child: Padding(padding: EdgeInsets.all(20), child: Text('No assigned bookings are currently available.')))
           else
             ...widget.bookings.map((booking) => Card(
-                  margin: const EdgeInsets.only(bottom: 10),
+                  margin: const EdgeInsets.only(bottom: 6),
                   child: ListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                     title: Text('${booking['patient_name'] ?? 'Unnamed patient'}'),
-                    subtitle: Text('${booking['id']} · ${booking['status'] ?? '—'}'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Booking ${booking['id']} · ${booking['status'] ?? '—'}'),
+                        if ('${booking['pickup_address'] ?? ''}'.isNotEmpty ||
+                            '${booking['destination_address'] ?? booking['patient_destination_hospital'] ?? ''}'.isNotEmpty)
+                          Text(
+                            '${booking['pickup_address'] ?? 'Pickup unavailable'} → '
+                            '${booking['patient_destination_hospital'] ?? booking['destination_address'] ?? 'Destination unavailable'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if ('${booking['preferred_date'] ?? ''}'.isNotEmpty ||
+                            '${booking['preferred_time'] ?? ''}'.isNotEmpty)
+                          Text(
+                            BookingDateTimeFormatter.formatDateTime(
+                              '${booking['preferred_date'] ?? ''}',
+                              '${booking['preferred_time'] ?? ''}',
+                            ),
+                          ),
+                      ],
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => _select(booking),
                   ),

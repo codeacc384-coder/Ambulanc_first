@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/booking_date_time_formatter.dart';
 import '../models/admin_models.dart';
 import '../store/admin_store.dart';
 import '../theme/admin_theme.dart';
@@ -687,7 +688,7 @@ class _BookingCard extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '· ${DateTime.now().difference(booking.createdAt).inMinutes}m ago',
+                                      '· Created ${BookingDateTimeFormatter.formatTimestamp(booking.createdAt.toIso8601String())}',
                                       maxLines: 1,
                                       style: StitchTheme.labelSm(
                                         color: StitchTheme.outline,

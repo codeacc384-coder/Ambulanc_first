@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/models/customer_care_case.dart';
 import '../../../../core/services/customer_care_repository.dart';
+import '../../../../shared/booking_date_time_formatter.dart';
 import '../../theme/customer_care_colors.dart';
 import '../../theme/customer_care_text_styles.dart';
 
@@ -261,6 +262,19 @@ class _VerifiedCard extends StatelessWidget {
                     color: CustomerCareColors.onSurfaceVariant,
                   ),
                 ),
+                if (caseItem.preferredDate.isNotEmpty ||
+                    caseItem.preferredTime.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    BookingDateTimeFormatter.formatDateTime(
+                      caseItem.preferredDate,
+                      caseItem.preferredTime,
+                    ),
+                    style: CustomerCareTextStyles.labelSm.copyWith(
+                      color: CustomerCareColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(8),

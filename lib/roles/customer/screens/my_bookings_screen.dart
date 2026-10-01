@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/booking.dart';
+import '../../../shared/booking_date_time_formatter.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/theme/app_text_styles.dart';
 import '../../../shared/widgets/aeromed_card.dart';
@@ -205,7 +206,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
           'Transport: ${booking.transportModeLabel}\n'
           'Patient: ${booking.patientName} (${booking.patientAge} yrs, ${booking.patientGender})\n\n'
           'Pickup: ${booking.pickup}\nDestination: ${booking.destination}\n'
-          'Preferred: ${booking.date} • ${booking.time}\n\n'
+          'Preferred: ${BookingDateTimeFormatter.formatDateTime(booking.date, booking.time)}\n\n'
           'Medical support: ${requirements.isEmpty ? 'None specified' : requirements.join(', ')}\n'
           'Quotation: ${booking.quotation?.id ?? 'Not generated yet'}\nInvoice: ${booking.invoice?.id ?? 'Not generated yet'}'
           '${booking.isHomeService ? '\n\nHome Service Billing\n'
@@ -224,6 +225,8 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
 }
 
+enum _BookingTileAction { details, quotation, invoice, cancel, bookAgain }
+
 class _BookingTile extends StatelessWidget {
   const _BookingTile({required this.booking, required this.onDetails, required this.onViewQuotation, required this.onCancel, required this.onBookAgain, required this.onAdvance});
 
@@ -237,21 +240,48 @@ class _BookingTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = AppColors.statusColors(booking.isCompleted ? 'Completed' : booking.isCancelled ? 'Cancelled' : booking.customerStatusLabel);
+    final startsHomeVisit = booking.isHomeService && booking.status == 'HOME_SERVICE_BOOKED';
+    final completesHomeVisit = booking.isHomeService && booking.status == 'HOME_SERVICE_IN_PROGRESS';
+    final hasDedicatedPrimaryAction = booking.hasPendingQuotation ||
+        booking.canTrack ||
+        startsHomeVisit ||
+        completesHomeVisit ||
+        booking.isCompleted;
+    final secondaryActions = <PopupMenuEntry<_BookingTileAction>>[
+      if (hasDedicatedPrimaryAction)
+        PopupMenuItem(
+          value: booking.isCompleted
+              ? _BookingTileAction.invoice
+              : _BookingTileAction.details,
+          child: Text(booking.isCompleted ? 'View invoice' : 'Details'),
+        ),
+      if (booking.quotation != null && booking.hasPendingQuotation)
+        const PopupMenuItem(
+          value: _BookingTileAction.quotation,
+          child: Text('View quotation'),
+        ),
+      if (booking.canCancel)
+        const PopupMenuItem(
+          value: _BookingTileAction.cancel,
+          child: Text('Cancel booking'),
+        ),
+    ];
     return AeroMedCard(
       shadow: false,
+      padding: const EdgeInsets.all(14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Expanded(child: Text(booking.id, style: AppTextStyles.cardTitle)),
           Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: status.$1, borderRadius: BorderRadius.circular(18)), child: Text(booking.customerStatusLabel, style: AppTextStyles.caption.copyWith(color: status.$2, fontWeight: FontWeight.w700))),
         ]),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         _locationLine(Icons.radio_button_checked_rounded, booking.pickup),
         _locationLine(Icons.location_on_rounded, booking.destination),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           booking.isHomeService
-              ? '${booking.homeServiceName} • ${booking.date} • ${booking.time}'
-              : '${booking.patientName} • ${booking.date} • ${booking.time}',
+              ? '${booking.homeServiceName} • ${BookingDateTimeFormatter.formatDateTime(booking.date, booking.time)}'
+              : '${booking.patientName} • ${BookingDateTimeFormatter.formatDateTime(booking.date, booking.time)}',
           style: AppTextStyles.supporting,
         ),
         if (booking.isHomeService) ...[
@@ -275,35 +305,73 @@ class _BookingTile extends StatelessWidget {
           _responseNote('Quotation accepted. Waiting for ambulance allocation.', Icons.check_circle_outline_rounded),
         if (booking.status == 'CUSTOMER_REJECTED')
           _responseNote('Quotation cancelled. Reason: ${booking.quotation?.rejectionReason.isEmpty ?? true ? 'No reason provided' : booking.quotation!.rejectionReason}', Icons.info_outline_rounded),
-        const Divider(height: 18),
-        Wrap(spacing: 7, runSpacing: 7, children: [
-          OutlinedButton.icon(onPressed: onDetails, icon: const Icon(Icons.visibility_outlined, size: 16), label: const Text('Details')),
-          if (booking.quotation != null && booking.hasPendingQuotation) OutlinedButton.icon(onPressed: onViewQuotation, icon: const Icon(Icons.receipt_long_outlined, size: 16), label: const Text('View Quotation')),
-          if (booking.quotation != null && booking.hasPendingQuotation) ElevatedButton.icon(onPressed: onAdvance, icon: const Icon(Icons.check_rounded, size: 16), label: const Text('Accept')),
-          if (booking.canTrack)
-            ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => ActiveTripPage(booking: booking)),
+        const Divider(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: booking.hasPendingQuotation
+                  ? ElevatedButton.icon(
+                      onPressed: onAdvance,
+                      icon: const Icon(Icons.check_rounded, size: 16),
+                      label: const Text('Accept quotation'),
+                    )
+                  : booking.canTrack
+                  ? ElevatedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ActiveTripPage(booking: booking),
+                        ),
+                      ),
+                      icon: const Icon(Icons.gps_fixed_rounded, size: 16),
+                      label: const Text('Track trip'),
+                    )
+                  : startsHomeVisit
+                  ? ElevatedButton.icon(
+                      onPressed: onAdvance,
+                      icon: const Icon(Icons.play_arrow_rounded, size: 16),
+                      label: const Text('Start visit'),
+                    )
+                  : completesHomeVisit
+                  ? ElevatedButton.icon(
+                      onPressed: onAdvance,
+                      icon: const Icon(Icons.receipt_long_rounded, size: 16),
+                      label: const Text('Complete and bill'),
+                    )
+                  : booking.isCompleted
+                  ? OutlinedButton.icon(
+                      onPressed: onBookAgain,
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: const Text('Book again'),
+                    )
+                  : OutlinedButton.icon(
+                      onPressed: onDetails,
+                      icon: const Icon(Icons.visibility_outlined, size: 16),
+                      label: const Text('Details'),
+                    ),
+            ),
+            if (secondaryActions.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              PopupMenuButton<_BookingTileAction>(
+                tooltip: 'More booking actions',
+                icon: const Icon(Icons.more_vert_rounded),
+                itemBuilder: (_) => secondaryActions,
+                onSelected: (action) {
+                  switch (action) {
+                    case _BookingTileAction.details:
+                    case _BookingTileAction.invoice:
+                      onDetails();
+                    case _BookingTileAction.quotation:
+                      onViewQuotation();
+                    case _BookingTileAction.cancel:
+                      onCancel();
+                    case _BookingTileAction.bookAgain:
+                      onBookAgain();
+                  }
+                },
               ),
-              icon: const Icon(Icons.gps_fixed_rounded, size: 16),
-              label: const Text('Track'),
-            ),
-          if (booking.isCompleted) OutlinedButton.icon(onPressed: onDetails, icon: const Icon(Icons.receipt_long_outlined, size: 16), label: const Text('View Invoice')),
-          if (booking.canCancel) TextButton.icon(onPressed: onCancel, icon: const Icon(Icons.close_rounded, size: 16), label: const Text('Cancel')),
-          if (booking.isCompleted) TextButton.icon(onPressed: onBookAgain, icon: const Icon(Icons.refresh_rounded, size: 16), label: const Text('Book Again')),
-          if (booking.isHomeService && booking.status == 'HOME_SERVICE_BOOKED')
-            TextButton.icon(
-              onPressed: onAdvance,
-              icon: const Icon(Icons.play_arrow_rounded, size: 16),
-              label: const Text('Start Visit'),
-            ),
-          if (booking.isHomeService && booking.status == 'HOME_SERVICE_IN_PROGRESS')
-            ElevatedButton.icon(
-              onPressed: onAdvance,
-              icon: const Icon(Icons.receipt_long_rounded, size: 16),
-              label: const Text('Complete & Bill'),
-            ),
-        ]),
+            ],
+          ],
+        ),
       ]),
     );
   }

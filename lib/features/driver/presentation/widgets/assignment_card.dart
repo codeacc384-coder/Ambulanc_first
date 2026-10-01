@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/models/driver_models.dart';
+import '../../../../shared/booking_date_time_formatter.dart';
 import '../../theme/driver_colors.dart';
 import '../../theme/driver_text_styles.dart';
 
@@ -46,7 +47,7 @@ class AssignmentCard extends StatelessWidget {
         children: [
           // Top Urgency Bar
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
               color: _isCodeRed
                   ? DriverColors.tertiary.withValues(alpha: 0.08)
@@ -54,9 +55,9 @@ class AssignmentCard extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(top: Radius.circular(17)),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                Expanded(
+                  child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -83,26 +84,40 @@ class AssignmentCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      booking.id,
-                      style: DriverTextStyles.bookingId.copyWith(
-                        color: DriverColors.onSurface,
-                        fontWeight: FontWeight.w700,
+                    Flexible(
+                      child: Text(
+                        booking.id,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: DriverTextStyles.bookingId.copyWith(
+                          color: DriverColors.onSurface,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: DriverColors.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(
-                    '${booking.preferredDate} • ${booking.preferredTime}',
-                    style: DriverTextStyles.telemetryMicro.copyWith(
-                      color: DriverColors.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: DriverColors.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      BookingDateTimeFormatter.formatDateTime(
+                        booking.preferredDate,
+                        booking.preferredTime,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: DriverTextStyles.telemetryMicro.copyWith(
+                        color: DriverColors.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -111,7 +126,7 @@ class AssignmentCard extends StatelessWidget {
           ),
 
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -137,17 +152,22 @@ class AssignmentCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: DriverColors.secondaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        booking.currentCondition,
-                        style: DriverTextStyles.telemetryMicro.copyWith(
-                          color: DriverColors.secondary,
-                          fontWeight: FontWeight.w700,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: DriverColors.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          booking.currentCondition,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: DriverTextStyles.telemetryMicro.copyWith(
+                            color: DriverColors.secondary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -176,9 +196,9 @@ class AssignmentCard extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 8),
                 const Divider(height: 1, color: DriverColors.surfaceContainerHigh),
-                const SizedBox(height: 14),
+                const SizedBox(height: 8),
 
                 // Route Segment
                 Row(
@@ -207,7 +227,7 @@ class AssignmentCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 6),
                           Text(
                             booking.destinationHospital.isNotEmpty
                                 ? '${booking.destinationHospital} (${booking.destinationAddress})'
@@ -237,32 +257,46 @@ class AssignmentCard extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
+                      Expanded(
+                        child: Row(
                         children: [
                           Icon(Icons.badge_outlined, size: 14, color: DriverColors.primaryContainer),
                           const SizedBox(width: 6),
-                          Text(
-                            'Dr: ${booking.doctorName}',
-                            style: DriverTextStyles.telemetryMicro.copyWith(
-                              color: DriverColors.onSurface,
-                              fontWeight: FontWeight.w600,
+                          Expanded(
+                            child: Text(
+                              'Dr: ${booking.doctorName}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: DriverTextStyles.telemetryMicro.copyWith(
+                                color: DriverColors.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      Row(
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Row(
                         children: [
                           Icon(Icons.health_and_safety_outlined, size: 14, color: DriverColors.secondary),
                           const SizedBox(width: 6),
-                          Text(
-                            'EMT: ${booking.emtName}',
-                            style: DriverTextStyles.telemetryMicro.copyWith(
-                              color: DriverColors.onSurface,
-                              fontWeight: FontWeight.w600,
+                          Expanded(
+                            child: Text(
+                              'EMT: ${booking.emtName}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: DriverTextStyles.telemetryMicro.copyWith(
+                                color: DriverColors.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
+                      ),
+                      const SizedBox(width: 8),
                       Text(
                         '${booking.estimatedDistanceKm} KM',
                         style: DriverTextStyles.telemetryMicro.copyWith(
@@ -297,7 +331,7 @@ class AssignmentCard extends StatelessWidget {
                           label: const Text('ACCEPT & START PICKUP'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isCodeRed ? DriverColors.tertiary : DriverColors.primaryContainer,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
                           ),
                         ),
                       ),
@@ -312,7 +346,7 @@ class AssignmentCard extends StatelessWidget {
                       label: const Text('START PICKUP'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _isCodeRed ? DriverColors.tertiary : DriverColors.primaryContainer,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                     ),
                   ),
@@ -324,7 +358,7 @@ class AssignmentCard extends StatelessWidget {
                       icon: const Icon(Icons.navigation_rounded, size: 18),
                       label: const Text('OPEN ACTIVE TRIP CONSOLE'),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         foregroundColor: DriverColors.primaryContainer,
                         side: const BorderSide(color: DriverColors.primaryContainer, width: 1.5),
                       ),

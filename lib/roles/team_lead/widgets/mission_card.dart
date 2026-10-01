@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/booking.dart';
+import '../../../shared/booking_date_time_formatter.dart';
 import '../store/team_lead_store.dart';
 import '../theme/team_lead_theme.dart';
 import 'case_details_dialog.dart';
@@ -37,7 +38,7 @@ class MissionCard extends StatelessWidget {
         children: [
           // Header Bar
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: TeamLeadTheme.surfaceLow,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(TeamLeadTheme.radiusMd)),
@@ -128,7 +129,7 @@ class MissionCard extends StatelessWidget {
 
           // Body Content
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -186,7 +187,19 @@ class MissionCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 6),
+                if (booking.date.isNotEmpty || booking.time.isNotEmpty)
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule_rounded, size: 14, color: TeamLeadTheme.onSurfaceVariant),
+                      const SizedBox(width: 6),
+                      Text(
+                        BookingDateTimeFormatter.formatDateTime(booking.date, booking.time),
+                        style: TeamLeadTheme.supportingBody(color: TeamLeadTheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 8),
 
                 // Assigned Crew & Vehicle Grid
                 Container(
@@ -226,7 +239,7 @@ class MissionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
 
                 // Live Telemetry Bar
                 TelemetrySummaryStrip(
@@ -264,7 +277,7 @@ class MissionCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
 
                 // Automatic location-driven trip progress. Team Lead is read-only here;
                 // the Driver GPS stream and backend update the milestone automatically.

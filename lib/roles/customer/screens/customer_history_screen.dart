@@ -3,6 +3,7 @@ import '../../../core/models/auth_user.dart';
 import '../../../core/models/booking.dart';
 import '../../../core/services/customer_booking_workflow_service.dart';
 import '../../../core/services/shared_booking_store.dart';
+import '../../../shared/booking_date_time_formatter.dart';
 import '../theme/ambulance_first_theme.dart';
 import '../widgets/ambulance_first_button.dart';
 import '../widgets/ambulance_first_card.dart';
@@ -257,7 +258,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '${booking.date}, ${booking.time}',
+                    BookingDateTimeFormatter.formatDateTime(booking.date, booking.time),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant),

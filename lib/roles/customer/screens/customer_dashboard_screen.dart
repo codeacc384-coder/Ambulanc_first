@@ -7,6 +7,7 @@ import '../../../core/services/shared_booking_store.dart';
 import '../../../core/services/supabase_booking_repository.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../../core/services/supabase_workflow_repository.dart';
+import '../../../shared/booking_date_time_formatter.dart';
 import '../theme/ambulance_first_theme.dart';
 import '../widgets/ambulance_first_button.dart';
 import '../widgets/ambulance_first_card.dart';
@@ -756,7 +757,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${booking.date}, ${booking.time} · ${booking.ambulanceType}',
+            '${BookingDateTimeFormatter.formatDateTime(booking.date, booking.time)} · ${booking.ambulanceType}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AmbulanceFirstTypography.codeSm(color: AmbulanceFirstColors.onSurfaceVariant).copyWith(fontSize: 10),

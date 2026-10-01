@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/models/customer_care_case.dart';
 import '../../../../core/services/customer_care_repository.dart';
+import '../../../../shared/booking_date_time_formatter.dart';
 import '../../theme/customer_care_colors.dart';
 import '../../theme/customer_care_text_styles.dart';
 
@@ -589,7 +590,7 @@ class _NewIntakeCard extends StatelessWidget {
                           const SizedBox(width: 6),
                           Flexible(
                             child: Text(
-                              '• Updated ${caseItem.updatedAt.isEmpty ? caseItem.createdAt : caseItem.updatedAt}',
+                              '• Updated ${BookingDateTimeFormatter.formatTimestamp(caseItem.updatedAt.isEmpty ? caseItem.createdAt : caseItem.updatedAt)}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: CustomerCareTextStyles.labelSm.copyWith(
@@ -678,7 +679,7 @@ class _NewIntakeCard extends StatelessWidget {
                       ),
                       if (caseItem.submittedAt.isNotEmpty) ...[
                         Text(
-                          'Submitted ${caseItem.submittedAt}',
+                          'Submitted ${BookingDateTimeFormatter.formatTimestamp(caseItem.submittedAt)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: CustomerCareTextStyles.labelSm.copyWith(
@@ -737,6 +738,33 @@ class _NewIntakeCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (caseItem.preferredDate.isNotEmpty ||
+                    caseItem.preferredTime.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.schedule_rounded,
+                        size: 14,
+                        color: CustomerCareColors.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          BookingDateTimeFormatter.formatDateTime(
+                            caseItem.preferredDate,
+                            caseItem.preferredTime,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: CustomerCareTextStyles.labelSm.copyWith(
+                            color: CustomerCareColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 8),
 
                 // Caller Strip

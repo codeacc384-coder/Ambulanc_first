@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/models/booking.dart';
+import '../../../shared/booking_date_time_formatter.dart';
 import '../store/team_lead_store.dart';
 import '../widgets/allocation_modal.dart';
 
@@ -276,9 +277,9 @@ class _AllocationQueueScreenState extends State<AllocationQueueScreen> {
         booking.status.toUpperCase() == 'CUSTOMER_ACCEPTED';
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -296,7 +297,7 @@ class _AllocationQueueScreenState extends State<AllocationQueueScreen> {
                 _badge(booking.status),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               '${booking.patientName} • '
               '${booking.serviceCategory}'
@@ -305,10 +306,17 @@ class _AllocationQueueScreenState extends State<AllocationQueueScreen> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
+            if (booking.date.isNotEmpty || booking.time.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                BookingDateTimeFormatter.formatDateTime(booking.date, booking.time),
+                style: const TextStyle(color: Color(0xFF667085)),
+              ),
+            ],
             const SizedBox(height: 5),
             Text(
               '${booking.pickup} → ${booking.destination}',
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 5),
@@ -320,25 +328,23 @@ class _AllocationQueueScreenState extends State<AllocationQueueScreen> {
               style: const TextStyle(color: Color(0xFF667085)),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  'Basic fare ₹${booking.amount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Spacer(),
-                if (booking.amount > 0)
-                  Text(
-                    '₹${booking.amount.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
+            if (booking.basicFare > 0 || booking.amount > 0)
+              Row(
+                children: [
+                  if (booking.basicFare > 0)
+                    Text(
+                      'Base ₹${booking.basicFare.toStringAsFixed(2)}',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
+                  const Spacer(),
+                  if (booking.amount > 0)
+                    Text(
+                      'Total ₹${booking.amount.toStringAsFixed(2)}',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                ],
+              ),
+            const SizedBox(height: 8),
             if (!accepted)
               const Text(
                 'Allocation locked until customer accepts the quotation.',

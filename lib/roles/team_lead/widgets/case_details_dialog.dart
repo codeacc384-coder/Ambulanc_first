@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/booking.dart';
+import '../../../shared/booking_date_time_formatter.dart';
 import '../store/team_lead_store.dart';
 import '../theme/team_lead_theme.dart';
 import 'status_badge.dart';
@@ -70,7 +71,7 @@ class CaseDetailsDialog extends StatelessWidget {
                             ],
                           ),
                           Text(
-                            '${booking.transportModeLabel} • Created ${booking.date} at ${booking.time}',
+                            '${booking.transportModeLabel} • Created ${BookingDateTimeFormatter.formatDateTime(booking.date, booking.time)}',
                             style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant),
                           ),
                         ],

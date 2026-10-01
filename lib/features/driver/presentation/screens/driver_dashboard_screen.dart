@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/models/driver_models.dart';
+import '../../../../shared/booking_date_time_formatter.dart';
 import '../../theme/driver_colors.dart';
 import '../../theme/driver_text_styles.dart';
 import '../widgets/driver_duty_switcher.dart';
@@ -386,7 +387,10 @@ class DriverDashboardScreen extends StatelessWidget {
                                   color: DriverColors.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: Text(b.preferredTime, style: DriverTextStyles.telemetryMicro),
+                                child: Text(
+                                  BookingDateTimeFormatter.formatTime(b.preferredTime),
+                                  style: DriverTextStyles.telemetryMicro,
+                                ),
                               ),
                             ],
                           ),

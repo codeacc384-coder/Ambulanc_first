@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/models/customer_care_case.dart';
 import '../../../../core/services/customer_care_repository.dart';
+import '../../../../shared/booking_date_time_formatter.dart';
 import '../../theme/customer_care_colors.dart';
 import '../../theme/customer_care_text_styles.dart';
 
@@ -396,7 +397,7 @@ class _ArchiveCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            caseItem.createdAt,
+                            BookingDateTimeFormatter.formatTimestamp(caseItem.createdAt),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: CustomerCareTextStyles.labelSm.copyWith(fontSize: 9.5),
@@ -443,6 +444,19 @@ class _ArchiveCard extends StatelessWidget {
               ),
               overflow: TextOverflow.ellipsis,
             ),
+            if (caseItem.preferredDate.isNotEmpty ||
+                caseItem.preferredTime.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                BookingDateTimeFormatter.formatDateTime(
+                  caseItem.preferredDate,
+                  caseItem.preferredTime,
+                ),
+                style: CustomerCareTextStyles.labelSm.copyWith(
+                  color: CustomerCareColors.onSurfaceVariant,
+                ),
+              ),
+            ],
             const SizedBox(height: 6),
             Row(
               children: [

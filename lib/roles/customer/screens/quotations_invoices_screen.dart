@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/booking_date_time_formatter.dart';
 import '../../../core/models/booking.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/theme/app_text_styles.dart';
@@ -264,7 +265,7 @@ class _InvoiceTile extends StatelessWidget {
                   children: [
                     Text(invoice.id, style: AppTextStyles.bodyStrong),
                     Text(
-                      '${booking.id} • ${booking.date}',
+                      '${booking.id} • ${BookingDateTimeFormatter.formatDate(booking.date)}',
                       style: AppTextStyles.supporting,
                     ),
                   ],

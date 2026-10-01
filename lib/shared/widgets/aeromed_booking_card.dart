@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/models/booking.dart';
+import '../booking_date_time_formatter.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import './aeromed_card.dart';
@@ -26,8 +27,8 @@ class AeroMedLocationCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: iconColor),
-        const SizedBox(width: 10),
+        Icon(icon, size: 16, color: iconColor),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,34 +56,50 @@ class AeroMedBookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AeroMedCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(child: Text(booking.id, style: AppTextStyles.cardTitle.copyWith(fontSize: 16))),
+              Expanded(
+                child: Text(
+                  booking.patientName.isNotEmpty ? booking.patientName : booking.id,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.cardTitle.copyWith(fontSize: 16),
+                ),
+              ),
               AeroMedStatusBadge(booking.status, live: booking.status == 'On the Way'),
             ],
           ),
-          const SizedBox(height: 14),
-          const Divider(),
-          const SizedBox(height: 14),
+          if (booking.patientName.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text('Booking ${booking.id}', style: AppTextStyles.caption),
+          ],
+          const SizedBox(height: 8),
           AeroMedLocationCard(icon: Icons.radio_button_checked_rounded, label: 'Pickup', value: booking.pickup),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           AeroMedLocationCard(
             icon: Icons.location_on_rounded,
             label: 'Destination',
             value: booking.destination,
             iconColor: AppColors.primaryDark,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           Row(
             children: [
               const Icon(Icons.calendar_today_outlined, size: 15, color: AppColors.textSecondary),
               const SizedBox(width: 6),
-              Text('${booking.date} • ${booking.time}', style: AppTextStyles.supporting),
-              const Spacer(),
+              Expanded(
+                child: Text(
+                  BookingDateTimeFormatter.formatDateTime(booking.date, booking.time),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.supporting,
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(booking.formattedAmount, style: AppTextStyles.cardTitle),
             ],
           ),
