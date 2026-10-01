@@ -95,6 +95,7 @@ class LiveRoadRouteService {
     required String originAddress,
     required String destinationAddress,
     required String legKey,
+    bool includeGeometry = true,
   }) async {
     final response = await client.functions.invoke(
       'calculate-route',
@@ -105,7 +106,7 @@ class LiveRoadRouteService {
         'pickup_lng': originLongitude,
         'destination_lat': destinationLatitude,
         'destination_lng': destinationLongitude,
-        'include_geometry': true,
+        'include_geometry': includeGeometry,
       },
     );
 

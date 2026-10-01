@@ -17,4 +17,23 @@ void main() {
       expect(find.text('30'), findsOneWidget);
     },
   );
+
+  testWidgets('shows placeholders until live route data is available', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: HudTelemetryBar(
+            speedKmh: 0,
+            etaMinutes: null,
+            remainingKm: null,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('--'), findsNWidgets(2));
+    expect(find.text('0'), findsOneWidget);
+  });
 }

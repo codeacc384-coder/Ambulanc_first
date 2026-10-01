@@ -1,9 +1,9 @@
 ﻿# Design.md — Ambulance First
 ### Emergency Medical Transport Platform — UI/UX Design Specification
 
-> **Scope:** Admin Portal · Driver Console · Customer Care Operations Portal
+> **Scope:** Admin · Customer · Customer Care · Driver · Team Lead · Doctor portals
 > **Framework:** Flutter (Material 3, useMaterial3: true)
-> **Last Updated:** September 2026
+> **Last Updated:** September 30, 2026
 
 ---
 
@@ -12,26 +12,29 @@
 1. [Design Philosophy](#1-design-philosophy)
 2. [Shared Design System Tokens](#2-shared-design-system-tokens)
 3. [Admin Portal Design](#3-admin-portal-design)
-4. [Driver Console Design](#4-driver-console-design)
-5. [Customer Care Portal Design](#5-customer-care-portal-design)
-6. [Cross-Portal Design Rules](#6-cross-portal-design-rules)
-7. [Semantic Color Usage Guide](#7-semantic-color-usage-guide)
-8. [Accessibility & Responsiveness](#8-accessibility--responsiveness)
+4. [Customer Portal Design](#4-customer-portal-design)
+5. [Driver Console Design](#5-driver-console-design)
+6. [Customer Care Portal Design](#6-customer-care-portal-design)
+7. [Team Lead Portal Design](#7-team-lead-portal-design)
+8. [Doctor Workspace Design](#8-doctor-workspace-design)
+9. [Cross-Portal Design Patterns](#9-cross-portal-design-patterns)
+10. [Semantic Color Usage](#10-semantic-color-usage)
+11. [Accessibility, Responsiveness & Gaps](#11-accessibility-responsiveness--gaps)
 
 ---
 
 ## 1. Design Philosophy
 
-Ambulance First is a **clinical-grade, high-stakes emergency transport platform**. Every design decision must reflect:
+Ambulance First is a **clinical-grade, high-stakes emergency transport platform**. The six role experiences share emergency-status semantics and a light clinical foundation, but do not yet use one unified theme or component library. Each experience is optimized for a different operational task:
 
 | Principle | Description |
 |---|---|
 | **Operational Clarity** | Critical information must be immediately scannable at a glance — no visual clutter. |
 | **Trust & Authority** | Clinical Cobalt (#0369A1) is the primary brand identity — professional, reliable, calm under pressure. |
 | **High-Density Data** | Screens carry real-time telemetry, booking IDs, patient vitals, GPS coordinates, and queue metrics — displayed without cognitive overload. |
-| **Role Specificity** | Each portal is tailored to its operator's mental model: Admin = oversight, Driver = action, Customer Care = triage. |
+| **Role Specificity** | Each portal is tailored to its operator's mental model: Admin = oversight, Customer = booking visibility, Customer Care = triage, Driver = trip execution, Team Lead = allocation, Doctor = clinical review. |
 | **Zero Ambiguity** | Status badges, urgency pips, semantic colors, and JetBrains Mono numerics provide unambiguous state communication. |
-| **Light-Mode First** | All portals use a clinical light-mode canvas (#F8F9FF) with dark-chrome nav accents for focus areas. |
+| **Light-Mode First** | Operations portals generally use a light clinical canvas. Customer and Doctor also consume a separate pale-green AeroMed palette; see the theme matrix for current inconsistencies. |
 
 ---
 
@@ -39,9 +42,9 @@ Ambulance First is a **clinical-grade, high-stakes emergency transport platform*
 
 ### 2.1 Color Palette
 
-All three portals share the same foundational color contract defined in StitchTheme / DriverColors / CustomerCareColors. Derived from the **Emergency Response Console** Stitch design system.
+There is no single color contract across all roles. Admin, Driver, and Customer Care use closely related cobalt/slate tokens; Team Lead uses a related but separately defined palette; Customer and Doctor use the AeroMed/AppColors green system in parts of the UI while the Customer shell also applies a cobalt theme. The role matrix below records the implementation as it exists, not a promise that every widget uses one token source.
 
-#### Primary Brand — Clinical Cobalt
+#### Clinical Cobalt Family — Admin, Driver, Customer Care, Team Lead
 
 | Token | Hex | Usage |
 |---|---|---|
@@ -52,14 +55,14 @@ All three portals share the same foundational color contract defined in StitchTh
 | primaryFixed | #CDE5FF | Light tint for badges, chips bg |
 | primaryFixedDim | #94CCFF | Hovered/dimmed primary state |
 | onPrimaryFixed | #001D32 | Text on primaryFixed surfaces |
-| inversePrimary | #94CCFF | Inverse (dark) primary — for HUD overlays |
+| inversePrimary | #94CCFF | Inverse primary — defined in Driver and Customer Care tokens |
 
-#### Secondary — Operational Emerald (Available / Verified)
+#### Operational Emerald — Role-Specific Secondary / Readiness
 
 | Token | Hex | Usage |
 |---|---|---|
 | secondary | #006C4A | Available/on-duty status, verified state |
-| secondaryContainer | #82F5C1–#9AF1C6 | Verified badge bg, emerald chip bg |
+| secondaryContainer | #82F5C1–#9AF1C6 | Verified badge / chip; exact values differ by role |
 | onSecondary | #FFFFFF | Text on secondary |
 | secondaryFixed | #85F8C4 | Fixed emerald tint |
 
@@ -106,7 +109,7 @@ All three portals share the same foundational color contract defined in StitchTh
 
 | Token | Hex | Usage |
 |---|---|---|
-| tertiary (CC) | #392CD1 | Specialist / PICU indicator |
+| tertiary | #392CD1 | Customer Care specialist / PICU indicator; Customer uses a related but different violet |
 | tertiaryContainer | #534BE9 | Lavender badge bg |
 | tertiaryFixed | #E2DFFF | Light lavender tint |
 
@@ -122,17 +125,30 @@ All three portals share the same foundational color contract defined in StitchTh
 
 | Token | Hex | Usage |
 |---|---|---|
-| onSurface | #0B1C30 | Primary text — all portals |
+| onSurface | #0B1C30 | Primary text in Admin, Driver, and Customer Care; other roles differ |
 | onSurfaceVariant | #40474F | Secondary text, labels, subtitles |
 | outline | #707881 | Timestamps, muted labels |
 | outlineVariant | #C0C7D1 | Card borders, divider lines |
 | borderSubtle | #E2E8F0 | Hairline card edges (Admin) |
 
+#### Role Theme Matrix (Observed)
+
+| Role | Theme source | Canvas / brand | Semantic accents | UI / data typefaces | Implementation note |
+|---|---|---|---|---|---|
+| Admin | `StitchTheme` | #F8F9FF / #0369A1 | Emerald #00573B, error #DC2626, amber #D97706 | Inter / JetBrains Mono | Consistent role-local tokens; flat cards and subtle borders. |
+| Customer | `AmbulanceFirstTheme` + shared `AppColors` | Theme #F8F9FF and cobalt #00507D; shared palette #F6F8F7 and green #3FAF6A | Theme crimson #DC2626; shared alert #D95353; amber #D99A32 | Inter + JetBrains Mono in role theme; Plus Jakarta Sans + Space Grotesk in shared text styles | Current screens mix both theme/token families. |
+| Customer Care | `CustomerCareTheme` / `CustomerCareColors` | #F8F9FF / #0369A1 | Emerald #006C4A, violet #392CD1, error #DC2626, amber #D97706 | Inter / JetBrains Mono | Violet tertiary is reserved for specialist/pediatric meaning. |
+| Driver | `DriverTheme` / `DriverColors` | #F8F9FF / #0369A1 | Emerald #006C4A, emergency red #DC2626, amber #D97706 | Public Sans / JetBrains Mono | Inverse colors are used for HUD and map overlays. |
+| Team Lead | `TeamLeadTheme` | #F8F9FF / #00507D; some screens use #F6F8FB | Emerald #006C4A, crimson #DC2626, amber #D97706 | Inter / JetBrains Mono tokens | Some screens use literal colors and styles instead of role tokens. |
+| Doctor | Shared `AeroMedRoleShell`, `AppTheme`, `AppColors` | Shared #F6F8F7 / #3FAF6A palette | Shared alert #D95353, warning #D99A32 | Plus Jakarta Sans / Space Grotesk via shared text theme | No doctor-specific theme exists. |
+
+The same token name can mean different things by role: Admin tertiary is readiness green, Driver tertiary is emergency red, and Customer Care tertiary is specialist violet. Always use the owning role's token.
+
 ---
 
 ### 2.2 Typography
 
-Each portal uses a **two-typeface system**: a humanist UI sans-serif for reading, and **JetBrains Mono** for all telemetry, IDs, codes, and timestamps.
+Several portals use two typefaces, but the font families differ by role. IDs, coordinates, timestamps, and telemetry are generally monospaced where a role-specific data style exists; do not assume every role uses JetBrains Mono.
 
 #### Admin Portal (StitchTheme)
 - **UI Font:** Inter (Google Fonts) — used for all headlines, body, and buttons
@@ -158,7 +174,7 @@ Each portal uses a **two-typeface system**: a humanist UI sans-serif for reading
 
 | Style | Font | Size | Weight | Usage |
 |---|---|---|---|---|
-| headlineLarge | Public Sans | 24px | 700 | Driver login header |
+| headlineLarge | Public Sans | 24px | 700 | Large driver headings |
 | headlineMedium | Public Sans | 20px | 700 | Section headings |
 | headlineSmall | Public Sans | 16px | 700 | Mission sub-headers |
 | titleMedium | Public Sans | 15px | 600 | Patient name labels |
@@ -195,7 +211,9 @@ Each portal uses a **two-typeface system**: a humanist UI sans-serif for reading
 
 ### 2.3 Spacing & Border Radii
 
-#### Spacing Scale
+#### Spacing Scales
+
+Spacing is role-local rather than one shared scale. `AppSpacing` uses a 4px base, steps of 8/12/16/20/24/28/32/40/48/64px, and 20px standard margin (12px mobile). `StitchTheme` uses 4/8/12/20/32px named steps and a 16px margin. Customer Care and Team Lead define their own scales.
 
 | Token | Value | Usage |
 |---|---|---|
@@ -222,9 +240,7 @@ Each portal uses a **two-typeface system**: a humanist UI sans-serif for reading
 
 ### 2.4 Elevation & Shadows
 
-The design uses **zero Material elevation** on cards. Visual hierarchy is achieved through **surface container layering** and **hairline borders**, not drop shadows.
-
-Subtle box shadows are reserved for focal elements only (login panels, active mission card).
+Elevation is role-specific. Admin, Driver, Customer Care, and Team Lead generally use zero-elevation cards with tonal surfaces and borders. AeroMed/Customer shared widgets include layered, soft shadows on selected tactile cards and controls. Avoid describing the whole product as either shadowless or glass-based.
 
 ---
 
@@ -242,7 +258,7 @@ Subtle box shadows are reserved for focal elements only (login panels, active mi
 | Font | Inter (UI) + JetBrains Mono (telemetry) |
 | Primary color | #0369A1 (Clinical Cobalt) |
 | Nav chrome | #0B132B (Command Dark) / #1C2541 (Command Marine) |
-| Target platform | Web / tablet / desktop |
+| Target platform | Web, tablet, and mobile |
 
 ### 3.2 Navigation Shell
 
@@ -254,6 +270,8 @@ Layout:
 - Scrollable: IndexedStack (Page Content)
 - Fixed bottom: StitchBottomNav [Tab icons] [More]
 - End Drawer: StitchCommandDrawer (dark chrome, #0B132B)
+
+The bottom bar shows Dashboard, Dispatch, Fleet, Staff, Finance, and More. Reports, Audit, and Pricing remain destinations in the command drawer. The eight-item table below is the full destination set, not the number of bottom-bar items.
 
 Navigation Tabs (8 items):
 
@@ -328,7 +346,7 @@ Pricing configuration settings management screen.
 
 #### StitchMetricCard
 
-Structure: [Icon] Title | LIVE badge pill | VALUE (JetBrains Mono displayLg) | Subtitle (labelSm)
+Structure: Title + icon row | Value (Inter display style) | Trend/badge or subtitle row when provided
 - Zero elevation card, surfaceContainerLowest bg, hairline border
 - Tappable to navigate to relevant tab
 
@@ -352,9 +370,51 @@ Role icon + title + subtitle on left. Available/total count on right with emeral
 
 ---
 
-## 4. Driver Console Design
+## 4. Customer Portal Design
 
 ### 4.1 Identity & Theme
+
+| Property | Value |
+|---|---|
+| Shell | `CustomerShell` |
+| Role theme | `AmbulanceFirstTheme.lightTheme()` is applied inside the shell |
+| Brand | Clinical cobalt (#00507D) with emerald readiness accents |
+| Surface | Role theme uses #F8F9FF; many shared widgets still use green `AppColors` (#F6F8F7 / #3FAF6A) |
+| Type | Role theme uses Inter + JetBrains Mono; shared `AppTextStyles` uses Plus Jakarta Sans + Space Grotesk |
+| Platform | Responsive mobile/tablet and desktop |
+
+The active Customer experience is visually mixed: `CustomerShell` applies the cobalt `AmbulanceFirstTheme`, while multiple screens and AeroMed widgets read `AppColors`/`AppTextStyles`, whose current values are green and Plus Jakarta Sans/Space Grotesk. A future visual-system cleanup should choose one source and migrate consumers deliberately.
+
+### 4.2 Navigation Shell
+
+At widths below 1024px the shell uses a compact top app bar and a six-item bottom navigation bar. At 1024px and wider it uses a 240px persistent left rail with a primary booking action and profile/sign-out footer.
+
+| Index | Destination | Screen |
+|---|---|---|
+| 0 | Dashboard | `CustomerDashboardScreen` |
+| 1 | Bookings | `CustomerBookingsScreen` |
+| 2 | Active Trips | `CustomerActiveTripScreen` |
+| 3 | Quotations | `CustomerQuotationsScreen` |
+| 4 | History | `CustomerHistoryScreen` |
+| 5 | Home Services | `HomeServicesScreen` |
+
+The booking wizard replaces the tab content and hides mobile navigation while open. Header actions provide Emergency SOS, notifications, and profile access. The rail also exposes Book Ambulance as its primary CTA.
+
+### 4.3 Screen & Component Patterns
+
+- **Dashboard:** Booking overview, active-trip status, quick booking entry, and route/location information. Uses shared booking/workflow state.
+- **Bookings / History / Quotations:** Customer-owned booking list, active trip detail, historical trips, and quotation/invoice views.
+- **Home Services:** Separate service request flow from transport booking.
+- **Booking Wizard:** Multi-step patient, service, route, and schedule form; scrollable on narrow screens.
+- **Active Trip:** Route/map, trip status, driver telemetry, hospital alert, and SOS actions.
+- **Booking details and quotation sheets:** Modal/sheet surfaces with route, patient, fare, and lifecycle information.
+- **Status and telemetry:** Green readiness, amber pending, and crimson emergency states; route and trip metrics use monospaced styles in AeroMed widgets.
+
+The Customer family uses more tactile/rounded surfaces than Admin: `AppRadius` ranges from 8px controls to 32px sheets, cards commonly use 12–16px radii, and selected AeroMed cards use low-opacity layered shadows.
+
+## 5. Driver Console Design
+
+### 5.1 Identity & Theme
 
 | Property | Value |
 |---|---|
@@ -370,35 +430,32 @@ Role icon + title + subtitle on left. Available/total count on right with emeral
 | Primary color | #0369A1 (Clinical Cobalt) |
 | Secondary | #006C4A (Operational Emerald) |
 | Tertiary / Error | #DC2626 (Code Red) |
-| Target platform | Mobile (Android/iOS) |
+| Target platform | Mobile and tablet; adaptive web/desktop shell |
 
-Login Screen:
-- Background: tri-color diagonal gradient (background -> surfaceContainerLow -> surfaceContainerHigh)
-- Card: 22px radius, hairline border, soft shadow
-- Brand block: primaryContainer square icon (local_shipping_rounded, 56x56), glow shadow
-- "Ambulance First" (headlineMedium, primary) + "24/7 EMERGENCY PILOT NETWORK" (telemetryMicro)
+Authentication is handled by the shared application entry flow; the Driver role shell begins after authentication and does not define a separate Driver login screen.
 
-### 4.2 Navigation Shell
+### 5.2 Navigation Shell
 
 Shell class: DriverShell (lib/features/driver/presentation/shell/driver_shell.dart)
 
 Layout:
-- Fixed top: HUD Telemetry Bar (vehicle speed, GPS status)
-- Scrollable: Screen Content
-- Fixed bottom: Bottom Tab Navigation (4 tabs)
+- Fixed top: `DriverTopBar` with active-trip/SOS and profile actions; a GPS state banner appears when needed.
+- At widths below 768px: scrollable content and a five-destination Material `NavigationBar`.
+- At 768px and wider: persistent `NavigationRail` and content workspace; bottom navigation is removed.
 
 Navigation Tabs (4 items):
 
 | Tab | Icon | Screen |
 |---|---|---|
 | Dashboard | home_rounded | DriverDashboardScreen |
-| Active Trip | navigation_rounded | DriverActiveTripScreen |
 | Assignments | assignment_rounded | DriverAssignmentsScreen |
+| Active Trip | navigation_rounded | DriverActiveTripScreen |
+| History | history_rounded | DriverTripHistoryScreen |
 | Profile | person_rounded | DriverProfileScreen |
 
-Trip History accessible from Profile or Assignments tab.
+The shell retains all five pages in its page list. Active-trip state is surfaced in navigation with a badge; mission actions and GPS lifecycle state affect the dashboard and trip console.
 
-### 4.3 Screen Inventory
+### 5.3 Screen Inventory
 
 #### Dashboard (DriverDashboardScreen)
 
@@ -450,7 +507,7 @@ Driver profile: name, photo, license, ambulance assignment, rating. Links to tri
 
 Chronological list of past completed/cancelled trips with dates and patient summaries.
 
-### 4.4 Component Patterns
+### 5.4 Component Patterns
 
 #### DriverDutySwitcher
 
@@ -486,9 +543,9 @@ Bottom sheet for quick-calling patient, caller, or hospital contacts during a tr
 
 ---
 
-## 5. Customer Care Portal Design
+## 6. Customer Care Portal Design
 
-### 5.1 Identity & Theme
+### 6.1 Identity & Theme
 
 | Property | Value |
 |---|---|
@@ -503,42 +560,32 @@ Bottom sheet for quick-calling patient, caller, or hospital contacts during a tr
 | Secondary | #006C4A (Operational Emerald) |
 | Tertiary | #392CD1 (Specialist Lavender) — PICU/Pediatric |
 | Tactical Nav bg | #0B132B, border #1E293B |
-| Target platform | Web / tablet |
+| Target platform | Web, tablet, and mobile |
 
-Login Screen:
-- Centered card on background canvas (#F8F9FF)
-- Card: surfaceContainerLowest bg, 16px radius, outlineVariant border, soft shadow
-- Brand icon: primaryContainer square (headset_mic_rounded, 56x56, glow shadow)
-- "Ambulance First" (headlineLg, primary) + "Customer Care Operations Portal" (labelMd, muted)
-- Operator Agent ID field + Security Password field (show/hide toggle)
-- CTA: "ENTER OPERATIONS PORTAL" (full-width primaryContainer button, 46px height)
+Authentication is handled by the shared application entry flow; Customer Care does not provide a separate sign-in screen in this shell.
 
-### 5.2 Navigation Shell
+### 6.2 Navigation Shell
 
 Shell class: CustomerCareShell (lib/features/customer_care/presentation/shell/customer_care_shell.dart)
 
 Layout:
-- Fixed top: Tactical Header (Agent ID, Shift, Sync)
-- Contextual: AgentShiftBanner if active shift
-- Scrollable: Screen Content
-- Fixed bottom: Bottom Tab Navigation (5 tabs)
+- Below 840px: Customer Care top bar, drawer, content, and five-item bottom bar.
+- At 840px and wider: persistent left navigation rail and content; top bar and bottom bar are removed.
+- A floating toast overlays the content for transient feedback.
 
 Navigation Tabs (5 items):
 
 | Tab | Icon | Screen |
 |---|---|---|
-| Dashboard | dashboard_rounded | CustomerCareDashboardScreen |
-| New Intake | add_ic_call_rounded | NewBookingsIntakeScreen |
-| Active Trips | monitor_heart_rounded | ActiveTripsScreen |
-| Verified | task_alt_rounded | VerifiedBookingsScreen |
-| Archive | inventory_2_rounded | AllBookingsArchiveScreen |
+| Dashboard | grid_view_rounded | `CustomerCareDashboardScreen` |
+| New | move_to_inbox_rounded | `NewBookingsIntakeScreen` |
+| Pending | phone_in_talk_rounded | `CallVerificationConsoleScreen` for the first pending case |
+| Handoff | assignment_ind_rounded | `TeamLeadHandoverScreen` |
+| Active | flight_takeoff_rounded | `ActiveTripsScreen` |
 
-Pushed screens (not tabs):
-- TeamLeadHandoverScreen — from Verified or Dashboard
-- Booking360DetailsScreen — from any booking card
-- CallVerificationConsoleScreen — from Dashboard triage cards
+The desktop rail has six destinations: Dashboard, New Requests, Pending Calls, Handoff Monitor, Active Trips, and All Bookings Archive. Verified queue and archive are secondary states opened from dashboard/drawer actions; neither is a mobile bottom-bar destination. Booking details and call verification replace the shell content while active.
 
-### 5.3 Screen Inventory
+### 6.3 Screen Inventory
 
 #### Dashboard (CustomerCareDashboardScreen)
 
@@ -548,7 +595,7 @@ High-density triage operations hub with 6 sections:
 - Left green accent border, surfaceContainerLow bg
 - Agent name, CC ID, shift time, shift status label
 
-**2. KPI Queue Cards Grid** — 2x2 on narrow, 1x4 on width > 580px (LayoutBuilder)
+**2. KPI Queue Cards Grid** — `LayoutBuilder` uses 2 columns at widths up to 580px and 4 columns above 580px.
 
 | Card | Accent Color | Badge | Interaction |
 |---|---|---|---|
@@ -614,7 +661,7 @@ AppBar: Back arrow + "Dossier 360°: #ID" title + status badge chip (surfaceCont
 - Handover notes text field
 - "SEND TO TEAM LEAD" CTA (full-width primaryContainer button)
 
-### 5.4 Component Patterns
+### 6.4 Component Patterns
 
 #### KpiQueueCard
 
@@ -663,69 +710,139 @@ Modal: last known GPS coordinates (JetBrains Mono), last ping timestamp, telemet
 
 ---
 
-## 6. Cross-Portal Design Rules
+## 7. Team Lead Portal Design
+
+### 7.1 Identity & Theme
+
+| Property | Value |
+|---|---|
+| Shell | `TeamLeadLayoutShell` |
+| Token source | `TeamLeadTheme` plus screen-local colors/styles |
+| Canvas | Theme #F8F9FF; command-center and queue screens also use #F6F8FB |
+| Brand | Deep cobalt #00507D, vibrant cobalt #0369A1, pale blue primary container #CDE5FF |
+| Status accents | Emerald #006C4A, crimson #DC2626, amber #D97706 |
+| Typography | Inter UI and JetBrains Mono telemetry tokens; some screens use direct `TextStyle` values |
+
+The shell and theme are more consistent than the individual screen layer. Command Center and Allocation Queue currently include literal color/style values, so visual parity with `TeamLeadTheme` is partial.
+
+### 7.2 Adaptive Navigation Shell
+
+`TeamLeadLayoutShell` uses three layouts: below 768px it shows an app bar, drawer, and five-item bottom bar; from 768px through 1023px it uses a `NavigationRail`; at 1024px and wider it uses a 250px sidebar and a top bar with shared search, operational status, and notifications.
+
+| Index | Destination | Screen |
+|---|---|---|
+| 0 | Command Center | `TeamLeadCommandCenter` |
+| 1 | Allocation Queue | `AllocationQueueScreen` |
+| 2 | Budget & Quotations | `BudgetQuotationsScreen` |
+| 3 | Active Trips | `ActiveTripsScreen` |
+| 4 | Fleet | `FleetScreen` |
+| 5 | Drivers | `DriverRosterScreen` |
+| 6 | EMTs | `EmtRosterScreen` |
+| 7 | Doctors | `DoctorRosterScreen` |
+| 8 | Operations Reports | `ReportsScreen` |
+
+The mobile bottom bar exposes Command Center, Allocation Queue, Budget & Quotations, Active Trips, and Fleet. The drawer exposes all nine modules.
+
+### 7.3 Screen & Component Patterns
+
+- **Command Center:** Refreshable live operations overview with allocation/quotation/trip metrics, fleet and staff availability, live data status, and links into operational queues.
+- **Allocation Queue:** Search, status chips, critical-only filtering, booking cards, and allocation modal/actions.
+- **Budget & Quotations:** Quote review and budget controls.
+- **Active Trips:** Live mission roster and trip-state monitoring.
+- **Fleet / Drivers / EMTs / Doctors:** Resource rosters for readiness and assignment decisions.
+- **Operations Reports:** Team-level operational metrics.
+- **Shell status:** Notifications show unread counts; desktop search state is shared with screens that accept the query.
+
+## 8. Doctor Workspace Design
+
+### 8.1 Identity & Theme
+
+Doctor has no role-specific theme. `DoctorShell` composes `AeroMedRoleShell`, uses the shared Material theme, and consumes the shared `AppColors`/`AppTextStyles` green visual system. Typography is Plus Jakarta Sans for general UI and Space Grotesk for route/data labels where shared styles are used.
+
+### 8.2 Navigation & Screens
+
+`AeroMedRoleShell` switches at 760px: below that it uses a mobile role bar, drawer, and bottom navigation; at 760px and wider it uses a 248px sidebar and desktop app bar.
+
+| Index | Destination | Screen |
+|---|---|---|
+| 0 | Overview | `DoctorDashboardScreen` |
+| 1 | Patients | `DoctorBookingScreen` |
+
+The Overview screen has loading, resource-link error, refresh, assigned/critical metrics, and an assigned-bookings list. Patients lists assigned bookings and opens a patient/booking dossier containing route and clinical summary, latest vitals, and assessment history. Empty states explain when a doctor resource, booking, vitals, or assessment is unavailable.
+
+### 8.3 Clinical Read-Only Pattern
+
+The current Doctor UI is review-only. A visible notice explains that assessment, medication, intervention, and vitals writes remain locked pending verification of the Doctor RLS/write contract. Do not describe write workflows as available until that contract is implemented.
+
+## 9. Cross-Portal Design Patterns
+
+These are consistency goals, not claims that every current screen already implements each pattern. Apply them with the role-specific token system and workflow in mind.
 
 | Rule | Detail |
 |---|---|
-| Booking ID format | Always in JetBrains Mono, uppercase, bold — never plain Inter |
-| Urgency pip | Left-edge 4–5px colored bar on any booking card — CRITICAL=error, URGENT=warning, NORMAL=secondary |
-| Status badges | Pill-shaped, semantic color per status — never plain text labels for operational states |
-| Empty states | Always icon + heading + description — never a blank area or bare "no data" text |
-| Loading states | LinearProgressIndicator (minHeight: 2) below header — non-blocking |
-| Error banners | Full-width error strip below header with icon, message, Retry button |
-| ETA display | Always in error color — urgency communication |
-| Patient initials | CircleAvatar with primaryContainer bg, white text |
-| Timestamps | Relative ("3m ago") for live feeds; absolute for audit/archive |
-| Form buttons | Full-width at bottom of form screens |
-| Material 3 | useMaterial3: true on all ThemeData, no legacy M2 overrides |
+| Booking identifiers | Use the owning role's data/monospaced style when available; retain full IDs in details and avoid letting long IDs break compact layouts. |
+| Urgency | Pair urgency color with explicit status text/icon; left-edge urgency markers appear on selected booking cards. |
+| Status | Prefer concise semantic badges or labels rather than color-only state. Badge shape and palette are role-specific. |
+| Empty and loading states | Explain whether data is empty, loading, or unavailable. Use a progress indicator for asynchronous work and a useful recovery action when one exists. |
+| Errors | Keep errors close to the affected workflow; use a retry action only when the operation is safely retryable. |
+| Patient identity | Initial avatars are used in several queue/card surfaces; do not expose unnecessary patient details in overview lists. |
+| Timestamps | Relative time suits live queues; absolute date/time suits history and audit records. |
+| High-risk actions | Use clear action labels and confirmation/feedback for dispatch, handoff, sign-off, and emergency actions. |
+| Material | Use Material 3 controls and semantics consistently; role-specific surfaces may override default shape and color. |
 
 ---
 
-## 7. Semantic Color Usage Guide
+## 10. Semantic Color Usage
 
 | Situation | Color Token | Example |
 |---|---|---|
-| Live / Available / Verified | secondary (#006C4A) + secondaryContainer | Available driver badge, Verified case label |
-| In Transit / Pending / Warning | warning (#D97706) + warningContainer | In-transit status, Pending calls KPI card |
-| Critical / Code Red / Error | error (#DC2626) + errorContainer | Code Red badges, CRITICAL audit entry, ETA label |
-| Primary Brand / CTA / Assignment | primaryContainer (#0369A1) | Buttons, active mission header, booking ID accents |
-| Specialist / PICU / Pediatric | tertiary CC (#392CD1) | Pediatric chip, PICU protocol indicator |
-| Muted / Timestamp / Secondary text | outline (#707881) | "3m ago", capacity labels, disclaimer text |
-| Telemetry Live | liveTelemetry (#10B981) | GPS live ping dot (Driver HUD) |
-| Telemetry Stale | staleTelemetry (#F59E0B) | GPS last-updated over 2 min (Driver HUD) |
-| Telemetry Unavailable | unavailableTelemetry (#EF4444) | GPS offline indicator (Driver HUD) |
+| Available / verified | Role-specific emerald token | Admin #00573B; Driver/Customer Care/Team Lead #006C4A; Customer values vary between green and cobalt systems |
+| Pending / attention | Role-specific amber token | Usually #D97706 in operations portals; shared Customer palette uses #D99A32 |
+| Critical / emergency | Role-specific crimson token | Usually #DC2626; shared Customer palette uses #D95353 |
+| Primary action | Owning role's primary token | Cobalt in Admin, Driver, Customer Care, and Team Lead; mixed green/cobalt in Customer/Doctor |
+| Specialist / pediatric | Customer Care tertiary violet | #392CD1 / #534BE9; do not reuse the same tertiary token in other roles |
+| Live / stale / unavailable GPS | Driver telemetry tokens | #10B981 / #F59E0B / #EF4444 |
+| Muted metadata | Owning role's outline/text token | Timestamps, secondary descriptions, and capacity labels |
 
----
+## 11. Accessibility, Responsiveness & Gaps
 
-## 8. Accessibility & Responsiveness
+### Responsive Breakpoints (Observed)
 
-### Color Contrast
+| Role | Narrow layout | Intermediate layout | Wide layout |
+|---|---|---|---|
+| Admin | Scrollable content; fixed compact header and five destinations plus More in bottom bar | Same shell | Same shell; page contents adapt independently |
+| Customer | App bar + six-item bottom navigation | Same until 1024px | At 1024px: app bar plus 240px persistent rail |
+| Customer Care | At <840px: top bar, drawer, five-item bottom bar | Same until 840px | At >=840px: persistent rail |
+| Driver | At <768px: top bar and five-item bottom navigation | Same below 768px | At >=768px: NavigationRail |
+| Team Lead | At <768px: app bar, drawer, five-item bottom bar | 768–1023px: NavigationRail | At >=1024px: 250px sidebar and top bar |
+| Doctor | At <760px: mobile role bar, drawer, bottom navigation | Same below 760px | At >=760px: shared 248px sidebar and desktop app bar |
 
-- All primary text (onSurface #0B1C30) on background (#F8F9FF) — WCAG AA compliant (contrast ratio > 7:1)
-- Error red on white: > 4.5:1 — AA compliant
-- White text on primaryContainer (#0369A1) — AA compliant
+### Cross-Role Interaction Patterns
 
-### Responsive Layout
+- Use visible labels/tooltips for icon-only actions, and provide keyboard-accessible controls on web.
+- Keep booking IDs and telemetry visually distinct from narrative text; use the role's data typeface where available.
+- Pair semantic colors with text or icons; color alone must not carry operational meaning.
+- Provide explicit loading, empty, and error states. Existing implementations vary by screen; do not assume every empty state currently has an icon or every error has a retry action.
+- Preserve safe-area insets and allow long content to scroll. Use available constraints rather than device-wide width assumptions inside nested layouts.
+- Keep high-risk actions explicit and separated from routine navigation; Driver SOS and Customer SOS use emergency styling.
 
-| Portal | Responsive Behavior |
-|---|---|
-| Admin | Web-first. KPI grid 2-column on standard web. Fleet/staff grids adapt to screen width. |
-| Driver | Mobile-first. Padding symmetric(horizontal: 16). Cards full-width. |
-| Customer Care | KPI grid: 2-column on narrow, 4-column on width > 580px (LayoutBuilder). Login max-width: 440px. |
+### Validation Status and Known Gaps
 
-### Touch Targets
+- Color token contrast ratios have not been audited across all role/background combinations. Do not claim blanket WCAG AA compliance without measuring rendered foreground/background pairs.
+- Minimum touch-target dimensions are not enforced uniformly in code; verify compact icon buttons, custom bottom bars, and dense data rows.
+- Customer currently mixes its cobalt `AmbulanceFirstTheme` with green shared `AppColors`/`AppTextStyles` consumers.
+- Team Lead screens partially bypass `TeamLeadTheme` with literal colors and text styles.
+- Doctor intentionally exposes review/read-only UI; clinical write actions must remain described as locked until backend authorization and workflows are verified.
+- Reduced-motion behavior and system text-scaling behavior have not been verified consistently across roles.
 
-- All tappable elements wrapped in InkWell with borderRadius matching container
-- Minimum tap target: 44x44px for icon buttons
-- Full-width form buttons use minimumSize: Size.fromHeight(44–48)
+### Source of Truth
 
-### Text Scalability
-
-- height parameters set on all TextStyle definitions to ensure consistent line-height under system font scaling
-- All numeric/telemetry displays use absolute JetBrains Mono sizes — not scaled by Dynamic Type, preserving HUD layout integrity
+- Theme files and shell implementations are authoritative for current values; this document is a cross-role implementation map, not a guarantee that every screen follows every pattern.
+- Shared foundation: `lib/shared/theme/` and `lib/shared/widgets/`.
+- Role systems: `lib/roles/admin/theme/`, `lib/roles/customer/theme/`, `lib/features/driver/theme/`, `lib/features/customer_care/theme/`, `lib/roles/team_lead/theme/`, and shared theme usage in `lib/roles/doctor/`.
 
 ---
 
 *This document reflects the design system as implemented in the codebase.*
-*Key source files: lib/roles/admin/theme/admin_theme.dart, lib/features/driver/theme/, lib/features/customer_care/theme/*
+*Key source files: `lib/roles/admin/theme/admin_theme.dart`, `lib/roles/customer/theme/ambulance_first_theme.dart`, `lib/features/driver/theme/`, `lib/features/customer_care/theme/`, `lib/roles/team_lead/theme/team_lead_theme.dart`, and `lib/shared/widgets/aeromed_role_shell.dart`.*
 *Stitch MCP Project references: DriverColors (Project 15205856723727982878), CustomerCareColors (Project 1449624092268908152)*

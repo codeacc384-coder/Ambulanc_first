@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../../../core/services/supabase_service.dart';
 
@@ -166,72 +165,191 @@ class _BudgetQuotationsScreenState extends State<BudgetQuotationsScreen> {
   }
 
   Future<void> _prepare(Map<String, dynamic> booking) async {
-    final additionalController = TextEditingController(text: '0');
-    final termsController =
-        TextEditingController(text: 'Payment before dispatch');
-
-    final values = await showDialog<Map<String, String>>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Prepare quotation • ${booking['id']}'),
-        content: SizedBox(
-          width: 460,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _line('Basic fare', _money(booking['basic_fare'])),
-              _line('Distance', '${_num(booking['estimated_distance_km']).toStringAsFixed(2)} km'),
-              const SizedBox(height: 12),
-              TextField(
-                controller: additionalController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Additional charge',
-                  prefixText: '₹ ',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: termsController,
-                decoration: const InputDecoration(
-                  labelText: 'Payment terms',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, {
-              'additional': additionalController.text,
-              'terms': termsController.text,
-            }),
-            child: const Text('Prepare & Send'),
-          ),
-        ],
-      ),
-    );
-
-    additionalController.dispose();
-    termsController.dispose();
-
-    if (values == null) return;
-
-    final additional =
-        double.tryParse(values['additional'] ?? '0') ?? 0;
-
     try {
+      final previewResult = await SupabaseService.client.rpc(
+        'preview_booking_quotation',
+        params: {'p_booking_id': '${booking['id']}'},
+      );
+      if (!mounted) return;
+      final preview = Map<String, dynamic>.from(previewResult as Map);
+      final amountController = TextEditingController(
+        text: _num(preview['final_amount']).toStringAsFixed(2),
+      );
+      final termsController = TextEditingController(
+        text: 'Payment before dispatch',
+      );
+      String? amountError;
+
+      final values = await showDialog<Map<String, String>>(
+        context: context,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setDialogState) {
+            final enteredAmount = double.tryParse(amountController.text);
+            final adjustment = enteredAmount == null
+                ? 0.0
+                : enteredAmount - _num(preview['final_amount']);
+            final distanceKm = _num(preview['distance_km']);
+            final distanceRate = _num(preview['distance_rate']);
+
+            return AlertDialog(
+              title: Text('Prepare quotation • ${booking['id']}'),
+              content: SizedBox(
+                width: 500,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.65,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          '${preview['service_category'] ?? 'Service'}'
+                          '${preview['service_subtype'] == null ? '' : ' • ${preview['service_subtype']}'}',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Rate-card calculation for ${distanceKm.toStringAsFixed(2)} km. The final amount can be adjusted for this quotation.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        if (_num(preview['night_surcharge_percent']) > 0)
+                          _line(
+                            'Night surcharge rate (if applicable)',
+                            '${_num(preview['night_surcharge_percent']).toStringAsFixed(2)}%',
+                          ),
+                        const SizedBox(height: 12),
+                        _line(
+                          'Base ambulance fare',
+                          _money(preview['base_charge']),
+                        ),
+                        if (_num(preview['distance_charge']) > 0)
+                          _line(
+                            'Distance ($distanceKm km × ${_money(distanceRate)}/km)',
+                            _money(preview['distance_charge']),
+                          ),
+                        if (_num(preview['doctor_charge']) > 0)
+                          _line(
+                            'Doctor escort',
+                            _money(preview['doctor_charge']),
+                          ),
+                        if (_num(preview['emt_charge']) > 0)
+                          _line('EMT escort', _money(preview['emt_charge'])),
+                        if (_num(preview['oxygen_charge']) > 0)
+                          _line('Oxygen', _money(preview['oxygen_charge'])),
+                        if (_num(preview['icu_charge']) > 0)
+                          _line('ICU', _money(preview['icu_charge'])),
+                        if (_num(preview['ventilator_charge']) > 0)
+                          _line(
+                            'Ventilator',
+                            _money(preview['ventilator_charge']),
+                          ),
+                        if (_num(preview['pediatric_icu_charge']) > 0)
+                          _line(
+                            'Pediatric ICU',
+                            _money(preview['pediatric_icu_charge']),
+                          ),
+                        if (_num(preview['equipment_charge']) > 0)
+                          _line(
+                            'Equipment',
+                            _money(preview['equipment_charge']),
+                          ),
+                        if (_num(preview['attendant_charge']) > 0)
+                          _line(
+                            'Medical attendant',
+                            _money(preview['attendant_charge']),
+                          ),
+                        if (_num(preview['air_charge']) > 0)
+                          _line('Air transfer', _money(preview['air_charge'])),
+                        if (_num(preview['railway_charge']) > 0)
+                          _line(
+                            'Railway transfer',
+                            _money(preview['railway_charge']),
+                          ),
+                        const Divider(height: 20),
+                        _line('Subtotal', _money(preview['subtotal'])),
+                        _line(
+                          'Tax (${_num(preview['tax_percent']).toStringAsFixed(2)}%)',
+                          _money(preview['tax_amount']),
+                        ),
+                        _line(
+                          'Calculated total',
+                          _money(preview['final_amount']),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: amountController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (_) => setDialogState(() {
+                            amountError = null;
+                          }),
+                          decoration: InputDecoration(
+                            labelText: 'Final quotation amount',
+                            prefixText: '₹ ',
+                            helperText: 'Tax-inclusive. This amount is sent to the customer.',
+                            errorText: amountError,
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _line(
+                          'Adjustment from calculated total',
+                          '${adjustment < 0 ? '-' : '+'}${_money(adjustment.abs())}',
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: termsController,
+                          decoration: const InputDecoration(
+                            labelText: 'Payment terms',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final amount = double.tryParse(
+                      amountController.text.trim(),
+                    );
+                    if (amount == null || !amount.isFinite || amount < 0) {
+                      setDialogState(() {
+                        amountError = 'Enter a valid amount of ₹0 or more.';
+                      });
+                      return;
+                    }
+                    Navigator.pop(context, {
+                      'finalAmount': amount.toStringAsFixed(2),
+                      'terms': termsController.text.trim(),
+                    });
+                  },
+                  child: const Text('Prepare & Send'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      amountController.dispose();
+      termsController.dispose();
+      if (values == null) return;
+
       await SupabaseService.client.rpc(
         'prepare_booking_quotation',
         params: {
           'p_booking_id': '${booking['id']}',
-          'p_additional_charge': additional,
+          'p_final_amount': double.parse(values['finalAmount']!),
           'p_payment_terms': values['terms'],
         },
       );
@@ -243,8 +361,13 @@ class _BudgetQuotationsScreenState extends State<BudgetQuotationsScreen> {
       await _load();
     } catch (e) {
       if (!mounted) return;
+      final error = e.toString();
+      final message = error.contains('PGRST202') &&
+              error.contains('preview_booking_quotation')
+          ? 'Quotation preview is not installed in Supabase. Apply migration 20260930000000_team_lead_editable_quotation.sql, then retry.'
+          : 'Quotation failed: $e';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Quotation failed: $e')),
+        SnackBar(content: Text(message)),
       );
     }
   }
@@ -297,8 +420,8 @@ class _BudgetQuotationsScreenState extends State<BudgetQuotationsScreen> {
     final finalAmount = _num(b['q_final_amount']);
     final basic = _num(b['basic_fare']);
     final hasQuotation =
-        finalAmount > 0 &&
-        '${b['quotation_status'] ?? ''}'.isNotEmpty;
+      finalAmount > 0 &&
+      '${b['quotation_status'] ?? ''}'.isNotEmpty;
 
     final canPrepare = {
       'SENT_TO_TEAM_LEAD',

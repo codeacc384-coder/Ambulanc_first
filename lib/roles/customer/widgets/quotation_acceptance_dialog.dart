@@ -213,8 +213,10 @@ class _QuotationAcceptanceDialogState extends State<QuotationAcceptanceDialog> {
                     if (q.pediatricIcuCharge > 0) _feeRow('Specialized PICU / PALS Protocols', q.pediatricIcuCharge),
                     if (q.equipmentCharge > 0) _feeRow('Ancillary Monitoring Equipment', q.equipmentCharge),
                     if (q.attendantCharge > 0) _feeRow('Certified Medical Attendant', q.attendantCharge),
-                    if (q.additionalCharges > 0) _feeRow('Tolls, Sanitization & Consumables', q.additionalCharges),
-                    if (q.discount > 0) _feeRow('Special Clinical Waiver / Discount', -q.discount, isDiscount: true),
+                    if (q.airAmbulanceCharges > 0) _feeRow('Air ambulance charges', q.airAmbulanceCharges),
+                    if (q.railwayCharges > 0) _feeRow('Railway transfer charges', q.railwayCharges),
+                    if (q.additionalCharges > 0) _feeRow('Additional quotation adjustment', q.additionalCharges),
+                    if (q.discount > 0) _feeRow('Quotation discount', -q.discount, isDiscount: true),
 
                     const Divider(height: 20),
                     _feeRow('Subtotal', q.subtotal, isBold: true),

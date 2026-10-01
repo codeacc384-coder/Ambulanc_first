@@ -1,10 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/models/driver_models.dart';
 import '../../../../core/services/driver_navigation_service.dart';
 import '../../../../core/services/live_road_route_service.dart';
-import '../../../../core/services/route_telemetry_service.dart';
 import '../../theme/driver_colors.dart';
 import '../../theme/driver_text_styles.dart';
 import '../widgets/driver_confirm_dialog.dart';
@@ -215,32 +216,6 @@ class DriverActiveTripScreen extends StatelessWidget {
         ? b.pickupAddress
         : b.destinationAddress;
     final targetLabel = headingToPickup ? 'PICKUP' : 'DROP-OFF';
-    final targetLatitude = headingToPickup
-        ? b.pickupLatitude
-        : b.destinationLatitude;
-    final targetLongitude = headingToPickup
-        ? b.pickupLongitude
-        : b.destinationLongitude;
-    final hasTargetCoordinates =
-        driver.latitude != null &&
-        driver.longitude != null &&
-        targetLatitude != null &&
-        targetLongitude != null;
-    final remainingKm = hasTargetCoordinates
-        ? RouteTelemetryService.distanceKm(
-            fromLatitude: driver.latitude!,
-            fromLongitude: driver.longitude!,
-            toLatitude: targetLatitude,
-            toLongitude: targetLongitude,
-          )
-        : b.estimatedDistanceKm;
-    final etaMinutes = hasTargetCoordinates || remainingKm > 0.05
-        ? RouteTelemetryService.etaMinutes(
-            distanceKm: remainingKm,
-            speedKmh: b.speedKmh,
-          )
-        : (b.etaMinutes > 0 ? b.etaMinutes : b.estimatedDurationMins);
-
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Column(
@@ -325,22 +300,12 @@ class DriverActiveTripScreen extends StatelessWidget {
           const SizedBox(height: 14),
 
           // Dark Inverse HUD Telemetry Bar
-          HudTelemetryBar(
-            speedKmh: b.speedKmh.toDouble(),
-            etaMinutes: etaMinutes,
-            remainingKm: remainingKm,
-            heading: 0,
-            gpsAccuracyMeters: driver.locationAccuracyMeters,
-            freshness: isLiveGpsSharing
-                ? TelemetryFreshness.live
-                : (lastLocationSharedAt != null
-                      ? TelemetryFreshness.stale
-                      : TelemetryFreshness.unavailable),
-            networkStatus: isLiveGpsSharing
-                ? 'LIVE TELEMETRY SHARED'
-                : (lastLocationSharedAt != null
-                      ? 'TELEMETRY DELAYED'
-                      : 'GPS NOT SHARED'),
+          _DriverLiveRouteTelemetry(
+            driver: driver,
+            booking: b,
+            leg: headingToPickup ? LiveTripLeg.pickup : LiveTripLeg.hospital,
+            isLiveGpsSharing: isLiveGpsSharing,
+            lastLocationSharedAt: lastLocationSharedAt,
           ),
 
           const SizedBox(height: 14),
@@ -689,6 +654,163 @@ class DriverActiveTripScreen extends StatelessWidget {
           const SizedBox(height: 24),
         ],
       ),
+    );
+  }
+}
+
+class _DriverLiveRouteTelemetry extends StatefulWidget {
+  const _DriverLiveRouteTelemetry({
+    required this.driver,
+    required this.booking,
+    required this.leg,
+    required this.isLiveGpsSharing,
+    required this.lastLocationSharedAt,
+  });
+
+  final DriverProfile driver;
+  final DriverBooking booking;
+  final LiveTripLeg leg;
+  final bool isLiveGpsSharing;
+  final DateTime? lastLocationSharedAt;
+
+  @override
+  State<_DriverLiveRouteTelemetry> createState() =>
+      _DriverLiveRouteTelemetryState();
+}
+
+class _DriverLiveRouteTelemetryState extends State<_DriverLiveRouteTelemetry> {
+  final LiveRoadRouteService _routeService = LiveRoadRouteService();
+  Timer? _refreshTimer;
+  LiveRoadRoute? _route;
+  DateTime? _lastRequestAt;
+  String? _lastLegKey;
+  String? _lastOriginKey;
+  bool _refreshing = false;
+
+  String get _legKey => '${widget.booking.id}:${widget.leg.name}';
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_refreshRoute(force: true));
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) => unawaited(_refreshRoute()),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _DriverLiveRouteTelemetry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.booking.id != widget.booking.id ||
+        oldWidget.leg != widget.leg) {
+      unawaited(_refreshRoute(force: true));
+    }
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _refreshRoute({bool force = false}) async {
+    final driver = widget.driver;
+    final booking = widget.booking;
+    final legKey = _legKey;
+    final legChanged = _lastLegKey != legKey;
+    final latitude = driver.latitude;
+    final longitude = driver.longitude;
+    final targetLatitude = widget.leg == LiveTripLeg.pickup
+        ? booking.pickupLatitude
+        : booking.destinationLatitude;
+    final targetLongitude = widget.leg == LiveTripLeg.pickup
+        ? booking.pickupLongitude
+        : booking.destinationLongitude;
+
+    final canRoute =
+        LiveRoadRouteService.hasActiveNavigation(
+          status: booking.status,
+          milestone: booking.tripMilestone,
+        ) &&
+        DriverNavigationService.hasValidCoordinates(latitude, longitude) &&
+        DriverNavigationService.hasValidCoordinates(
+          targetLatitude,
+          targetLongitude,
+        ) &&
+        LiveRoadRouteService.hasFreshDriverLocation(driver.locationUpdatedAt);
+
+    if (!canRoute) {
+      if (_route != null && mounted) setState(() => _route = null);
+      return;
+    }
+
+    final originKey =
+        '$latitude,$longitude:${driver.locationUpdatedAt?.millisecondsSinceEpoch}';
+    final elapsed = _lastRequestAt == null
+        ? null
+        : DateTime.now().difference(_lastRequestAt!);
+    if (_refreshing ||
+        (!force && !legChanged && _lastOriginKey == originKey) ||
+        (!force &&
+            !legChanged &&
+            elapsed != null &&
+            elapsed < const Duration(seconds: 30))) {
+      return;
+    }
+
+    final targetAddress = widget.leg == LiveTripLeg.pickup
+        ? booking.pickupAddress
+        : booking.destinationAddress;
+    _refreshing = true;
+    _lastRequestAt = DateTime.now();
+    _lastLegKey = legKey;
+    _lastOriginKey = originKey;
+    if (legChanged && _route != null && mounted) {
+      setState(() => _route = null);
+    }
+
+    try {
+      final route = await _routeService.calculate(
+        originLatitude: latitude!,
+        originLongitude: longitude!,
+        destinationLatitude: targetLatitude!,
+        destinationLongitude: targetLongitude!,
+        originAddress: 'Ambulance live GPS',
+        destinationAddress: targetAddress,
+        legKey: legKey,
+        includeGeometry: false,
+      );
+      if (!mounted || _legKey != legKey || _lastOriginKey != originKey) {
+        return;
+      }
+      setState(() => _route = route);
+    } catch (error) {
+      debugPrint('DRIVER LIVE ROUTE ERROR [$legKey]: $error');
+    } finally {
+      _refreshing = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final freshness = widget.isLiveGpsSharing
+        ? TelemetryFreshness.live
+        : (widget.lastLocationSharedAt != null
+              ? TelemetryFreshness.stale
+              : TelemetryFreshness.unavailable);
+    return HudTelemetryBar(
+      speedKmh: widget.booking.speedKmh.toDouble(),
+      etaMinutes: _route?.etaMinutes,
+      remainingKm: _route?.distanceKm,
+      heading: 0,
+      gpsAccuracyMeters: widget.driver.locationAccuracyMeters,
+      freshness: freshness,
+      networkStatus: widget.isLiveGpsSharing
+          ? 'LIVE TELEMETRY SHARED'
+          : (widget.lastLocationSharedAt != null
+                ? 'TELEMETRY DELAYED'
+                : 'GPS NOT SHARED'),
     );
   }
 }

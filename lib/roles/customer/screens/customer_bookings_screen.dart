@@ -464,7 +464,11 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
           ),
           const SizedBox(height: 8),
 
-          if (booking.status == 'PATIENT_PICKED_UP' &&
+          if (const {
+                'PATIENT_PICKED_UP',
+                'IN_TRANSIT',
+                'ARRIVED',
+              }.contains(booking.status) &&
               !booking.patientOnboardConfirmed) ...[
             SizedBox(
               width: double.infinity,
@@ -662,6 +666,20 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
       );
     } catch (error) {
       if (!mounted) return;
+      if (error.toString().contains(
+        'Customer must confirm patient onboard before drop-off',
+      )) {
+        await _refreshCustomerBookings();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Please confirm patient onboard before confirming drop-off. The trip has been refreshed.',
+            ),
+          ),
+        );
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Unable to confirm drop-off: $error')),
       );
@@ -676,8 +694,9 @@ class _CustomerBookingsScreenState extends State<CustomerBookingsScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Confirm patient onboard'),
         content: Text(
-          'Has ${booking.patientName} safely boarded the ambulance at ${booking.pickup}? '
-          'Confirming lets the driver start toward ${booking.destination}.',
+          booking.status == 'PATIENT_PICKED_UP'
+              ? 'Has ${booking.patientName} safely boarded the ambulance at ${booking.pickup}? Confirming lets the driver start toward ${booking.destination}.'
+              : 'Did ${booking.patientName} board the ambulance at ${booking.pickup}? Confirming this lets the trip continue to completion.',
         ),
         actions: [
           TextButton(

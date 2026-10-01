@@ -55,7 +55,6 @@ class _AllocationModalState extends State<AllocationModal> {
   List<Map<String, dynamic>> _doctors = [];
 
   String? _ambulanceId;
-  String? _driverId;
   String? _medicalCrewId;
   String? _doctorId;
 
@@ -95,8 +94,8 @@ class _AllocationModalState extends State<AllocationModal> {
         // Keep every ambulance visible so unavailable or incompatible rows
         // show their actual reason instead of being silently mislabelled.
         _ambulances = ambulances;
-        _drivers = drivers.where(_resourceIsAvailable).toList();
-        _medicalCrew = crew.where(_resourceIsAvailable).toList();
+        _drivers = drivers;
+        _medicalCrew = crew;
         _doctors = doctors.where(_resourceIsAvailable).toList();
         _loading = false;
       });
@@ -132,6 +131,27 @@ class _AllocationModalState extends State<AllocationModal> {
     return _isAvailable('${resource['status'] ?? ''}');
   }
 
+  Map<String, dynamic>? _pairedDriverForAmbulance(
+    Map<String, dynamic> ambulance,
+  ) {
+    final currentDriverId = '${ambulance['current_driver_id'] ?? ''}'.trim();
+    if (currentDriverId.isNotEmpty) {
+      return _find(_drivers, currentDriverId);
+    }
+
+    final vehicleNumber = '${ambulance['vehicle_number'] ?? ''}'
+        .trim()
+        .toLowerCase();
+    if (vehicleNumber.isEmpty) return null;
+
+    for (final driver in _drivers) {
+      final assignedVehicle =
+          '${driver['assigned_ambulance_number'] ?? ''}'.trim().toLowerCase();
+      if (assignedVehicle == vehicleNumber) return driver;
+    }
+    return null;
+  }
+
   String? _ambulanceIneligibility(Map<String, dynamic> ambulance) {
     final status = '${ambulance['status'] ?? ''}'.trim().toUpperCase();
     if (!SupabaseResourceRepository.isAmbulanceAvailable(ambulance)) {
@@ -150,6 +170,17 @@ class _AllocationModalState extends State<AllocationModal> {
     if (requiredSubtype.isNotEmpty && ambulanceSubtype != requiredSubtype) {
       return 'Ambulance subtype ${_subtypeLabel(ambulanceSubtype)} does not '
           'match required ${_subtypeLabel(requiredSubtype)}.';
+    }
+
+    final pairedDriver = _pairedDriverForAmbulance(ambulance);
+    if (pairedDriver == null) {
+      return 'No driver is paired with this ambulance.';
+    }
+    if (!_resourceIsAvailable(pairedDriver) ||
+        pairedDriver['assigned_booking_id'] != null) {
+      final driverStatus =
+          '${pairedDriver['status'] ?? 'UNKNOWN'}'.trim().toUpperCase();
+      return 'Paired driver is not available (status: ${driverStatus.replaceAll('_', ' ')}).';
     }
 
     final missing = <String>[];
@@ -205,16 +236,22 @@ class _AllocationModalState extends State<AllocationModal> {
       return;
     }
 
-    if (_driverId == null) {
+    final selectedDriver = selectedAmbulance == null
+        ? null
+        : _pairedDriverForAmbulance(selectedAmbulance);
+    if (selectedDriver == null ||
+        !_resourceIsAvailable(selectedDriver) ||
+        selectedDriver['assigned_booking_id'] != null) {
       _showMessage(
-        'Select an available driver.',
+        'The selected ambulance does not have an available paired driver.',
         isError: true,
       );
       return;
     }
 
+    final selectedCrew = _find(_medicalCrew, _medicalCrewId);
     if (_medicalCrewRequired &&
-        _medicalCrewId == null) {
+        (selectedCrew == null || !_resourceIsAvailable(selectedCrew))) {
       _showMessage(
         'Select an EMT / medical crew member.',
         isError: true,
@@ -239,7 +276,7 @@ class _AllocationModalState extends State<AllocationModal> {
       await _workflow.allocateBooking(
         bookingId: booking.id,
         ambulanceId: _ambulanceId!,
-        driverId: _driverId!,
+        driverId: '${selectedDriver['id']}',
         doctorId: _doctorId,
         emtId: _medicalCrewId,
       );
@@ -289,10 +326,9 @@ class _AllocationModalState extends State<AllocationModal> {
       _ambulances,
       _ambulanceId,
     );
-    final selectedDriver = _find(
-      _drivers,
-      _driverId,
-    );
+    final selectedDriver = selectedAmbulance == null
+        ? null
+        : _pairedDriverForAmbulance(selectedAmbulance);
     final selectedCrew = _find(
       _medicalCrew,
       _medicalCrewId,
@@ -342,9 +378,9 @@ class _AllocationModalState extends State<AllocationModal> {
                     _resourceSection(
                       title: '2. Driver',
                       subtitle:
-                          'Live available drivers from public.drivers are shown. Booking/category validation is enforced by the allocation RPC.',
+                          'The driver paired with the selected ambulance is assigned automatically.',
                       icon: Icons.badge_rounded,
-                      child: _driverList(),
+                      child: _assignedDriverCard(selectedAmbulance),
                     ),
                     if (_medicalCrewRequired) ...[
                       const SizedBox(height: 16),
@@ -726,42 +762,30 @@ class _AllocationModalState extends State<AllocationModal> {
     );
   }
 
-  Widget _driverList() {
-    if (_drivers.isEmpty) {
+  Widget _assignedDriverCard(Map<String, dynamic>? ambulance) {
+    if (ambulance == null) {
       return _emptyResource(
-        'No available driver is currently recorded in Supabase.',
+        'Select an ambulance to see its paired driver.',
       );
     }
 
-    return Column(
-      children: _drivers.map((driver) {
-        final id = '${driver['id']}';
-        final selected = _driverId == id;
+    final driver = _pairedDriverForAmbulance(ambulance);
+    if (driver == null) {
+      return _emptyResource(
+        'No driver is paired with this ambulance in Supabase.',
+      );
+    }
 
-        return _selectableTile(
-          selected: selected,
-          onTap: _customerAccepted
-              ? () {
-                  setState(() {
-                    _driverId = id;
-                  });
-                }
-              : null,
-          icon: Icons.badge_rounded,
-          title:
-              '${driver['full_name'] ?? 'Unnamed Driver'}',
-          subtitle:
-              '${driver['phone'] ?? 'No phone'} • '
-              'License: ${driver['license_number'] ?? 'Not provided'}',
-          trailing: Text(
-            '${driver['experience_years'] ?? 0} yrs',
-            style: TeamLeadTheme.small(
-              color: TeamLeadTheme.primaryDark,
-              weight: FontWeight.w700,
-            ),
-          ),
-        );
-      }).toList(),
+    final status = '${driver['status'] ?? 'UNKNOWN'}'.trim().toUpperCase();
+    return _selectableTile(
+      selected: true,
+      onTap: null,
+      icon: Icons.badge_rounded,
+      title: '${driver['name'] ?? driver['full_name'] ?? 'Unnamed Driver'}',
+      subtitle:
+          '${driver['phone'] ?? 'No phone'} • '
+          'License: ${driver['license_number'] ?? 'Not provided'}',
+      trailing: _statusBadge(status),
     );
   }
 
@@ -778,8 +802,8 @@ class _AllocationModalState extends State<AllocationModal> {
         final selected = _medicalCrewId == id;
 
         return _selectableTile(
-          selected: selected,
-          onTap: _customerAccepted
+          selected: selected && _resourceIsAvailable(crew),
+          onTap: _customerAccepted && _resourceIsAvailable(crew)
               ? () {
                   setState(() {
                     _medicalCrewId = id;
@@ -792,11 +816,8 @@ class _AllocationModalState extends State<AllocationModal> {
           subtitle:
               '${crew['crew_type'] ?? 'Medical Crew'} • '
               '${crew['certification'] ?? 'Certification not provided'}',
-          trailing: Text(
-            '${crew['phone'] ?? 'No phone'}',
-            style: TeamLeadTheme.small(
-              color: TeamLeadTheme.textMuted,
-            ),
+          trailing: _statusBadge(
+            '${crew['status'] ?? 'UNKNOWN'}'.trim().toUpperCase(),
           ),
         );
       }).toList(),

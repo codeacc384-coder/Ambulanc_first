@@ -133,6 +133,7 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
       }
       if (!mounted) return;
       Booking? refreshedTrip;
+      final previousStatus = _selectedTrip?.status;
       setState(() {
         final selectedId = _selectedTrip?.id;
         refreshedTrip = selectedId != null
@@ -149,6 +150,17 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
       });
       if (refreshedTrip != null) {
         _subscribeToBookingTelemetry(refreshedTrip!.id);
+        const onboardConfirmationStatuses = {
+          'PATIENT_PICKED_UP',
+          'IN_TRANSIT',
+          'ARRIVED',
+        };
+        if (!refreshedTrip!.patientOnboardConfirmed &&
+            onboardConfirmationStatuses.contains(refreshedTrip!.status) &&
+            previousStatus != refreshedTrip!.status &&
+            mounted) {
+          unawaited(_confirmPatientOnboard(refreshedTrip!));
+        }
         await _refreshRoadRoute(refreshedTrip!);
       }
     } catch (_) {
@@ -300,6 +312,20 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
       );
     } catch (error) {
       if (!mounted) return;
+      if (error.toString().contains(
+        'Customer must confirm patient onboard before drop-off',
+      )) {
+        await _refreshTripTelemetry();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Please confirm patient onboard before confirming drop-off. The trip has been refreshed.',
+            ),
+          ),
+        );
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Unable to confirm drop-off: $error')),
       );
@@ -314,8 +340,9 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Confirm patient onboard'),
         content: Text(
-          'Has ${booking.patientName} safely boarded the ambulance at ${booking.pickup}? '
-          'Confirming lets the driver start toward ${booking.destination}.',
+          booking.status == 'PATIENT_PICKED_UP'
+              ? 'Has ${booking.patientName} safely boarded the ambulance at ${booking.pickup}? Confirming lets the driver start toward ${booking.destination}.'
+              : 'Did ${booking.patientName} board the ambulance at ${booking.pickup}? Confirming this lets the trip continue to completion.',
         ),
         actions: [
           TextButton(
@@ -509,7 +536,12 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (b.status == 'PATIENT_PICKED_UP' && !b.patientOnboardConfirmed) ...[
+        if (const {
+              'PATIENT_PICKED_UP',
+              'IN_TRANSIT',
+              'ARRIVED',
+            }.contains(b.status) &&
+            !b.patientOnboardConfirmed) ...[
           AmbulanceFirstCard(
             padding: const EdgeInsets.all(AmbulanceFirstSpacing.spaceSm),
             child: Column(
@@ -523,7 +555,9 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'The driver reports that ${b.patientName} has boarded at ${b.pickup}. Confirm before the driver starts toward ${b.destination}.',
+                  b.status == 'PATIENT_PICKED_UP'
+                      ? 'The driver reports that ${b.patientName} has boarded at ${b.pickup}. Confirm before the driver starts toward ${b.destination}.'
+                      : 'Onboard confirmation is still needed. Confirm only if ${b.patientName} boarded at ${b.pickup}.',
                   style: AmbulanceFirstTypography.bodySm(
                     color: AmbulanceFirstColors.onSurfaceVariant,
                   ),

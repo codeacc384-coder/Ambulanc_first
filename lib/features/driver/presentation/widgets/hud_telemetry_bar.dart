@@ -19,8 +19,8 @@ class HudTelemetryBar extends StatelessWidget {
   });
 
   final double speedKmh;
-  final int etaMinutes;
-  final double remainingKm;
+  final int? etaMinutes;
+  final double? remainingKm;
   final double heading;
   final double gpsAccuracyMeters;
   final TelemetryFreshness freshness;
@@ -75,11 +75,18 @@ class HudTelemetryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayedEtaMinutes = etaMinutes <= 0 && remainingKm > 0.05
-        ? RouteTelemetryService.etaMinutes(
-            distanceKm: remainingKm,
-            speedKmh: speedKmh,
-          )
+    final currentRemainingKm = remainingKm;
+    final displayedEtaMinutes =
+        etaMinutes == null ||
+            (etaMinutes! <= 0 &&
+                currentRemainingKm != null &&
+                currentRemainingKm > 0.05)
+        ? currentRemainingKm != null && currentRemainingKm > 0.05
+              ? RouteTelemetryService.etaMinutes(
+                  distanceKm: currentRemainingKm,
+                  speedKmh: speedKmh,
+                )
+              : etaMinutes
         : etaMinutes;
 
     return Container(
@@ -118,7 +125,7 @@ class HudTelemetryBar extends StatelessWidget {
                   label: 'EST. ARRIVAL',
                   value: freshness == TelemetryFreshness.unavailable
                       ? '--'
-                      : displayedEtaMinutes.toString(),
+                      : displayedEtaMinutes?.toString() ?? '--',
                   unit: 'MIN',
                   color: DriverColors.primaryFixed,
                 ),
@@ -129,7 +136,7 @@ class HudTelemetryBar extends StatelessWidget {
                   label: 'REMAINING',
                   value: freshness == TelemetryFreshness.unavailable
                       ? '--'
-                      : remainingKm.toStringAsFixed(1),
+                      : remainingKm?.toStringAsFixed(1) ?? '--',
                   unit: 'KM',
                   color: Colors.white,
                 ),
