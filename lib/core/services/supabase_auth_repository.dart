@@ -3,39 +3,92 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/auth_user.dart' as app_models;
 import 'supabase_service.dart';
 
-/// Authentication adapter for the existing Supabase Auth + profiles setup.
+/// Supabase authentication repository for Ambulance First.
 ///
-/// IMPORTANT:
-/// - The backend profile role is authoritative.
-/// - The client never promotes a user to a role selected in the UI.
-/// - ADMIN is recognized and routed to the Admin Flutter portal.
-/// - EMT is not treated as a profile role because it is not confirmed by the
-///   current backend contract.
+/// Authentication source:
+///   Supabase Auth
+///
+/// User/profile source:
+///   profiles table
+///
+/// Role source:
+///   profiles.role
+///
+/// No demo users, hardcoded accounts, fake IDs, or local authentication
+/// are used here.
 class SupabaseAuthRepository {
   SupabaseClient get _db => SupabaseService.client;
 
+  // ===========================================================================
+  // CURRENT USER
+  // ===========================================================================
+
   Future<app_models.AuthUser?> currentUser() async {
     final user = _db.auth.currentUser;
-    if (user == null) return null;
+
+    if (user == null) {
+      return null;
+    }
+
     return profileForUser(user);
   }
+
+  // ===========================================================================
+  // LOGIN
+  // ===========================================================================
 
   Future<app_models.AuthUser> signIn({
     required String identifier,
     required String password,
   }) async {
-    final trimmed = identifier.trim();
-    final response = trimmed.contains('@')
-        ? await _db.auth.signInWithPassword(email: trimmed, password: password)
-        : await _db.auth.signInWithPassword(phone: trimmed, password: password);
+    final trimmedIdentifier = identifier.trim();
 
-    final user = response.user;
-    if (user == null) {
-      throw const AuthException('Authentication failed.');
+    if (trimmedIdentifier.isEmpty) {
+      throw const AuthException(
+        'Please enter your email address or mobile number.',
+      );
     }
 
+    if (password.isEmpty) {
+      throw const AuthException(
+        'Please enter your password.',
+      );
+    }
+
+    AuthResponse response;
+
+    // Email login
+    if (trimmedIdentifier.contains('@')) {
+      response = await _db.auth.signInWithPassword(
+        email: trimmedIdentifier.toLowerCase(),
+        password: password,
+      );
+    }
+
+    // Mobile login
+    else {
+      response = await _db.auth.signInWithPassword(
+        phone: trimmedIdentifier,
+        password: password,
+      );
+    }
+
+    final user = response.user;
+
+    if (user == null) {
+      throw const AuthException(
+        'Authentication failed. No authenticated user was returned.',
+      );
+    }
+
+    // Authentication succeeded.
+    // Now load the real profile from Supabase.
     return profileForUser(user);
   }
+
+  // ===========================================================================
+  // REGISTER CUSTOMER
+  // ===========================================================================
 
   Future<app_models.AuthUser?> registerCustomer({
     required String fullName,
@@ -43,42 +96,98 @@ class SupabaseAuthRepository {
     required String mobile,
     required String password,
   }) async {
-    final trimmed = identifier.trim();
+    final name = fullName.trim();
+    final trimmedIdentifier = identifier.trim();
+    final phone = mobile.trim();
+
+    if (name.isEmpty) {
+      throw const AuthException(
+        'Full name is required.',
+      );
+    }
+
+    if (trimmedIdentifier.isEmpty) {
+      throw const AuthException(
+        'Email address or mobile number is required.',
+      );
+    }
+
+    if (phone.isEmpty) {
+      throw const AuthException(
+        'Mobile number is required.',
+      );
+    }
+
+    if (password.length < 6) {
+      throw const AuthException(
+        'Password must contain at least 6 characters.',
+      );
+    }
+
     final metadata = <String, dynamic>{
-      'full_name': fullName.trim(),
-      'name': fullName.trim(),
-      'phone': mobile.trim(),
-      // Self-registration is CUSTOMER only. Internal roles are provisioned
-      // through the existing backend/profile administration process.
+      'full_name': name,
+      'name': name,
+      'phone': phone,
+
+      // Self-registration can ONLY create a customer.
+      //
+      // Operational roles such as DRIVER, TEAM_LEAD, CUSTOMER_CARE,
+      // DOCTOR and ADMIN must be provisioned by the backend/admin system.
       'role': 'CUSTOMER',
     };
 
-    final response = trimmed.contains('@')
-        ? await _db.auth.signUp(
-            email: trimmed,
-            password: password,
-            data: metadata,
-          )
-        : await _db.auth.signUp(
-            phone: trimmed,
-            password: password,
-            data: metadata,
-          );
+    AuthResponse response;
+
+    if (trimmedIdentifier.contains('@')) {
+      response = await _db.auth.signUp(
+        email: trimmedIdentifier.toLowerCase(),
+        password: password,
+        data: metadata,
+      );
+    } else {
+      response = await _db.auth.signUp(
+        phone: trimmedIdentifier,
+        password: password,
+        data: metadata,
+      );
+    }
 
     final user = response.user;
-    if (user == null) return null;
 
-    // If email/phone confirmation is enabled, session can be null. In that
-    // case the UI should tell the user to complete verification before login.
-    if (response.session == null) return null;
+    if (user == null) {
+      return null;
+    }
+
+    // Supabase can require email/phone confirmation.
+    //
+    // In that case user exists but there is no active session yet.
+    if (response.session == null) {
+      return null;
+    }
 
     return profileForUser(user);
   }
 
-  Future<void> signOut() => _db.auth.signOut();
+  // ===========================================================================
+  // LOGOUT
+  // ===========================================================================
+
+  Future<void> signOut() async {
+    await _db.auth.signOut();
+  }
+
+  // ===========================================================================
+  // LOAD PROFILE
+  // ===========================================================================
 
   Future<app_models.AuthUser> profileForUser(User user) async {
     Map<String, dynamic>? row;
+
+    // -------------------------------------------------------------------------
+    // Primary profile relationship:
+    //
+    // profiles.id = auth.users.id
+    // -------------------------------------------------------------------------
 
     try {
       final result = await _db
@@ -86,67 +195,78 @@ class SupabaseAuthRepository {
           .select()
           .eq('id', user.id)
           .maybeSingle();
+
       if (result != null) {
         row = Map<String, dynamic>.from(result);
       }
     } catch (_) {
-      // Some existing profile schemas use user_id rather than id. Try the
-      // alternate relationship before surfacing the profile error.
+      // Some schemas use profiles.user_id instead.
+      // Try that only if the primary query fails.
+    }
+
+    // -------------------------------------------------------------------------
+    // Alternate relationship:
+    //
+    // profiles.user_id = auth.users.id
+    // -------------------------------------------------------------------------
+
+    if (row == null) {
       try {
         final result = await _db
             .from('profiles')
             .select()
             .eq('user_id', user.id)
             .maybeSingle();
+
         if (result != null) {
           row = Map<String, dynamic>.from(result);
         }
       } catch (_) {
-        rethrow;
+        // Ignore here and report a clear profile error below.
       }
     }
+
+    // -------------------------------------------------------------------------
+    // Profile does not exist
+    // -------------------------------------------------------------------------
 
     if (row == null) {
       throw StateError(
         'Authenticated user has no matching profiles row. '
-        'Create/provision the profile before entering the application.',
+        'The Supabase Auth account exists, but its profile has not been '
+        'created in the profiles table.',
       );
     }
 
-    final role = _normalizeRole(row['role']?.toString());
+    // -------------------------------------------------------------------------
+    // ROLE
+    // -------------------------------------------------------------------------
+
+    final role = _normalizeRole(
+      row['role']?.toString(),
+    );
+
     if (role == null) {
       throw StateError(
         'The profiles row contains an unsupported or missing role.',
       );
     }
 
-    if (role == 'CUSTOMER') {
-      final customerProfile = await _db.rpc('get_customer_profile');
-      if (customerProfile is! Map) {
-        throw const FormatException('get_customer_profile returned malformed data.');
-      }
-      final profile = Map<String, dynamic>.from(customerProfile);
-      final profileRole = _normalizeRole(profile['role']?.toString());
-      if (profileRole != 'CUSTOMER') {
-        throw StateError('get_customer_profile returned a non-Customer profile.');
-      }
-      return app_models.AuthUser(
-        id: _requiredProfileValue(profile, 'id', user.id),
-        name: _profileValue(profile, 'full_name'),
-        email: _profileValue(profile, 'email'),
-        phone: _profileValue(profile, 'phone'),
-        role: profileRole!,
-      );
-    }
+    // -------------------------------------------------------------------------
+    // Build AuthUser entirely from Supabase data
+    // -------------------------------------------------------------------------
 
     return app_models.AuthUser(
-      id: user.id,
+      id: _firstNonEmpty([
+        row['id'],
+        row['user_id'],
+        user.id,
+      ]),
       name: _firstNonEmpty([
         row['full_name'],
         row['name'],
         user.userMetadata?['full_name'],
         user.userMetadata?['name'],
-        user.email,
       ]),
       email: _firstNonEmpty([
         row['email'],
@@ -161,46 +281,54 @@ class SupabaseAuthRepository {
     );
   }
 
-  String _requiredProfileValue(
-    Map<String, dynamic> profile,
-    String key,
-    String fallback,
-  ) {
-    final value = _profileValue(profile, key);
-    if (value.isEmpty) return fallback;
-    return value;
-  }
-
-  String _profileValue(Map<String, dynamic> profile, String key) {
-    return profile[key]?.toString().trim() ?? '';
-  }
+  // ===========================================================================
+  // ROLE NORMALIZATION
+  // ===========================================================================
 
   String? _normalizeRole(String? raw) {
-    switch (raw?.trim().toUpperCase()) {
+    if (raw == null) {
+      return null;
+    }
+
+    switch (raw.trim().toUpperCase()) {
       case 'CUSTOMER':
         return 'CUSTOMER';
+
       case 'CUSTOMER_CARE':
       case 'CUSTOMER CARE':
         return 'CUSTOMER_CARE';
+
       case 'TEAM_LEAD':
       case 'TEAM LEAD':
         return 'TEAM_LEAD';
+
       case 'DRIVER':
         return 'DRIVER';
+
       case 'DOCTOR':
         return 'DOCTOR';
+
       case 'ADMIN':
         return 'ADMIN';
+
       default:
         return null;
     }
   }
 
+  // ===========================================================================
+  // FIRST NON-EMPTY VALUE
+  // ===========================================================================
+
   String _firstNonEmpty(List<dynamic> values) {
     for (final value in values) {
       final text = value?.toString().trim() ?? '';
-      if (text.isNotEmpty) return text;
+
+      if (text.isNotEmpty) {
+        return text;
+      }
     }
+
     return '';
   }
 }
