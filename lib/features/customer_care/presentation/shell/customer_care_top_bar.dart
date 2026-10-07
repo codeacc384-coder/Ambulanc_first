@@ -3,18 +3,21 @@ import 'package:flutter/material.dart';
 import '../../theme/customer_care_colors.dart';
 import '../../theme/customer_care_text_styles.dart';
 
-class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget {
+class CustomerCareTopBar extends StatelessWidget
+    implements PreferredSizeWidget {
   const CustomerCareTopBar({
     super.key,
     required this.onOpenDrawer,
     this.onCallHotline,
     this.onNotificationsTap,
+    this.notificationCount = 0,
     this.agentName = 'Customer Care',
   });
 
   final VoidCallback onOpenDrawer;
   final VoidCallback? onCallHotline;
   final VoidCallback? onNotificationsTap;
+  final int notificationCount;
   final String agentName;
 
   @override
@@ -33,12 +36,14 @@ class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget 
               return const SizedBox.shrink();
             }
 
-            final isCompact = constraints.maxWidth < 340;
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
@@ -90,66 +95,42 @@ class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget 
                           ],
                         ),
                       ),
-                      if (!isCompact) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                          decoration: BoxDecoration(
-                            color: CustomerCareColors.secondaryContainer.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: CustomerCareColors.secondary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'ON-DUTY',
-                                style: CustomerCareTextStyles.labelSm.copyWith(
-                                  color: CustomerCareColors.onSecondaryFixedVariant,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 9.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                       const SizedBox(width: 2),
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+                        constraints: const BoxConstraints.tightFor(
+                          width: 40,
+                          height: 40,
+                        ),
                         icon: Stack(
                           clipBehavior: Clip.none,
                           children: [
                             const Icon(Icons.notifications_outlined, size: 21),
-                            Positioned(
-                              top: -2,
-                              right: -2,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: CustomerCareColors.error,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '3',
-                                  style: CustomerCareTextStyles.labelSm.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w800,
+                            if (notificationCount > 0)
+                              Positioned(
+                                top: -2,
+                                right: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: CustomerCareColors.error,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '$notificationCount',
+                                    style: CustomerCareTextStyles.labelSm
+                                        .copyWith(
+                                          color: Colors.white,
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                   ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                         onPressed: onNotificationsTap,
@@ -159,8 +140,14 @@ class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget 
                   ),
                 ),
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 3,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: CustomerCareColors.primaryContainer,
                     borderRadius: BorderRadius.circular(6),
@@ -190,7 +177,10 @@ class CustomerCareTopBar extends StatelessWidget implements PreferredSizeWidget 
                         onTap: onCallHotline,
                         borderRadius: BorderRadius.circular(4),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2.5,
+                          ),
                           decoration: BoxDecoration(
                             color: CustomerCareColors.surfaceContainerLowest,
                             borderRadius: BorderRadius.circular(4),

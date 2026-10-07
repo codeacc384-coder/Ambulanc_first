@@ -94,13 +94,45 @@ void main() {
       }
     }
   });
+
+  testWidgets('Customer Care profile shows the signed-in database details', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+
+    for (final viewport in [const Size(1280, 800), const Size(375, 812)]) {
+      tester.view.physicalSize = viewport;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CustomerCareShell(key: ValueKey(viewport), user: user),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      if (viewport.width < 840) {
+        await tester.tap(find.byTooltip('Open Operations Hub'));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('View profile'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Customer Care Profile'), findsOneWidget);
+      expect(find.text(user.name), findsWidgets);
+      expect(find.text(user.email), findsOneWidget);
+      expect(find.text(user.phone), findsOneWidget);
+      expect(find.text(user.backendRole), findsOneWidget);
+      expect(find.text(user.id), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
+      await tester.tap(find.text('CLOSE'));
+      await tester.pumpAndSettle();
+    }
+  });
+
 }
 
-void _expectNoException(
-  WidgetTester tester,
-  Size viewport,
-  String section,
-) {
+void _expectNoException(WidgetTester tester, Size viewport, String section) {
   final exception = tester.takeException();
   final details = _renderErrors.join('\n');
   _renderErrors.clear();

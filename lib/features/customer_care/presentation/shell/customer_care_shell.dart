@@ -39,7 +39,9 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
     super.initState();
     final repository = CustomerCareRepository.instance;
     if (repository.allCases.isEmpty && !repository.isLoading) {
-      repository.load().catchError((_) {});
+      repository.load().catchError((Object error) {
+        debugPrint('CUSTOMER CARE INITIAL LOAD FAILED: $error');
+      });
     }
   }
 
@@ -82,6 +84,57 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
     });
   }
 
+  void _openProfile() {
+    _scaffoldKey.currentState?.closeDrawer();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _showProfile();
+      }
+    });
+  }
+
+  Future<void> _showProfile() async {
+    final user = widget.user;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Customer Care Profile'),
+        content: SizedBox(
+          width: 420,
+          child: user == null
+              ? const Text(
+                  'Profile details are unavailable. Please sign in again.',
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _profileDetail('Name', user.name),
+                    _profileDetail('Email', user.email),
+                    _profileDetail('Phone', user.phone),
+                    _profileDetail('Role', user.backendRole),
+                    _profileDetail('Profile ID', user.id),
+                  ],
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('CLOSE'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileDetail(String label, String value) {
+    final detail = value.trim().isEmpty ? 'Not provided' : value;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(label),
+      subtitle: SelectableText(detail),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final repo = CustomerCareRepository.instance;
@@ -89,8 +142,8 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
     return ListenableBuilder(
       listenable: repo,
       builder: (context, _) {
-        final newCount = repo.newInboundCount;
-        final pendingCount = repo.pendingCallsCount;
+        final newCount = repo.hasLoaded ? repo.newInboundCount : 0;
+        final pendingCount = repo.hasLoaded ? repo.pendingCallsCount : 0;
 
         // If currently in detail view or console view, render them
         if (_activeCaseForConsole != null) {
@@ -139,6 +192,7 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
                           _displayToast('Support contact unavailable.'),
                       onNotificationsTap: () =>
                           _showNotifications(context, repo),
+                      notificationCount: repo.unreadNotificationCount,
                     ),
               drawer: isDesktop
                   ? null
@@ -152,6 +206,11 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
                         });
                       },
                       onOpenArchive: _openArchive,
+                      onOpenProfile: _openProfile,
+                      newInboundCount: newCount,
+                      pendingCallsCount: pendingCount,
+                      hasLoaded: repo.hasLoaded,
+                      user: widget.user,
                       onLogout: widget.onLogout,
                     ),
               body: Stack(
@@ -207,7 +266,8 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
                                             'Customer Care Ops',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: CustomerCareTextStyles.labelSm
+                                            style: CustomerCareTextStyles
+                                                .labelSm
                                                 .copyWith(
                                                   color: CustomerCareColors
                                                       .onSurfaceVariant,
@@ -233,13 +293,13 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
                                 1,
                                 Icons.move_to_inbox_rounded,
                                 'New Requests',
-                                badge: '$newCount',
+                                badge: repo.hasLoaded ? '$newCount' : null,
                               ),
                               _buildRailItem(
                                 2,
                                 Icons.phone_in_talk_rounded,
                                 'Pending Calls',
-                                badge: '$pendingCount',
+                                badge: repo.hasLoaded ? '$pendingCount' : null,
                               ),
                               _buildRailItem(
                                 3,
@@ -257,6 +317,21 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
                                 'All Bookings Archive',
                               ),
                               const Spacer(),
+                              Material(
+                                color: Colors.transparent,
+                                child: ListTile(
+                                  leading: const Icon(Icons.person_outline),
+                                  title: Text(
+                                    widget.user?.name.isNotEmpty == true
+                                        ? widget.user!.name
+                                        : 'Profile',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: const Text('View profile'),
+                                  onTap: _openProfile,
+                                ),
+                              ),
                               if (widget.onLogout != null)
                                 Padding(
                                   padding: const EdgeInsets.all(12),

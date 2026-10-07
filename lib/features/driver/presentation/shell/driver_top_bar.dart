@@ -20,7 +20,7 @@ class DriverTopBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onProfileTap;
 
   @override
-  Size get preferredSize => const Size.fromHeight(74);
+  Size get preferredSize => const Size.fromHeight(120);
 
   Color get _dutyColor {
     switch (driver.status) {
@@ -51,57 +51,57 @@ class DriverTopBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       child: SafeArea(
         bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              // Logo & Pilot Identity
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: DriverColors.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: DriverColors.primaryContainer.withValues(
-                        alpha: 0.3,
-                      ),
-                      blurRadius: 6,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 560;
+            final veryCompact = constraints.maxWidth < 360;
+            final identity = Row(
+              children: [
+                if (!veryCompact) ...[
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: DriverColors.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: DriverColors.primaryContainer.withValues(
+                            alpha: 0.3,
+                          ),
+                          blurRadius: 6,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.local_shipping_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            'Ambulance First',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: DriverTextStyles.titleMedium.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.2,
+                    child: const Icon(
+                      Icons.local_shipping_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              compact ? driver.name : 'Ambulance First',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: DriverTextStyles.titleMedium.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.2,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Container(
+                          if (!veryCompact) ...[
+                            const SizedBox(width: 6),
+                            Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 6,
                                 vertical: 1.5,
@@ -121,87 +121,91 @@ class DriverTopBar extends StatelessWidget implements PreferredSizeWidget {
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '${driver.assignedAmbulanceNumber}  •  ${driver.name.toUpperCase()}',
-                      style: DriverTextStyles.telemetryMicro.copyWith(
-                        color: DriverColors.onSurfaceVariant,
-                        fontSize: 10,
+                          ],
+                        ],
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Duty status pill
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _dutyColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _dutyColor.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _dutyColor,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
+                      if (!compact)
                         Text(
-                          driver.status.replaceAll('_', ' '),
+                          [
+                            if (driver.assignedAmbulanceNumber.isNotEmpty)
+                              driver.assignedAmbulanceNumber,
+                            driver.name.toUpperCase(),
+                          ].join(' • '),
                           style: DriverTextStyles.telemetryMicro.copyWith(
-                            color: _dutyColor,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 9.5,
+                            color: DriverColors.onSurfaceVariant,
+                            fontSize: 10,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
+              ],
+            );
 
-              // Emergency SOS Button
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => EmergencySosModal(
-                          driverId: driver.id,
-                          driverName: driver.name,
-                          bookingId: activeBooking?.id,
-                          ambulanceUnit: driver.assignedAmbulanceNumber,
-                          latitude: driver.latitude,
-                          longitude: driver.longitude,
-                          onSosTriggered: onSosTriggered,
-                        ),
-                      );
-                    },
+            final status = Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(
+                color: _dutyColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _dutyColor.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _dutyColor,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    driver.status.replaceAll('_', ' '),
+                    style: DriverTextStyles.telemetryMicro.copyWith(
+                      color: _dutyColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 9.5,
+                    ),
+                  ),
+                ],
+              ),
+            );
+
+            void triggerSos() {
+              showDialog(
+                context: context,
+                builder: (ctx) => EmergencySosModal(
+                  driverId: driver.id,
+                  driverName: driver.name,
+                  bookingId: activeBooking?.id,
+                  ambulanceUnit: driver.assignedAmbulanceNumber,
+                  latitude: driver.latitude,
+                  longitude: driver.longitude,
+                  onSosTriggered: onSosTriggered,
+                ),
+              );
+            }
+
+            final sosButton = veryCompact
+                ? SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: IconButton.filled(
+                      onPressed: triggerSos,
+                      tooltip: 'SOS',
+                      style: IconButton.styleFrom(
+                        backgroundColor: DriverColors.tertiary,
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: const Icon(Icons.warning_rounded, size: 18),
+                    ),
+                  )
+                : ElevatedButton.icon(
+                    onPressed: triggerSos,
                     icon: const Icon(
                       Icons.warning_rounded,
                       size: 16,
@@ -218,35 +222,64 @@ class DriverTopBar extends StatelessWidget implements PreferredSizeWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
+                  );
+
+            final profileButton = InkWell(
+              onTap: onProfileTap,
+              borderRadius: BorderRadius.circular(20),
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: DriverColors.surfaceContainerHighest,
+                child: Text(
+                  driver.name.isNotEmpty ? driver.name[0].toUpperCase() : 'D',
+                  style: DriverTextStyles.titleSmall.copyWith(
+                    color: DriverColors.primaryContainer,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
+            );
 
-              const SizedBox(width: 10),
-
-              // Profile Avatar
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: InkWell(
-                    onTap: onProfileTap,
-                    borderRadius: BorderRadius.circular(20),
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: DriverColors.surfaceContainerHighest,
-                      child: Text(
-                        driver.name.isNotEmpty ? driver.name[0] : 'D',
-                        style: DriverTextStyles.titleSmall.copyWith(
-                          color: DriverColors.primaryContainer,
-                          fontWeight: FontWeight.w800,
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: compact ? 8 : 16,
+                vertical: 8,
+              ),
+              child: compact
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: identity),
+                            const SizedBox(width: 8),
+                            profileButton,
+                          ],
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            status,
+                            const SizedBox(width: 8),
+                            sosButton,
+                          ],
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(child: identity),
+                        const SizedBox(width: 12),
+                        status,
+                        const SizedBox(width: 10),
+                        sosButton,
+                        const SizedBox(width: 10),
+                        profileButton,
+                      ],
                     ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

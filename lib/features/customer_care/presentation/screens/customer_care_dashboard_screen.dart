@@ -5,7 +5,6 @@ import '../../../../core/models/customer_care_case.dart';
 import '../../../../core/services/customer_care_repository.dart';
 import '../../theme/customer_care_colors.dart';
 import '../../theme/customer_care_text_styles.dart';
-import '../widgets/agent_shift_banner.dart';
 import '../widgets/kpi_queue_card.dart';
 import '../widgets/triage_incident_card.dart';
 import '../widgets/telemetry_radar_card.dart';
@@ -188,7 +187,7 @@ class _CustomerCareDashboardScreenState
     return ListenableBuilder(
       listenable: repo,
       builder: (context, _) {
-        if (repo.errorMessage != null && repo.allCases.isEmpty) {
+        if (repo.errorMessage != null && !repo.hasLoaded) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -198,8 +197,13 @@ class _CustomerCareDashboardScreenState
             ),
           );
         }
-        if (repo.isLoading && repo.allCases.isEmpty) {
+        if (repo.isLoading && !repo.hasLoaded) {
           return const Center(child: CircularProgressIndicator());
+        }
+        if (!repo.hasLoaded) {
+          return const Center(
+            child: Text('Customer Care data is unavailable.'),
+          );
         }
         final allCases = repo.allCases;
         final newInboundCount = repo.newInboundCount;
@@ -214,11 +218,23 @@ class _CustomerCareDashboardScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Agent Shift Protocol Banner
-              const AgentShiftBanner(),
-              const SizedBox(height: 12),
-
-              // 2. Interactive KPI Cards Grid
+              if (repo.errorMessage != null)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: CustomerCareColors.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Could not refresh Customer Care data: ${repo.errorMessage}',
+                    style: CustomerCareTextStyles.bodySm.copyWith(
+                      color: CustomerCareColors.onErrorContainer,
+                    ),
+                  ),
+                ),
+              // KPI counts come from the Customer Care dashboard RPC.
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.maxWidth > 580;
@@ -234,7 +250,7 @@ class _CustomerCareDashboardScreenState
                         title: 'New Inbound',
                         count: newInboundCount.toString().padLeft(2, '0'),
                         badgeText: '${repo.codeRedCount} Code Red',
-                        subtitle: 'Requires rapid pickup',
+                        subtitle: 'Code Red cases',
                         accentColor: CustomerCareColors.error,
                         badgeBgColor: CustomerCareColors.errorContainer,
                         badgeFgColor: CustomerCareColors.onErrorContainer,
@@ -248,8 +264,8 @@ class _CustomerCareDashboardScreenState
                       KpiQueueCard(
                         title: 'Pending Calls',
                         count: pendingCallsCount.toString().padLeft(2, '0'),
-                        badgeText: '$pendingCallsCount Follow-up',
-                        subtitle: 'Avg wait 1.8m',
+                        badgeText: '$pendingCallsCount Cases',
+                        subtitle: 'Cases awaiting contact',
                         accentColor: CustomerCareColors.warning,
                         badgeBgColor: CustomerCareColors.warningContainer,
                         badgeFgColor: CustomerCareColors.onWarningContainer,
@@ -263,8 +279,8 @@ class _CustomerCareDashboardScreenState
                       KpiQueueCard(
                         title: 'Verified',
                         count: verifiedCount.toString().padLeft(2, '0'),
-                        badgeText: 'Ready',
-                        subtitle: 'For Team Lead',
+                        badgeText: 'Verified',
+                        subtitle: 'Cases verified',
                         accentColor: CustomerCareColors.secondary,
                         badgeBgColor: CustomerCareColors.secondaryContainer,
                         badgeFgColor:
@@ -279,8 +295,8 @@ class _CustomerCareDashboardScreenState
                       KpiQueueCard(
                         title: 'Sent to Lead',
                         count: handedOverCount.toString().padLeft(2, '0'),
-                        badgeText: 'In Dispatch',
-                        subtitle: 'Downstream active',
+                        badgeText: 'Handed over',
+                        subtitle: 'Cases sent to Team Lead',
                         accentColor: CustomerCareColors.primaryContainer,
                         badgeBgColor: CustomerCareColors.primaryFixed,
                         badgeFgColor: CustomerCareColors.onPrimaryFixedVariant,
@@ -299,7 +315,7 @@ class _CustomerCareDashboardScreenState
               ),
               const SizedBox(height: 12),
 
-              // 3. Operational Search & Filter Ribbon
+              // Operational Search & Filter Ribbon
               Container(
                 decoration: BoxDecoration(
                   color: CustomerCareColors.surfaceContainerLowest,

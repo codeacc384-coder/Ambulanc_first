@@ -25,18 +25,37 @@ class CustomerCareRepository extends ChangeNotifier {
   String _lastFilter = 'ALL';
   String _lastSearch = '';
   bool isLoading = false;
+  bool _hasLoaded = false;
   String? errorMessage;
 
+  static const _dashboardCountKeys = [
+    'new_inbound_count',
+    'code_red_count',
+    'pending_calls_count',
+    'verified_count',
+    'sent_to_team_lead_count',
+    'active_trips_count',
+    'total_open_count',
+  ];
+
+  bool get hasLoaded =>
+      _hasLoaded &&
+      _dashboardCountKeys.every(
+        (key) => _parseDashboardCount(_dashboard[key]) != null,
+      );
   List<CustomerCareCase> get allCases => List.unmodifiable(_cases);
   List<Map<String, dynamic>> get notifications =>
       List.unmodifiable(_notifications);
-  int get newInboundCount => _int(_dashboard['new_inbound_count']);
-  int get codeRedCount => _int(_dashboard['code_red_count']);
-  int get pendingCallsCount => _int(_dashboard['pending_calls_count']);
-  int get verifiedCount => _int(_dashboard['verified_count']);
-  int get handedOverCount => _int(_dashboard['sent_to_team_lead_count']);
-  int get activeTripCount => _int(_dashboard['active_trips_count']);
-  int get totalOpenCount => _int(_dashboard['total_open_count']);
+  int get newInboundCount => _dashboardCount('new_inbound_count');
+  int get codeRedCount => _dashboardCount('code_red_count');
+  int get pendingCallsCount => _dashboardCount('pending_calls_count');
+  int get verifiedCount => _dashboardCount('verified_count');
+  int get handedOverCount => _dashboardCount('sent_to_team_lead_count');
+  int get activeTripCount => _dashboardCount('active_trips_count');
+  int get totalOpenCount => _dashboardCount('total_open_count');
+  int get unreadNotificationCount => _notifications.where((notification) {
+    return notification['read'] != true && notification['is_read'] != true;
+  }).length;
   int get highPriorityCount => _cases.where((c) => c.priority == 'HIGH').length;
   int get pediatricCount => _cases.where((c) => c.pediatric).length;
   int get icuCount => _cases.where((c) => c.icu).length;
@@ -74,7 +93,6 @@ class CustomerCareRepository extends ChangeNotifier {
   List<CustomerCareCase> get activeTripCases => List.unmodifiable(_activeTrips);
 
   Future<void> load({String filter = 'ALL', String search = ''}) async {
-    _requireSession();
     _lastFilter = filter;
     _lastSearch = search;
     _subscribeToBookingChanges();
@@ -82,6 +100,7 @@ class CustomerCareRepository extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      _requireSession();
       final results = await Future.wait<dynamic>([
         _db.rpc('get_customer_care_dashboard'),
         _db.rpc(
@@ -91,15 +110,24 @@ class CustomerCareRepository extends ChangeNotifier {
         _db.rpc('get_customer_care_notifications'),
         _db.rpc('get_customer_care_active_trips'),
       ]);
-      _dashboard = _asMap(results[0], 'get_customer_care_dashboard');
-      _requireDashboardKeys(_dashboard);
+      final dashboard = _asMap(results[0], 'get_customer_care_dashboard');
+      _requireDashboardKeys(dashboard);
       final rawBookings = _asRows(results[1], 'get_customer_care_bookings');
-      _cases = rawBookings.map(_mapCase).toList();
-      _notifications = _asRows(results[2], 'get_customer_care_notifications');
-      _activeTrips = _asRows(
+      final cases = rawBookings.map(_mapCase).toList();
+      final notifications = _asRows(
+        results[2],
+        'get_customer_care_notifications',
+      );
+      final activeTrips = _asRows(
         results[3],
         'get_customer_care_active_trips',
       ).map(_mapCase).toList();
+
+      _dashboard = dashboard;
+      _cases = cases;
+      _notifications = notifications;
+      _activeTrips = activeTrips;
+      _hasLoaded = true;
     } catch (error) {
       errorMessage = error.toString();
       rethrow;
@@ -566,24 +594,39 @@ class CustomerCareRepository extends ChangeNotifier {
     return Map<String, dynamic>.from(value);
   }
 
-  void _requireDashboardKeys(Map<String, dynamic> value) {
-    const requiredKeys = [
-      'new_inbound_count',
-      'code_red_count',
-      'pending_calls_count',
-      'verified_count',
-      'sent_to_team_lead_count',
-      'active_trips_count',
-      'total_open_count',
-    ];
-    final missing = requiredKeys
-        .where((key) => !value.containsKey(key))
+  void _requireDashboardKeys(Map<String, dynamic> dashboard) {
+    final missing = _dashboardCountKeys
+        .where((key) => !dashboard.containsKey(key))
         .toList();
     if (missing.isNotEmpty) {
       throw FormatException(
         'get_customer_care_dashboard is missing required keys: ${missing.join(', ')}',
       );
     }
+    for (final key in _dashboardCountKeys) {
+      if (_parseDashboardCount(dashboard[key]) == null) {
+        throw FormatException(
+          'get_customer_care_dashboard returned an invalid count for $key.',
+        );
+      }
+    }
+  }
+
+  int _dashboardCount(String key) =>
+      _parseDashboardCount(_dashboard[key]) ??
+      (throw FormatException(
+        'get_customer_care_dashboard returned an invalid count for $key.',
+      ));
+
+  static int? _parseDashboardCount(dynamic value) {
+    final count = value is num ? value : int.tryParse('$value');
+    if (count is! num ||
+        !count.isFinite ||
+        count != count.toInt() ||
+        count < 0) {
+      return null;
+    }
+    return count.toInt();
   }
 
   static String _outcome(String value) {
