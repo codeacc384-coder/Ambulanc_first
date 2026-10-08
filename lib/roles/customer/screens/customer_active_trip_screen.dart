@@ -6,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 import '../../../core/models/auth_user.dart';
 import '../../../core/models/booking.dart';
 import '../../../core/services/customer_booking_workflow_service.dart';
-import '../../../core/services/customer_portal_cache.dart';
 import '../../../core/services/shared_booking_store.dart';
 import '../../../core/services/supabase_booking_repository.dart';
 import '../../../core/services/supabase_service.dart';
@@ -16,7 +15,6 @@ import '../../../core/services/driver_navigation_service.dart';
 import '../theme/ambulance_first_theme.dart';
 import '../widgets/ambulance_first_card.dart';
 import '../widgets/ambulance_first_states.dart';
-import '../widgets/ambulance_first_timeline.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../widgets/customer_google_trip_map.dart';
 
@@ -480,6 +478,11 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  if (_hasAssignment(currentTrip)) ...[
+                    _buildAssignmentCard(currentTrip),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Responsive Split: Live Map Canvas on Left (Desktop) or Top (Mobile)
                   if (isDesktop)
                     Row(
@@ -530,7 +533,7 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // Mission Sidebar: Patient Demographics, Crew, and Milestone Timeline
+  // Mission Sidebar: Patient Demographics and Assigned Crew
   // ---------------------------------------------------------------------------
   Widget _buildMissionSidebar(Booking b) {
     return Column(
@@ -730,41 +733,94 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
                 icon: Icons.medical_services_rounded,
                 phone: b.doctorPhone,
               ),
-              const Divider(height: 14),
-              _crewTile(
-                role: 'Ambulance Driver',
-                name: b.driverName.trim().isEmpty
-                    ? 'Driver details unavailable'
-                    : b.driverName,
-                icon: Icons.drive_eta_rounded,
-                phone: b.driverPhone,
-              ),
             ],
           ),
         ),
         const SizedBox(height: 12),
 
         _buildVitalsCard(b),
-        const SizedBox(height: 12),
+      ],
+    );
+  }
 
-        // Milestone Progression Timeline
-        AmbulanceFirstCard(
-          padding: const EdgeInsets.all(AmbulanceFirstSpacing.spaceSm),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  bool _hasAssignment(Booking booking) =>
+      booking.assignedDriverId != null ||
+      booking.driverName.trim().isNotEmpty ||
+      booking.vehicleNumber.trim().isNotEmpty;
+
+  Widget _buildAssignmentCard(Booking booking) {
+    final driverName = booking.driverName.trim();
+    final vehicleNumber = booking.vehicleNumber.trim();
+
+    return AmbulanceFirstCard(
+      padding: const EdgeInsets.all(AmbulanceFirstSpacing.spaceSm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Assigned Ambulance',
+            style: AmbulanceFirstTypography.labelMd(
+              color: AmbulanceFirstColors.onSurface,
+            ).copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Row(
             children: [
-              Text(
-                'Mission Milestones',
-                style: AmbulanceFirstTypography.labelMd(
-                  color: AmbulanceFirstColors.onSurface,
-                ).copyWith(fontWeight: FontWeight.w700),
+              const Icon(
+                Icons.drive_eta_rounded,
+                size: 18,
+                color: AmbulanceFirstColors.clinicalCobalt,
               ),
-              const SizedBox(height: 12),
-              AmbulanceFirstTimeline(steps: _timelineSteps(b)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      driverName.isEmpty ? 'Driver assigned' : driverName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AmbulanceFirstTypography.bodyMd(
+                        color: AmbulanceFirstColors.onSurface,
+                      ).copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      vehicleNumber.isEmpty
+                          ? 'Vehicle details will appear when available'
+                          : vehicleNumber,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AmbulanceFirstTypography.bodySm(
+                        color: AmbulanceFirstColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (booking.driverPhone.trim().isNotEmpty)
+                Text(
+                  booking.driverPhone,
+                  style: AmbulanceFirstTypography.codeSm(
+                    color: AmbulanceFirstColors.clinicalCobalt,
+                    weight: FontWeight.w600,
+                  ),
+                ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            DriverNavigationService.hasValidCoordinates(
+                  booking.driverLatitude,
+                  booking.driverLongitude,
+                )
+                ? 'Driver location is shown on the map below.'
+                : 'Waiting for the driver to share their live location.',
+            style: AmbulanceFirstTypography.bodySm(
+              color: AmbulanceFirstColors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -876,40 +932,6 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
     );
   }
 
-  List<MilestoneStep> _timelineSteps(Booking booking) {
-    final history = CustomerPortalCache.bookingHistory[booking.id] ?? const [];
-    if (history.isEmpty) {
-      return const [
-        MilestoneStep(
-          title: 'History unavailable',
-          subtitle: 'Persisted booking history is not available.',
-          isCompleted: false,
-          isCurrent: false,
-        ),
-      ];
-    }
-    return history.map((entry) {
-      final status = entry['status']?.toString() ?? 'Status unavailable';
-      final milestone = entry['milestone']?.toString();
-      final description = entry['description']?.toString();
-      final notes = entry['notes']?.toString();
-      final changedBy = entry['changed_by_role']?.toString();
-      final subtitle = [
-        if (description != null && description.isNotEmpty) description,
-        if (notes != null && notes.isNotEmpty) notes,
-        if (changedBy != null && changedBy.isNotEmpty) 'Changed by $changedBy',
-      ].join(' · ');
-      return MilestoneStep(
-        title: milestone != null && milestone.isNotEmpty ? milestone : status,
-        subtitle: subtitle.isNotEmpty ? subtitle : 'Details unavailable',
-        isCompleted: status == booking.status || booking.isCompleted,
-        isCurrent: status == booking.status,
-        timestamp:
-            entry['timestamp']?.toString() ?? entry['created_at']?.toString(),
-      );
-    }).toList();
-  }
-
   Widget _pillTag(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -927,5 +949,4 @@ class _CustomerActiveTripScreenState extends State<CustomerActiveTripScreen> {
     );
   }
 }
-
 

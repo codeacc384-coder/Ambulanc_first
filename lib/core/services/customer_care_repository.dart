@@ -138,7 +138,9 @@ class CustomerCareRepository extends ChangeNotifier {
   }
 
   void _subscribeToBookingChanges() {
-    if (_bookingRealtimeChannel != null || !SupabaseService.isInitialized) {
+    if (_bookingRealtimeChannel != null ||
+        !SupabaseService.isInitialized ||
+        !SupabaseService.isRealtimeEnabled) {
       return;
     }
     _bookingRealtimeChannel = _db

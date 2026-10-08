@@ -54,7 +54,16 @@ class _AdminFleetScreenState extends State<AdminFleetScreen> {
         }).toList();
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(StitchTheme.margin),
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(
+            StitchTheme.margin,
+            StitchTheme.margin,
+            StitchTheme.margin,
+            StitchTheme.spaceXl,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -144,10 +153,10 @@ class _AdminFleetScreenState extends State<AdminFleetScreen> {
               // 2. KPI Metric Row
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final isWide = constraints.maxWidth >= 880;
-                  final tileWidth = isWide
-                      ? (constraints.maxWidth - 18) / 4
-                      : constraints.maxWidth;
+                  final columnCount = constraints.maxWidth >= 880 ? 4 : 2;
+                  final tileWidth =
+                      (constraints.maxWidth - (columnCount - 1) * 6) /
+                      columnCount;
 
                   return Wrap(
                     spacing: 6,

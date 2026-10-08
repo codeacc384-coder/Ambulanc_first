@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
 
 import '../config/supabase_config.dart';
 
@@ -9,11 +10,13 @@ import '../config/supabase_config.dart';
 /// The legacy SUPABASE_ANON_KEY define remains supported.
 class SupabaseService {
   static bool _initialized = false;
+  static bool _realtimeEnabled = true;
 
   static String get url => SupabaseConfig.url;
   static String get publishableKey => SupabaseConfig.publishableKey;
   static bool get isConfigured => SupabaseConfig.isConfigured;
   static bool get isInitialized => _initialized;
+  static bool get isRealtimeEnabled => _realtimeEnabled;
 
   static SupabaseClient get client {
     if (!_initialized) {
@@ -24,16 +27,28 @@ class SupabaseService {
     return Supabase.instance.client;
   }
 
-  static Future<void> initialize() async {
+  static Future<void> initialize({
+    http.Client? httpClient,
+    String? urlOverride,
+    String? publishableKeyOverride,
+    bool enableRealtime = true,
+    FlutterAuthClientOptions? authOptions,
+  }) async {
     if (_initialized) return;
 
-    if (!isConfigured) {
+    final configuredUrl = urlOverride ?? url;
+    final configuredKey = publishableKeyOverride ?? publishableKey;
+    if (configuredKey.trim().isEmpty ||
+        (urlOverride == null && !isConfigured)) {
       return;
     }
 
+    _realtimeEnabled = enableRealtime;
     await Supabase.initialize(
-      url: url,
-      publishableKey: publishableKey,
+      url: configuredUrl,
+      publishableKey: configuredKey,
+      httpClient: httpClient,
+      authOptions: authOptions ?? const FlutterAuthClientOptions(),
     );
     _initialized = true;
   }

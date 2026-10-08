@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/models/auth_user.dart';
 import '../../../../core/models/customer_care_case.dart';
 import '../../../../core/services/customer_care_repository.dart';
+import '../../../../core/services/supabase_service.dart';
 import '../../theme/customer_care_colors.dart';
 import '../../theme/customer_care_text_styles.dart';
 import '../screens/customer_care_dashboard_screen.dart';
@@ -38,7 +39,9 @@ class _CustomerCareShellState extends State<CustomerCareShell> {
   void initState() {
     super.initState();
     final repository = CustomerCareRepository.instance;
-    if (repository.allCases.isEmpty && !repository.isLoading) {
+    if (SupabaseService.isInitialized &&
+        repository.allCases.isEmpty &&
+        !repository.isLoading) {
       repository.load().catchError((Object error) {
         debugPrint('CUSTOMER CARE INITIAL LOAD FAILED: $error');
       });

@@ -32,7 +32,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('admin fleet lays out at 320px without exceptions', (
+  testWidgets('admin fleet is responsive and touch-scrollable at 320px', (
     WidgetTester tester,
   ) async {
     addTearDown(tester.view.resetPhysicalSize);
@@ -50,6 +50,26 @@ void main() {
     );
 
     expect(find.text('Fleet Command'), findsOneWidget);
+    expect(find.text('TOTAL FLEET'), findsOneWidget);
+    expect(find.text('AVAILABLE'), findsNWidgets(2));
+    expect(
+      tester.getTopLeft(find.text('TOTAL FLEET')).dy,
+      tester.getTopLeft(find.text('AVAILABLE').first).dy,
+    );
+
+    final verticalScrollView = find
+        .descendant(
+          of: find.byType(SingleChildScrollView).first,
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    await tester.drag(verticalScrollView, const Offset(0, -300));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.state<ScrollableState>(verticalScrollView).position.pixels,
+      greaterThan(0),
+    );
     expect(tester.takeException(), isNull);
   });
 }

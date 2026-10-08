@@ -56,7 +56,7 @@
       startFlutter();
     } else {
       const mapsScript = document.createElement('script');
-      mapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(mapsKey)}&v=weekly`;
+      mapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(mapsKey)}&v=weekly&loading=async`;
       mapsScript.async = true;
       mapsScript.onload = startFlutter;
       mapsScript.onerror = startFlutter;

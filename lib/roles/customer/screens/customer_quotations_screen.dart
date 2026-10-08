@@ -119,6 +119,10 @@ class _CustomerQuotationsScreenState
             : AmbulanceFirstSpacing.marginMobile;
 
         return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: EdgeInsets.symmetric(
             horizontal: horizontalPadding,
             vertical: 16,
@@ -308,12 +312,12 @@ class _CustomerQuotationsScreenState
           // ----------------------------------------------------------------
           // HEADER ROW
           // ----------------------------------------------------------------
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final identity = Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
+                  Flexible(
                     child: AmbulanceFirstBookingId(
                       id: q.id,
                       prefix: 'QUOTE',
@@ -329,49 +333,82 @@ class _CustomerQuotationsScreenState
                       ),
                     ),
                   ],
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isPending
-                          ? AmbulanceFirstColors.warningContainer
-                          : isAccepted
-                              ? AmbulanceFirstColors.secondaryContainer
-                              : AmbulanceFirstColors.surfaceContainer,
-                      borderRadius: BorderRadius.circular(
-                        AmbulanceFirstSpacing.radiusPill,
-                      ),
-                    ),
-                    child: Text(
-                      q.status,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AmbulanceFirstTypography.codeSm(
-                        color: isPending
-                            ? AmbulanceFirstColors.onWarning
-                            : isAccepted
-                                ? AmbulanceFirstColors.onSecondaryContainer
-                                : AmbulanceFirstColors.onSurfaceVariant,
-                        weight: FontWeight.w700,
-                      ).copyWith(fontSize: 10),
-                    ),
-                  ),
                 ],
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  '₹ ${q.finalAmount.toStringAsFixed(2)}',
-                  style: AmbulanceFirstTypography.telemetryNum(
-                    color: AmbulanceFirstColors.onSurface,
-                    size: 20,
+              );
+              final statusBadge = Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: isPending
+                      ? AmbulanceFirstColors.warningContainer
+                      : isAccepted
+                      ? AmbulanceFirstColors.secondaryContainer
+                      : AmbulanceFirstColors.surfaceContainer,
+                  borderRadius: BorderRadius.circular(
+                    AmbulanceFirstSpacing.radiusPill,
                   ),
                 ),
-              ),
-            ],
+                child: Text(
+                  q.status,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmbulanceFirstTypography.codeSm(
+                    color: isPending
+                        ? AmbulanceFirstColors.onWarning
+                        : isAccepted
+                        ? AmbulanceFirstColors.onSecondaryContainer
+                        : AmbulanceFirstColors.onSurfaceVariant,
+                    weight: FontWeight.w700,
+                  ).copyWith(fontSize: 10),
+                ),
+              );
+              final total = Text(
+                '₹ ${q.finalAmount.toStringAsFixed(2)}',
+                maxLines: 1,
+                style: AmbulanceFirstTypography.telemetryNum(
+                  color: AmbulanceFirstColors.onSurface,
+                  size: 20,
+                ),
+              );
+
+              if (constraints.maxWidth < 420) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: identity),
+                        const SizedBox(width: 8),
+                        statusBadge,
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: total,
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(child: identity),
+                        const SizedBox(width: 8),
+                        statusBadge,
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  total,
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: 10),
@@ -414,6 +451,8 @@ class _CustomerQuotationsScreenState
 
                 Text(
                   '${booking.pickup} → ${booking.destination} (${booking.distanceKm} km transit)',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style:
                       AmbulanceFirstTypography.bodySm(
                     color:
@@ -488,40 +527,45 @@ class _CustomerQuotationsScreenState
           // ACTIONS
           // ----------------------------------------------------------------
           if (isPending)
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: AmbulanceFirstButton(
-                    label: 'REVIEW & AUTHORIZE',
-                    icon: Icons.verified_rounded,
-                    onPressed: _responding
-                        ? null
-                        : () => _openAcceptanceDialog(
-                              context,
-                              booking,
-                            ),
-                    variant:
-                        AmbulanceFirstButtonVariant.primary,
-                  ),
-                ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final authorize = AmbulanceFirstButton(
+                  label: 'REVIEW & AUTHORIZE',
+                  icon: Icons.verified_rounded,
+                  fullWidth: constraints.maxWidth < 360,
+                  onPressed: _responding
+                      ? null
+                      : () => _openAcceptanceDialog(context, booking),
+                  variant: AmbulanceFirstButtonVariant.primary,
+                );
+                final decline = AmbulanceFirstButton(
+                  label: 'DECLINE',
+                  fullWidth: constraints.maxWidth < 360,
+                  onPressed: _responding
+                      ? null
+                      : () => _openAcceptanceDialog(context, booking),
+                  variant: AmbulanceFirstButtonVariant.secondary,
+                );
 
-                const SizedBox(width: 8),
+                if (constraints.maxWidth < 360) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      authorize,
+                      const SizedBox(height: 8),
+                      decline,
+                    ],
+                  );
+                }
 
-                Expanded(
-                  child: AmbulanceFirstButton(
-                    label: 'DECLINE',
-                    onPressed: _responding
-                        ? null
-                        : () => _openAcceptanceDialog(
-                              context,
-                              booking,
-                            ),
-                    variant:
-                        AmbulanceFirstButtonVariant.secondary,
-                  ),
-                ),
-              ],
+                return Row(
+                  children: [
+                    Expanded(flex: 2, child: authorize),
+                    const SizedBox(width: 8),
+                    Expanded(child: decline),
+                  ],
+                );
+              },
             )
           else
             Row(

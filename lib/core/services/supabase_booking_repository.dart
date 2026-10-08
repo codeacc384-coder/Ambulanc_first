@@ -674,6 +674,7 @@ class SupabaseBookingRepository {
     for (final key in [
       'ambulance',
       'driver',
+      'assignment',
       'doctor',
       'medical_crew',
       'medicalCrew',
@@ -718,6 +719,24 @@ class SupabaseBookingRepository {
     if (driver != null) {
       row['driver_name'] ??= driver['full_name'] ?? driver['name'];
       row['driver_phone'] ??= driver['phone'] ?? driver['mobile'];
+    }
+    final assignment = _nestedMap(row, ['assignment']);
+    if (assignment != null) {
+      row['assigned_driver_id'] ??=
+          assignment['assigned_driver_id'] ?? assignment['driver_id'];
+      row['driver_name'] ??=
+          assignment['driver_name'] ??
+          assignment['driver_full_name'] ??
+          assignment['driverName'];
+      row['driver_phone'] ??=
+          assignment['driver_phone'] ??
+          assignment['driver_mobile'] ??
+          assignment['driverPhone'];
+      row['vehicle_number'] ??=
+          assignment['vehicle_number'] ??
+          assignment['ambulance_vehicle_number'] ??
+          assignment['registration_number'] ??
+          assignment['vehicleNumber'];
     }
     final doctor = _nestedMap(row, ['doctor']);
     if (doctor != null) {

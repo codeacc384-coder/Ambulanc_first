@@ -36,26 +36,16 @@ void main() {
       onBookNewAmbulance: () {},
       onNavigateToSection: (_) {},
     ),
-    'Bookings': () => CustomerBookingsScreen(
-      user: user,
-      onBookNewAmbulance: () {},
-    ),
-    'Active Trips': () => CustomerActiveTripScreen(
-      user: user,
-      onBookNewAmbulance: () {},
-    ),
-    'Quotations': () => CustomerQuotationsScreen(
-      user: user,
-      onBookNewAmbulance: () {},
-    ),
-    'History': () => CustomerHistoryScreen(
-      user: user,
-      onBookNewAmbulance: () {},
-    ),
-    'Home Services': () => HomeServicesScreen(
-      user: user,
-      onBookingCreated: (_) {},
-    ),
+    'Bookings': () =>
+        CustomerBookingsScreen(user: user, onBookNewAmbulance: () {}),
+    'Active Trips': () =>
+        CustomerActiveTripScreen(user: user, onBookNewAmbulance: () {}),
+    'Quotations': () =>
+        CustomerQuotationsScreen(user: user, onBookNewAmbulance: () {}),
+    'History': () =>
+        CustomerHistoryScreen(user: user, onBookNewAmbulance: () {}),
+    'Home Services': () =>
+        HomeServicesScreen(user: user, onBookingCreated: (_) {}),
     'Customer Shell': () => const CustomerShell(user: user),
     'Booking wizard': () => BookAmbulanceWizardScreen(
       user: user,
@@ -133,6 +123,17 @@ void main() {
         );
         await tester.pumpAndSettle();
         _expectNoLayoutException(tester, viewport, page.key);
+        if (page.key == 'Active Trips') {
+          expect(find.text('Assigned Ambulance'), findsOneWidget);
+          expect(
+            find.text('Christopher Driver With A Long Name'),
+            findsOneWidget,
+          );
+          expect(find.text('Mission Milestones'), findsNothing);
+        }
+        if (page.key == 'Quotations') {
+          expect(find.text('REVIEW & AUTHORIZE'), findsOneWidget);
+        }
       }
 
       await tester.pumpWidget(
@@ -190,7 +191,10 @@ void main() {
       final routeFields = find.byType(TextFormField);
       await tester.ensureVisible(routeFields.first);
       await tester.enterText(routeFields.first, 'Long hospital pickup address');
-      await tester.enterText(routeFields.at(1), 'Long destination hospital address');
+      await tester.enterText(
+        routeFields.at(1),
+        'Long destination hospital address',
+      );
       await _continueWizard(tester);
       _expectNoLayoutException(tester, viewport, 'Wizard schedule step');
       await tester.ensureVisible(find.text('Scheduled'));
@@ -216,8 +220,7 @@ Booking _booking({
 }) {
   return Booking(
     id: id,
-    pickup:
-        'St. Catherine Medical Center, North Tower, Bengaluru, Karnataka',
+    pickup: 'St. Catherine Medical Center, North Tower, Bengaluru, Karnataka',
     destination:
         'Regional Advanced Critical Care and Specialty Hospital, Whitefield',
     date: '29 September 2026',

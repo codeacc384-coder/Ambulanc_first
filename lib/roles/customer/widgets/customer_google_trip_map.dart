@@ -32,26 +32,48 @@ class _CustomerGoogleTripMapState extends State<CustomerGoogleTripMap> {
       DriverNavigationService.hasValidCoordinates(latitude, longitude);
 
   List<LatLng> get _allLocations => [
-        if (_valid(widget.booking.driverLatitude, widget.booking.driverLongitude))
-          LatLng(widget.booking.driverLatitude!, widget.booking.driverLongitude!),
-        LatLng(widget.booking.pickupLatitude!, widget.booking.pickupLongitude!),
-        LatLng(
-          widget.booking.destinationLatitude!,
-          widget.booking.destinationLongitude!,
-        ),
-      ];
+    if (_valid(widget.booking.driverLatitude, widget.booking.driverLongitude))
+      LatLng(widget.booking.driverLatitude!, widget.booking.driverLongitude!),
+    if (_valid(widget.booking.pickupLatitude, widget.booking.pickupLongitude))
+      LatLng(widget.booking.pickupLatitude!, widget.booking.pickupLongitude!),
+    if (_valid(
+      widget.booking.destinationLatitude,
+      widget.booking.destinationLongitude,
+    ))
+      LatLng(
+        widget.booking.destinationLatitude!,
+        widget.booking.destinationLongitude!,
+      ),
+  ];
 
   @override
   void didUpdateWidget(covariant CustomerGoogleTripMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.booking.id != widget.booking.id) _initialBoundsFitted = false;
+    if (oldWidget.booking.id != widget.booking.id) {
+      _initialBoundsFitted = false;
+    }
+    final driverLocationJustBecameAvailable =
+        !_valid(
+          oldWidget.booking.driverLatitude,
+          oldWidget.booking.driverLongitude,
+        ) &&
+        _valid(widget.booking.driverLatitude, widget.booking.driverLongitude);
+    if (driverLocationJustBecameAvailable) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focus(_allLocations);
+      });
+    }
   }
 
   Future<void> _focus(List<LatLng> points, {double padding = 56}) async {
     final controller = _controller;
-    if (controller == null || points.isEmpty) return;
+    if (controller == null || points.isEmpty) {
+      return;
+    }
     if (points.length == 1) {
-      await controller.animateCamera(CameraUpdate.newLatLngZoom(points.first, 15));
+      await controller.animateCamera(
+        CameraUpdate.newLatLngZoom(points.first, 15),
+      );
       return;
     }
     var minLat = points.first.latitude;
@@ -79,14 +101,18 @@ class _CustomerGoogleTripMapState extends State<CustomerGoogleTripMap> {
 
   Future<void> _recenterActiveRoute() {
     final booking = widget.booking;
-    if (!_valid(booking.driverLatitude, booking.driverLongitude)) return Future.value();
+    if (!_valid(booking.driverLatitude, booking.driverLongitude)) {
+      return Future.value();
+    }
     final targetLatitude = widget.isPickupLeg
         ? booking.pickupLatitude
         : booking.destinationLatitude;
     final targetLongitude = widget.isPickupLeg
         ? booking.pickupLongitude
         : booking.destinationLongitude;
-    if (!_valid(targetLatitude, targetLongitude)) return Future.value();
+    if (!_valid(targetLatitude, targetLongitude)) {
+      return Future.value();
+    }
     return _focus([
       LatLng(booking.driverLatitude!, booking.driverLongitude!),
       LatLng(targetLatitude!, targetLongitude!),
@@ -96,30 +122,50 @@ class _CustomerGoogleTripMapState extends State<CustomerGoogleTripMap> {
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
-    if (!_valid(booking.pickupLatitude, booking.pickupLongitude) ||
-        !_valid(booking.destinationLatitude, booking.destinationLongitude)) {
-      return _unavailable('Confirmed pickup or hospital coordinates are unavailable.');
+    final locations = _allLocations;
+    if (locations.isEmpty) {
+      return _unavailable(
+        'Ambulance location is not available yet. The map will appear when the driver shares GPS.',
+      );
     }
 
-    final hasAmbulance = _valid(booking.driverLatitude, booking.driverLongitude);
-    final isLive = hasAmbulance &&
-        LiveRoadRouteService.hasFreshDriverLocation(booking.driverLocationUpdatedAt);
+    final hasAmbulance = _valid(
+      booking.driverLatitude,
+      booking.driverLongitude,
+    );
+    final hasPickup = _valid(booking.pickupLatitude, booking.pickupLongitude);
+    final hasDestination = _valid(
+      booking.destinationLatitude,
+      booking.destinationLongitude,
+    );
+    final isLive =
+        hasAmbulance &&
+        LiveRoadRouteService.hasFreshDriverLocation(
+          booking.driverLocationUpdatedAt,
+        );
     final markers = <Marker>{
-      Marker(
-        markerId: const MarkerId('pickup'),
-        position: LatLng(booking.pickupLatitude!, booking.pickupLongitude!),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: InfoWindow(title: 'PICKUP', snippet: booking.pickup),
-      ),
-      Marker(
-        markerId: const MarkerId('hospital'),
-        position: LatLng(
-          booking.destinationLatitude!,
-          booking.destinationLongitude!,
+      if (hasPickup)
+        Marker(
+          markerId: const MarkerId('pickup'),
+          position: LatLng(booking.pickupLatitude!, booking.pickupLongitude!),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
+          infoWindow: InfoWindow(title: 'PICKUP', snippet: booking.pickup),
         ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        infoWindow: InfoWindow(title: 'HOSPITAL', snippet: booking.destination),
-      ),
+      if (hasDestination)
+        Marker(
+          markerId: const MarkerId('hospital'),
+          position: LatLng(
+            booking.destinationLatitude!,
+            booking.destinationLongitude!,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: InfoWindow(
+            title: 'HOSPITAL',
+            snippet: booking.destination,
+          ),
+        ),
       if (hasAmbulance)
         Marker(
           markerId: const MarkerId('ambulance'),
@@ -146,99 +192,107 @@ class _CustomerGoogleTripMapState extends State<CustomerGoogleTripMap> {
             ),
           };
 
-    return SizedBox(
-      height: 360,
-      child: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(booking.pickupLatitude!, booking.pickupLongitude!),
-              zoom: 13,
+    return LayoutBuilder(
+      builder: (context, constraints) => SizedBox(
+        height: (constraints.maxWidth * 0.72).clamp(250.0, 360.0),
+        child: Stack(
+          children: [
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: locations.first,
+                zoom: locations.length == 1 ? 15 : 13,
+              ),
+              markers: markers,
+              polylines: polylines,
+              myLocationButtonEnabled: false,
+              mapToolbarEnabled: false,
+              onMapCreated: (controller) {
+                _controller = controller;
+                if (!_initialBoundsFitted) {
+                  _initialBoundsFitted = true;
+                  WidgetsBinding.instance.addPostFrameCallback(
+                    (_) => _fitAll(),
+                  );
+                }
+              },
             ),
-            markers: markers,
-            polylines: polylines,
-            myLocationButtonEnabled: false,
-            mapToolbarEnabled: false,
-            onMapCreated: (controller) {
-              _controller = controller;
-              if (!_initialBoundsFitted) {
-                _initialBoundsFitted = true;
-                WidgetsBinding.instance.addPostFrameCallback((_) => _fitAll());
-              }
-            },
-          ),
-          Positioned(
-            top: 12,
-            left: 12,
-            child: _statusChip(
-              isLive ? 'GPS LIVE' : hasAmbulance ? 'GPS STALE' : 'GPS UNAVAILABLE',
-              isLive
-                  ? AmbulanceFirstColors.telemetryLive
-                  : AmbulanceFirstColors.telemetryUnavailable,
-            ),
-          ),
-          Positioned(
-            right: 12,
-            bottom: 12,
-            child: Column(
-              children: [
-                FloatingActionButton.small(
-                  heroTag: 'trip-map-recenter-${booking.id}',
-                  onPressed: _recenterActiveRoute,
-                  tooltip: 'Recenter active route',
-                  child: const Icon(Icons.my_location_rounded),
-                ),
-                const SizedBox(height: 8),
-                FloatingActionButton.small(
-                  heroTag: 'trip-map-fit-${booking.id}',
-                  onPressed: _fitAll,
-                  tooltip: 'Show ambulance, pickup, and hospital',
-                  child: const Icon(Icons.fit_screen_rounded),
-                ),
-              ],
-            ),
-          ),
-          if (geometry.length < 2)
             Positioned(
+              top: 12,
               left: 12,
-              bottom: 12,
               child: _statusChip(
-                'Road route unavailable',
-                AmbulanceFirstColors.telemetryUnavailable,
+                isLive
+                    ? 'GPS LIVE'
+                    : hasAmbulance
+                    ? 'GPS STALE'
+                    : 'GPS UNAVAILABLE',
+                isLive
+                    ? AmbulanceFirstColors.telemetryLive
+                    : AmbulanceFirstColors.telemetryUnavailable,
               ),
             ),
-        ],
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: Column(
+                children: [
+                  FloatingActionButton.small(
+                    heroTag: 'trip-map-recenter-${booking.id}',
+                    onPressed: _recenterActiveRoute,
+                    tooltip: 'Recenter active route',
+                    child: const Icon(Icons.my_location_rounded),
+                  ),
+                  const SizedBox(height: 8),
+                  FloatingActionButton.small(
+                    heroTag: 'trip-map-fit-${booking.id}',
+                    onPressed: _fitAll,
+                    tooltip: 'Show ambulance, pickup, and hospital',
+                    child: const Icon(Icons.fit_screen_rounded),
+                  ),
+                ],
+              ),
+            ),
+            if (geometry.length < 2)
+              Positioned(
+                left: 12,
+                bottom: 12,
+                child: _statusChip(
+                  'Road route unavailable',
+                  AmbulanceFirstColors.telemetryUnavailable,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _statusChip(String label, Color color) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color),
-        ),
-        child: Text(
-          label,
-          style: AmbulanceFirstTypography.codeSm(
-            color: color,
-            weight: FontWeight.w700,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.94),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: color),
+    ),
+    child: Text(
+      label,
+      style: AmbulanceFirstTypography.codeSm(
+        color: color,
+        weight: FontWeight.w700,
+      ),
+    ),
+  );
 
   Widget _unavailable(String message) => Container(
-        height: 360,
-        color: AmbulanceFirstColors.surfaceContainerHigh,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: AmbulanceFirstTypography.bodySm(
-            color: AmbulanceFirstColors.onSurfaceVariant,
-          ),
-        ),
-      );
+    height: 360,
+    color: AmbulanceFirstColors.surfaceContainerHigh,
+    alignment: Alignment.center,
+    padding: const EdgeInsets.all(24),
+    child: Text(
+      message,
+      textAlign: TextAlign.center,
+      style: AmbulanceFirstTypography.bodySm(
+        color: AmbulanceFirstColors.onSurfaceVariant,
+      ),
+    ),
+  );
 }
