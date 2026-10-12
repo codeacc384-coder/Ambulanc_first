@@ -159,7 +159,7 @@ void main() {
       final textFields = find.byType(TextFormField);
       await tester.ensureVisible(textFields.first);
       await tester.enterText(textFields.first, 'Alexandria Patient');
-      await tester.enterText(textFields.last, '42');
+      await tester.enterText(textFields.at(1), '42');
       final dropdowns = find.byType(DropdownButtonFormField<String>);
       await tester.ensureVisible(dropdowns.first);
       await tester.tap(dropdowns.first);
@@ -168,12 +168,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Female'), findsOneWidget);
       expect(find.text('Current Medical Condition'), findsOneWidget);
-      expect(dropdowns, findsNWidgets(2));
-      await tester.ensureVisible(find.text('Current Medical Condition'));
-      await tester.tap(dropdowns.at(1));
+      expect(dropdowns, findsOneWidget);
+      final conditionField = find.descendant(
+        of: find.byType(Autocomplete<String>),
+        matching: find.byType(TextFormField),
+      );
+      await tester.ensureVisible(conditionField);
+      await tester.tap(conditionField);
+      await tester.enterText(conditionField, 'Diabetes');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Stable / Routine').last);
+      await tester.tap(find.text('Diabetes / Blood Sugar Emergency').last);
       await tester.pumpAndSettle();
+      expect(find.text('Diabetes / Blood Sugar Emergency'), findsOneWidget);
       await _continueWizard(tester);
       expect(find.textContaining('Step 4 of 7'), findsOneWidget);
       _expectNoLayoutException(tester, viewport, 'Wizard medical step');

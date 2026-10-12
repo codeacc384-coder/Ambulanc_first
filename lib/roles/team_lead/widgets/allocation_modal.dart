@@ -164,8 +164,11 @@ class _AllocationModalState extends State<AllocationModal> {
     // Compare normalized values because the operational feed may render a
     // subtype as TYPE-B while the stored value is TYPE_B.
     final requiredSubtype = _normalizedSubtype(booking.serviceSubtype);
+    final serviceSubtype = ambulance['service_subtype']?.toString().trim();
     final ambulanceSubtype = _normalizedSubtype(
-      ambulance['service_subtype'] ?? ambulance['subtype'],
+      serviceSubtype == null || serviceSubtype.isEmpty
+          ? ambulance['subtype']
+          : serviceSubtype,
     );
     if (requiredSubtype.isNotEmpty && ambulanceSubtype != requiredSubtype) {
       return 'Ambulance subtype ${_subtypeLabel(ambulanceSubtype)} does not '
@@ -696,40 +699,53 @@ class _AllocationModalState extends State<AllocationModal> {
       );
     }
 
+    final hasCompatibleAmbulance = _ambulances.any(
+      (ambulance) => _ambulanceIneligibility(ambulance) == null,
+    );
+    final requiredSubtype = _normalizedSubtype(booking.serviceSubtype);
+
     return Column(
-      children: _ambulances.map((ambulance) {
-        final id = '${ambulance['id']}';
-        final selected = _ambulanceId == id;
-        final ineligibility = _ambulanceIneligibility(ambulance);
+      children: [
+        if (!hasCompatibleAmbulance && requiredSubtype.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'No compatible ambulance is available for ${_subtypeLabel(requiredSubtype)}. In Admin > Fleet > Register Ambulance, choose the matching medical classification, enable the required equipment, and pair an available driver.',
+              style: TeamLeadTheme.small(color: TeamLeadTheme.medicalCrimson),
+            ),
+          ),
+        ..._ambulances.map((ambulance) {
+          final id = '${ambulance['id']}';
+          final selected = _ambulanceId == id;
+          final ineligibility = _ambulanceIneligibility(ambulance);
 
-        final vehicle =
-            '${ambulance['vehicle_number'] ?? 'Vehicle'}';
-        final display =
-            '${ambulance['display_name'] ?? ''}'
-                .trim();
-        final category =
-            '${ambulance['category'] ?? ''}';
-        final subtype =
-            '${ambulance['service_subtype'] ?? ''}';
+          final vehicle = '${ambulance['vehicle_number'] ?? 'Vehicle'}';
+          final display = '${ambulance['display_name'] ?? ''}'.trim();
+          final category = '${ambulance['category'] ?? ''}';
+          final serviceSubtype = ambulance['service_subtype']
+              ?.toString()
+              .trim();
+          final subtype = serviceSubtype == null || serviceSubtype.isEmpty
+              ? '${ambulance['subtype'] ?? ''}'
+              : serviceSubtype;
 
-        return _selectableTile(
-          selected: selected,
-          onTap: _customerAccepted && ineligibility == null
-              ? () {
-                  setState(() {
-                    _ambulanceId = id;
-                  });
-                }
-              : null,
-          icon: Icons.local_shipping_rounded,
-          title: display.isEmpty
-              ? vehicle
-              : display,
-          subtitle:
-              '$vehicle • $category${subtype.isEmpty ? '' : ' • $subtype'}',
-          trailing: _ambulanceTrailing(ambulance, ineligibility),
-        );
-      }).toList(),
+          return _selectableTile(
+            selected: selected,
+            onTap: _customerAccepted && ineligibility == null
+                ? () {
+                    setState(() {
+                      _ambulanceId = id;
+                    });
+                  }
+                : null,
+            icon: Icons.local_shipping_rounded,
+            title: display.isEmpty ? vehicle : display,
+            subtitle:
+                '$vehicle • $category${subtype.isEmpty ? '' : ' • $subtype'}',
+            trailing: _ambulanceTrailing(ambulance, ineligibility),
+          );
+        }),
+      ],
     );
   }
 

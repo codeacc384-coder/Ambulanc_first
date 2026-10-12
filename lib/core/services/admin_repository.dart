@@ -73,9 +73,15 @@ class AdminRepository {
     return eligible;
   }
 
-  Future<List<Map<String, dynamic>>> doctors() async => _maps(
-    await _db.from('doctors').select().order('created_at', ascending: false),
-  );
+  Future<List<Map<String, dynamic>>> doctors() async {
+    final result = await _db.rpc('get_admin_doctors');
+    if (result is! List) {
+      throw const FormatException(
+        'get_admin_doctors returned malformed data.',
+      );
+    }
+    return _maps(result);
+  }
   Future<List<Map<String, dynamic>>> medicalCrew() async => _maps(
     await _db
         .from('medical_crew')

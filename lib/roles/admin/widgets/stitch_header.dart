@@ -50,10 +50,10 @@ class _StitchHeaderState extends State<StitchHeader> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Top Row: Live Dispatch & Profile/Notifications
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              // Live Dispatch Status Pill
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -82,8 +82,6 @@ class _StitchHeaderState extends State<StitchHeader> {
                   ],
                 ),
               ),
-
-              // Notification and Profile Action
               Row(
                 children: [
                   IconButton(
@@ -164,44 +162,51 @@ class _StitchHeaderState extends State<StitchHeader> {
           const SizedBox(height: 8),
 
           // Bottom Row: Screen Title + Version + Sync
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        widget.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: StitchTheme.headlineSm(
-                          color: StitchTheme.onSurface,
-                          weight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        widget.subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: StitchTheme.labelSm(
-                          color: StitchTheme.onSurfaceVariant.withValues(
-                            alpha: 0.7,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const syncWidth = 72.0;
+              final titleWidth = (constraints.maxWidth - syncWidth).clamp(
+                0.0,
+                constraints.maxWidth,
+              );
+
+              return Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                runSpacing: 4,
+                children: [
+                  SizedBox(
+                    width: titleWidth,
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            widget.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: StitchTheme.headlineSm(
+                              color: StitchTheme.onSurface,
+                              weight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            widget.subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: StitchTheme.labelSm(
+                              color: StitchTheme.onSurfaceVariant.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
+                  ),
+                  InkWell(
                     onTap:
                         widget.onSync ??
                         () {
@@ -236,9 +241,9 @@ class _StitchHeaderState extends State<StitchHeader> {
                       ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ],
       ),

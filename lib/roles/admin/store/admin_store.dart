@@ -199,6 +199,19 @@ class AdminStore extends ChangeNotifier {
 
   Future<void> refresh() => loadFromDatabase();
 
+  Future<void> refreshDoctors() async {
+    try {
+      final rows = await _repository.doctors();
+      _staff.removeWhere((staffMember) => staffMember.role == 'DOCTOR');
+      _staff.addAll(rows.map((row) => _staffFromRow(row, role: 'DOCTOR')));
+      _errorMessage = null;
+    } catch (error) {
+      _errorMessage = 'Could not refresh doctors from Supabase: $error';
+    } finally {
+      notifyListeners();
+    }
+  }
+
   AdminBooking? bookingById(String bookingId) {
     for (final booking in _bookings) {
       if (booking.id == bookingId) return booking;
@@ -697,6 +710,17 @@ class AdminStore extends ChangeNotifier {
   }
 
   AdminStaff _staffFromRow(Map<String, dynamic> row, {required String role}) {
+    final assignedBookingId = _nullable(row, [
+      'assigned_booking_id',
+      'assigned_mission',
+    ]);
+    final assignedBookingStatus = _nullable(row, ['assigned_booking_status']);
+    final assignedMission = assignedBookingId == null
+        ? null
+        : assignedBookingStatus == null
+        ? assignedBookingId
+        : '$assignedBookingId - $assignedBookingStatus';
+
     return AdminStaff(
       id: _string(row, ['id', 'profile_id', 'user_id']),
       name: _string(row, ['name', 'full_name'], fallback: 'Unnamed staff'),
@@ -718,10 +742,7 @@ class AdminStore extends ChangeNotifier {
         'assigned_ambulance_number',
         'assigned_vehicle',
       ]),
-      assignedMission: _nullable(row, [
-        'assigned_booking_id',
-        'assigned_mission',
-      ]),
+      assignedMission: assignedMission,
       department: _nullable(row, ['department']),
       shift: _nullable(row, ['shift']),
       workload: _nullable(row, ['workload']),
@@ -1210,8 +1231,8 @@ class AdminStore extends ChangeNotifier {
       return (
         true,
         'Ambulance ${callSign.trim()} successfully registered and saved. '
-            'It is now AVAILABLE for Team Lead allocation, and driver $driverName '
-            'has been paired with $driverName.',
+            'It is now AVAILABLE for Team Lead allocation, and $driverName '
+            'has been paired as its primary driver.',
       );
     } catch (error) {
       final message = error.toString().replaceFirst('Exception: ', '');

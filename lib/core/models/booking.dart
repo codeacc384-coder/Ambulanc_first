@@ -275,6 +275,10 @@ class Booking {
       quotation?.status == 'SENT' || quotation?.status == 'CUSTOMER_VIEWED';
 
   String get formattedAmount => '₹${amount.toStringAsFixed(0)}';
+  bool get deadBodyFreezerRequired =>
+      deadBodyDetails?.freezerRequired ??
+      (serviceSubtype?.trim().toUpperCase() != 'DEAD_BODY_NO_FREEZER' &&
+          !specialInstructions.toLowerCase().contains('freezer not required'));
 
   String get transportModeLabel {
     switch (transportMode) {

@@ -156,7 +156,10 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
                     _RoleTab(
                       label: 'Doctors (${store.doctors.length})',
                       isSelected: _selectedRole == 'DOCTOR',
-                      onTap: () => setState(() => _selectedRole = 'DOCTOR'),
+                      onTap: () async {
+                        setState(() => _selectedRole = 'DOCTOR');
+                        await widget.store.refreshDoctors();
+                      },
                     ),
                     const SizedBox(width: 6),
                     _RoleTab(
@@ -417,13 +420,14 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
               'Provision New Staff Member',
               style: StitchTheme.headlineSm(),
             ),
-            content: SizedBox(
-              width: 430,
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: role,
                       decoration: const InputDecoration(
                         labelText: 'Assigned Role *',
@@ -502,6 +506,7 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
+                        isExpanded: true,
                         initialValue: supportedCategory,
                         decoration: const InputDecoration(
                           labelText: 'Primary Transport Category *',
@@ -555,10 +560,7 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
                           prefixIcon: Icon(Icons.health_and_safety_outlined),
                         ),
                         items: const [
-                          DropdownMenuItem(
-                            value: 'EMT',
-                            child: Text('EMT'),
-                          ),
+                          DropdownMenuItem(value: 'EMT', child: Text('EMT')),
                           DropdownMenuItem(
                             value: 'PARAMEDIC',
                             child: Text('Paramedic'),
@@ -659,9 +661,7 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: saving
-                    ? null
-                    : () => Navigator.of(ctx).pop(),
+                onPressed: saving ? null : () => Navigator.of(ctx).pop(),
                 child: const Text('Cancel'),
               ),
               ElevatedButton.icon(
@@ -676,9 +676,7 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
                         ),
                       )
                     : const Icon(Icons.person_add_alt_1_rounded),
-                label: Text(
-                  saving ? 'Saving...' : 'Provision Account',
-                ),
+                label: Text(saving ? 'Saving...' : 'Provision Account'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: StitchTheme.primaryContainer,
                   foregroundColor: Colors.white,
@@ -700,7 +698,6 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
       shiftCtrl.dispose();
     });
   }
-
 }
 
 class _RoleTab extends StatelessWidget {
@@ -842,6 +839,17 @@ class _StaffCard extends StatelessWidget {
               'Specialty: ${s.specialization!}',
               style: StitchTheme.bodySm(
                 color: StitchTheme.primaryContainer,
+                weight: FontWeight.w600,
+              ),
+            ),
+          ],
+
+          if (s.role == 'DOCTOR' && s.assignedMission != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Assigned booking: ${s.assignedMission!}',
+              style: StitchTheme.bodySm(
+                color: StitchTheme.onSurfaceVariant,
                 weight: FontWeight.w600,
               ),
             ),

@@ -89,13 +89,28 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
       debugPrint('ADMIN FLEET DRIVER ROSTER ERROR: $error');
       if (!mounted) return;
       setState(() {
-        _driverLoadError = 'Unable to load available drivers. Refresh and try again.';
+        _driverLoadError =
+            'Unable to load available drivers. Refresh and try again.';
       });
     }
 
     if (!mounted) return;
     setState(() {
       _isLoadingDrivers = false;
+    });
+  }
+
+  void _setClassification(String classification) {
+    setState(() {
+      _classification = classification;
+      _hasO2 = true;
+      _hasIcu =
+          classification == 'ADVANCED_ICU' || classification == 'PEDIATRIC_ICU';
+      _hasVentilator =
+          classification == 'ADVANCED_ICU' || classification == 'PEDIATRIC_ICU';
+      _hasPicu = classification == 'PEDIATRIC_ICU';
+      _hasIncubator = classification == 'PEDIATRIC_ICU';
+      _hasFreezer = false;
     });
   }
 
@@ -108,8 +123,9 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
       }
     } else if (_currentStep == 4) {
       if (_selectedDriverId == null || _selectedDriverId!.isEmpty) {
-        setState(() => _error =
-            'Select an available driver who is not already allocated to an ambulance.');
+        setState(
+          () => _error = 'Select an available driver who is not already allocated to an ambulance.',
+        );
         return;
       }
     }
@@ -281,6 +297,7 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
         ),
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: _classification,
           decoration: const InputDecoration(
             labelText: 'Medical Classification',
@@ -292,7 +309,7 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
             ),
             DropdownMenuItem(
               value: 'BASIC_OXYGEN',
-              child: Text('Type-B Standard BLS'),
+              child: Text('Type-B Basic Oxygen (BLS)'),
             ),
             DropdownMenuItem(
               value: 'INTERMEDIATE_ALS',
@@ -303,11 +320,21 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
               child: Text('Type-N Neonatal PICU'),
             ),
           ],
-          onChanged: (v) =>
-              setState(() => _classification = v ?? _classification),
+          onChanged: (v) {
+            if (v != null) _setClassification(v);
+          },
         ),
+        if (_classification == 'BASIC_OXYGEN')
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              'Matches BASIC_OXYGEN bookings. Oxygen is enabled by default; adjust the equipment in Step 2 if needed.',
+              style: StitchTheme.bodySm(color: StitchTheme.outline),
+            ),
+          ),
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: _stationBase,
           decoration: const InputDecoration(labelText: 'Home Station Base'),
           items: const [
@@ -411,8 +438,8 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
   }
 
   Widget _buildStep4Driver() {
-    final availableDrivers = widget.store.drivers
-        .where((driver) {
+    final availableDrivers =
+        widget.store.drivers.where((driver) {
           final role = driver.role.toUpperCase();
           final status = driver.status;
           final hasCredential =
@@ -434,9 +461,9 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
               !isCurrentlyAssigned &&
               !hasPrimaryAmbulance &&
               !hasActiveMission;
-        })
-        .toList()
-      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        }).toList()..sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
 
     dynamic selectedDriver;
     if (_selectedDriverId != null) {
@@ -549,7 +576,10 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
                     _driverEmailCtrl.text = selectedDriver.email.toString();
                     _driverLicenseCtrl.text =
                         selectedDriver.licenseNumber?.toString() ?? '';
-                    _driverExpYears = selectedDriver.experienceYears.clamp(1, 25);
+                    _driverExpYears = selectedDriver.experienceYears.clamp(
+                      1,
+                      25,
+                    );
                     _error = null;
                   });
                 },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/admin_theme.dart';
 
 class StitchCommandDrawer extends StatelessWidget {
@@ -26,54 +27,79 @@ class StitchCommandDrawer extends StatelessWidget {
               padding: const EdgeInsets.all(StitchTheme.margin),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: StitchTheme.primary,
-                              borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
-                            ),
-                            child: const Icon(
-                              Icons.shield_rounded,
-                              size: 20,
-                              color: StitchTheme.onPrimary,
-                            ),
+                  LayoutBuilder(
+                    builder: (context, constraints) => Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: (constraints.maxWidth - 48).clamp(
+                            0.0,
+                            constraints.maxWidth,
                           ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Text(
-                                'Central Command',
-                                style: StitchTheme.headlineSm(color: StitchTheme.onSurface),
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: StitchTheme.primary,
+                                  borderRadius: BorderRadius.circular(
+                                    StitchTheme.radiusSm,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.shield_rounded,
+                                  size: 20,
+                                  color: StitchTheme.onPrimary,
+                                ),
                               ),
-                              Text(
-                                'ADMINISTRATOR - OPS LEAD',
-                                style: StitchTheme.labelSm(
-                                  color: StitchTheme.primaryContainer,
-                                  weight: FontWeight.w600,
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Central Command',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: StitchTheme.headlineSm(
+                                        color: StitchTheme.onSurface,
+                                      ),
+                                    ),
+                                    Text(
+                                      'ADMINISTRATOR - OPS LEAD',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: StitchTheme.labelSm(
+                                        color: StitchTheme.primaryContainer,
+                                        weight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, color: StitchTheme.onSurfaceVariant),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: StitchTheme.onSurfaceVariant,
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 12),
 
                   // SOS Override Queue Banner
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: StitchTheme.errorContainer.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
@@ -99,7 +125,9 @@ class StitchCommandDrawer extends StatelessWidget {
                               ),
                               Text(
                                 '2 code-red incidents active in dispatch stream',
-                                style: StitchTheme.bodySm(color: StitchTheme.onErrorContainer),
+                                style: StitchTheme.bodySm(
+                                  color: StitchTheme.onErrorContainer,
+                                ),
                               ),
                             ],
                           ),
@@ -116,7 +144,10 @@ class StitchCommandDrawer extends StatelessWidget {
             // Navigation Directory Section
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: StitchTheme.margin, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: StitchTheme.margin,
+                  vertical: 8,
+                ),
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
@@ -206,14 +237,23 @@ class StitchCommandDrawer extends StatelessWidget {
 
             // Sign out action
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: StitchTheme.margin),
+              padding: const EdgeInsets.symmetric(
+                horizontal: StitchTheme.margin,
+              ),
               child: OutlinedButton.icon(
                 onPressed: () {
                   Navigator.of(context).pop();
                   onSignOut();
                 },
-                icon: const Icon(Icons.logout_rounded, size: 16, color: StitchTheme.error),
-                label: Text('Sign Out', style: StitchTheme.bodyMd(color: StitchTheme.error)),
+                icon: const Icon(
+                  Icons.logout_rounded,
+                  size: 16,
+                  color: StitchTheme.error,
+                ),
+                label: Text(
+                  'Sign Out',
+                  style: StitchTheme.bodyMd(color: StitchTheme.error),
+                ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: StitchTheme.borderSubtle),
                   minimumSize: const Size.fromHeight(40),
@@ -227,29 +267,44 @@ class StitchCommandDrawer extends StatelessWidget {
 
             // Footer Encryption Badge
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: StitchTheme.margin, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: StitchTheme.margin,
+                vertical: 10,
+              ),
               color: StitchTheme.surfaceContainerLow,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: StitchTheme.tertiary,
-                          shape: BoxShape.circle,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: StitchTheme.tertiary,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'TLS 1.3 End-to-End Gov Encrypted',
-                        style: StitchTheme.labelSm(color: StitchTheme.onSurfaceVariant),
-                      ),
-                    ],
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'TLS 1.3 End-to-End Gov Encrypted',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: StitchTheme.labelSm(
+                              color: StitchTheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const Icon(Icons.lock_rounded, size: 14, color: StitchTheme.outline),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.lock_rounded,
+                    size: 14,
+                    color: StitchTheme.outline,
+                  ),
                 ],
               ),
             ),
@@ -283,16 +338,22 @@ class _DrawerLink extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(StitchTheme.radiusSm),
         ),
-        tileColor: isSelected ? StitchTheme.surfaceContainer : Colors.transparent,
+        tileColor: isSelected
+            ? StitchTheme.surfaceContainer
+            : Colors.transparent,
         leading: Icon(
           icon,
           size: 19,
-          color: isSelected ? StitchTheme.primaryContainer : StitchTheme.onSurfaceVariant,
+          color: isSelected
+              ? StitchTheme.primaryContainer
+              : StitchTheme.onSurfaceVariant,
         ),
         title: Text(
           title,
           style: StitchTheme.bodyMd(
-            color: isSelected ? StitchTheme.onSurface : StitchTheme.onSurfaceVariant,
+            color: isSelected
+                ? StitchTheme.onSurface
+                : StitchTheme.onSurfaceVariant,
             weight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
         ),

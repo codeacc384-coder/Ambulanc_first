@@ -82,7 +82,11 @@ class TeamLeadOperationsService {
   List<OperationsResource> availableDoctors(Booking b) => doctors.where((d) => d.available && (!b.pediatricPatient || d.specialization.toLowerCase().contains('pediatric'))).toList();
 
   bool _ambulanceCompatible(OperationsResource a, Booking b) {
-    if (b.transportMode == 'DEAD_BODY_TRANSFER' && !a.capabilities.contains('FREEZER')) return false;
+    if (b.transportMode == 'DEAD_BODY_TRANSFER' &&
+        b.deadBodyFreezerRequired &&
+        !a.capabilities.contains('FREEZER')) {
+      return false;
+    }
     if (b.icuRequired && !a.capabilities.contains('ICU')) return false;
     if (b.ventilatorRequired && !a.capabilities.contains('VENTILATOR')) return false;
     if (b.oxygenRequired && !a.capabilities.contains('OXYGEN')) return false;

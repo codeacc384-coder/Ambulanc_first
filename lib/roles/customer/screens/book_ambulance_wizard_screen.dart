@@ -39,6 +39,60 @@ class BookAmbulanceWizardScreen extends StatefulWidget {
 }
 
 class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
+  static const _medicalConditions = [
+    'Stable / Routine',
+    'Cardiac Arrest',
+    'Chest Pain / Suspected Heart Attack',
+    'Heart Failure',
+    'Arrhythmia',
+    'Cardiac Monitoring Required',
+    'Stroke',
+    'Seizure',
+    'Unconsciousness / Altered Mental Status',
+    'Head Injury',
+    'Spinal Injury',
+    'Traumatic Brain Injury',
+    'Trauma / Multiple Injuries',
+    'Fracture',
+    'Severe Bleeding',
+    'Shock',
+    'Breathing Difficulty',
+    'Respiratory Failure',
+    'Asthma',
+    'COPD',
+    'Pneumonia',
+    'Ventilator Dependent / Critical',
+    'Oxygen Support Required',
+    'Sepsis / Severe Infection',
+    'High Fever',
+    'Diabetes / Blood Sugar Emergency',
+    'Kidney Failure / Dialysis',
+    'Liver Failure',
+    'Cancer / Oncology Care',
+    'Burns',
+    'Poisoning / Overdose',
+    'Allergic Reaction / Anaphylaxis',
+    'Pregnancy Complication',
+    'Labour / Delivery',
+    'Postpartum Complication',
+    'Newborn / Neonatal Care',
+    'Neonatal / PICU Specialized',
+    'Pediatric Emergency',
+    'Dehydration',
+    'Severe Pain',
+    'Mental Health Crisis',
+    'Infectious Disease Isolation',
+    'Post-Operative Transfer',
+    'Post-Surgical Monitoring',
+    'Rehabilitation Transfer',
+    'Bedridden / Mobility Assistance',
+    'Palliative / Hospice Care',
+    'Organ Transplant Transfer',
+    'Blood Transfusion Required',
+    'Wound Care',
+    'Other',
+  ];
+
   int _currentStep = 0;
   bool _submitting = false;
   bool _gettingLocation = false;
@@ -99,6 +153,7 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
   bool _emtRequired = false;
   bool _stretcherRequired = false;
   bool _wheelchairRequired = false;
+  bool _freezerRequired = true;
   final Set<String> _autoSelectedRequirements = {};
   final List<String> _additionalEquipment = [];
   final Set<String> _autoSelectedEquipment = {};
@@ -221,8 +276,9 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
         }
         return true;
       case 3:
-        if (_serviceCategory == 'ROAD' && _ambulanceCategory.isEmpty) {
-          _showError('Please select the road ambulance category.');
+        if (_availableAmbulanceCategories.isNotEmpty &&
+            _ambulanceCategory.isEmpty) {
+          _showError('Please select the ambulance setup.');
           return false;
         }
         return true;
@@ -470,7 +526,12 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
         ),
         (
           key: 'ambulanceType',
-          prompt: 'If you know, which road ambulance type: oxygen ambulance, ICU ambulance, or NICU ambulance? Say skip if unsure.',
+          prompt: 'If you know, which ambulance setup do you need: ICU, NICU, or oxygen? Rail ambulance supports ICU only. Say skip if unsure.',
+          optional: true,
+        ),
+        (
+          key: 'freezerRequired',
+          prompt: 'For dead body transfer, do you need a freezer? Say with freezer or without freezer. Say skip if unsure.',
           optional: true,
         ),
         (
@@ -550,7 +611,10 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
         if (!_voiceInterviewActive || !mounted) return;
         final question = questions[index];
         if (_voiceCompletedQuestionKeys.contains(question.key)) continue;
-        if ((question.key == 'ambulanceType' && _serviceCategory != 'ROAD') ||
+        if ((question.key == 'ambulanceType' &&
+                _availableAmbulanceCategories.isEmpty) ||
+            (question.key == 'freezerRequired' &&
+                _serviceCategory != 'DEAD_BODY') ||
             (question.key.startsWith('schedule') &&
                 _scheduleType != 'SCHEDULED' &&
                 question.key != 'schedule')) {
@@ -896,9 +960,18 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
             ? null
             : 'Please say road, air, rail, or dead body transfer.';
       case 'ambulanceType':
+        if (_serviceCategory == 'RAIL') {
+          return RegExp(r'\bicu\b').hasMatch(normalized)
+              ? null
+              : 'Rail ambulance supports the ICU setup only. Please say ICU.';
+        }
         return RegExp(r'oxygen|icu|nicu|picu').hasMatch(normalized)
             ? null
-            : 'Please say oxygen ambulance, ICU ambulance, or NICU ambulance.';
+            : 'Please say ICU, NICU, or oxygen ambulance.';
+      case 'freezerRequired':
+        return RegExp(r'freezer|without').hasMatch(normalized)
+            ? null
+            : 'Please say with freezer or without freezer.';
       case 'phone':
         final digits = _spokenDigits(answer).replaceAll('+', '');
         return digits.length >= 10 && digits.length <= 15
@@ -976,6 +1049,9 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
         } else {
           _applyAmbulancePreset('Oxygen Ambulance (BLS)');
         }
+      case 'freezerRequired':
+        _freezerRequired = !normalized.contains('without') &&
+            !normalized.contains('no freezer');
       case 'customerName':
         _customerNameCtrl.text = answer.trim();
       case 'phone':
@@ -1162,9 +1238,7 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
     setState(() {
       _serviceCategory = category;
       _transportMode = transportMode;
-
-      // Reset road-only selections when switching to another transport type.
-      if (category != 'ROAD') {
+      if (!_availableAmbulanceCategories.contains(_ambulanceCategory)) {
         _ambulanceCategory = '';
       }
     });
@@ -1225,18 +1299,38 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
   }
 
   String? _serviceSubtypeForFare() {
-    if (_serviceCategory != 'ROAD') return null;
-
-    if (_ambulanceCategory.contains('NICU') ||
-        _ambulanceCategory.contains('Pediatric')) {
-      return 'PEDIATRIC_ICU';
+    if (_serviceCategory == 'DEAD_BODY') {
+      return _freezerRequired ? 'DEAD_BODY_FREEZER' : null;
     }
 
-    if (_ambulanceCategory.contains('ICU')) {
-      return 'ADVANCED_ICU';
+    if (_serviceCategory == 'RAIL') {
+      return _ambulanceCategory.isEmpty ? null : 'TRAIN_ICU_COACH';
     }
 
-    return 'BASIC_OXYGEN';
+    if (_serviceCategory == 'ROAD') {
+      if (_ambulanceCategory.contains('NICU') ||
+          _ambulanceCategory.contains('Pediatric')) {
+        return 'PEDIATRIC_ICU';
+      }
+
+      if (_ambulanceCategory.contains('ICU')) {
+        return 'ADVANCED_ICU';
+      }
+
+      if (_ambulanceCategory.isNotEmpty) return 'BASIC_OXYGEN';
+    }
+
+    return null;
+  }
+
+  String? _specialInstructionsForSetup() {
+    if (_serviceCategory == 'AIR' && _ambulanceCategory.isNotEmpty) {
+      return 'Air ambulance setup: $_ambulanceCategory';
+    }
+    if (_serviceCategory == 'DEAD_BODY' && !_freezerRequired) {
+      return 'Freezer not required for dead body transfer.';
+    }
+    return null;
   }
 
   Map<String, dynamic> _bookingPayload() {
@@ -1244,6 +1338,7 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
       'booking_source': 'ONLINE',
       'service_category': _serviceCategory,
       'service_subtype': _serviceSubtypeForFare(),
+      'special_instructions': _specialInstructionsForSetup(),
       'transport_mode': _transportMode,
       'ambulance_type': _ambulanceCategory.isEmpty
           ? _serviceLabel(_serviceCategory)
@@ -1636,52 +1731,62 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
             ),
           ],
         ),
-        if (_serviceCategory == 'ROAD') ...[
+        if (_availableAmbulanceCategories.isNotEmpty) ...[
           const SizedBox(height: 22),
           _stepHeader(
-            'Road Ambulance Type',
+            '${_serviceLabel(_serviceCategory)} Setup',
             'Choose a clinical setup to preselect the matching equipment and crew requirements.',
           ),
           const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 780 ? 3 : 1;
+              final columns = constraints.maxWidth >= 780
+                  ? _availableAmbulanceCategories.length
+                  : 1;
               final tileWidth =
                   (constraints.maxWidth - (columns - 1) * 12) / columns;
               return Wrap(
                 spacing: 12,
                 runSpacing: 12,
-                children: [
-                  SizedBox(
-                    width: tileWidth,
-                    child: _ambulancePresetCard(
-                      title: 'Oxygen Ambulance',
-                      subtitle: 'Oxygen support with BLS crew',
-                      icon: Icons.air_rounded,
-                      category: 'Oxygen Ambulance (BLS)',
-                    ),
-                  ),
-                  SizedBox(
-                    width: tileWidth,
-                    child: _ambulancePresetCard(
-                      title: 'ICU Ambulance',
-                      subtitle: 'Critical-care monitoring and oxygen',
-                      icon: Icons.monitor_heart_outlined,
-                      category: 'ICU Ambulance (ALS)',
-                    ),
-                  ),
-                  SizedBox(
-                    width: tileWidth,
-                    child: _ambulancePresetCard(
-                      title: 'NICU Ambulance',
-                      subtitle: 'Neonatal care with transport incubator',
-                      icon: Icons.child_care_rounded,
-                      category: 'NICU Ambulance (PICU/NICU)',
-                    ),
-                  ),
-                ],
+                children: _availableAmbulanceCategories
+                    .map(
+                      (category) => SizedBox(
+                        width: tileWidth,
+                        child: _ambulancePresetCard(category: category),
+                      ),
+                    )
+                    .toList(),
               );
             },
+          ),
+        ],
+        if (_serviceCategory == 'DEAD_BODY') ...[
+          const SizedBox(height: 22),
+          _stepHeader(
+            'Freezer Requirement',
+            'Choose whether the transfer requires a freezer.',
+          ),
+          const SizedBox(height: 8),
+          Material(
+            color: Colors.transparent,
+            child: RadioGroup<bool>(
+              groupValue: _freezerRequired,
+              onChanged: (value) {
+                if (value != null) setState(() => _freezerRequired = value);
+              },
+              child: const Column(
+                children: [
+                  RadioListTile<bool>(
+                    value: true,
+                    title: Text('With Freezer'),
+                  ),
+                  RadioListTile<bool>(
+                    value: false,
+                    title: Text('Without Freezer'),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ],
@@ -1689,11 +1794,25 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
   }
 
   Widget _ambulancePresetCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
     required String category,
   }) {
+    final (title, subtitle, icon) = switch (category) {
+      'ICU Ambulance (ALS)' => (
+        'ICU Ambulance',
+        'Critical-care monitoring and oxygen',
+        Icons.monitor_heart_outlined,
+      ),
+      'NICU Ambulance (PICU/NICU)' => (
+        'NICU Ambulance',
+        'Neonatal care with transport incubator',
+        Icons.child_care_rounded,
+      ),
+      _ => (
+        'Oxygen Ambulance',
+        'Oxygen support with BLS crew',
+        Icons.air_rounded,
+      ),
+    };
     final selected = _ambulanceCategory == category;
     return InkWell(
       onTap: () => _applyAmbulancePreset(category),
@@ -2002,36 +2121,118 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
           ],
         ),
         const SizedBox(height: 14),
-        AmbulanceFirstDropdown<String>(
-          label: 'Current Medical Condition',
-          value: _patientCondition.isEmpty ? null : _patientCondition,
-          isRequired: true,
-          items: const [
-            DropdownMenuItem(value: 'Stable', child: Text('Stable / Routine')),
-            DropdownMenuItem(
-              value: 'Cardiac Monitoring Required',
-              child: Text('Cardiac Monitoring Required'),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Current Medical Condition',
+                    style: AmbulanceFirstTypography.labelMd(
+                      color: AmbulanceFirstColors.onSurface,
+                    ).copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                Text(
+                  ' *',
+                  style: AmbulanceFirstTypography.labelMd(
+                    color: AmbulanceFirstColors.medicalCrimson,
+                  ),
+                ),
+              ],
             ),
-            DropdownMenuItem(
-              value: 'Ventilator Dependent',
-              child: Text('Ventilator Dependent / Critical'),
+            const SizedBox(height: 6),
+            Autocomplete<String>(
+              optionsBuilder: (textEditingValue) {
+                final query = textEditingValue.text.trim().toLowerCase();
+                final matches = _medicalConditions
+                    .where((condition) => condition.toLowerCase().contains(query))
+                    .toList();
+                if (query.isNotEmpty &&
+                    !_medicalConditions.any(
+                      (condition) => condition.toLowerCase() == query,
+                    )) {
+                  matches.add(textEditingValue.text.trim());
+                }
+                return matches;
+              },
+              onSelected: (condition) {
+                setState(() => _patientCondition = condition);
+              },
+              fieldViewBuilder:
+                  (context, textEditingController, focusNode, onFieldSubmitted) {
+                    return TextFormField(
+                      controller: textEditingController,
+                      focusNode: focusNode,
+                      onChanged: (value) {
+                        setState(() => _patientCondition = value.trim());
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Search or enter a medical condition',
+                        prefixIcon: Icon(Icons.search_rounded),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                      ),
+                    );
+                  },
+              optionsViewBuilder: (context, onSelected, options) {
+                final query = _patientCondition.trim();
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    elevation: 6,
+                    borderRadius: BorderRadius.circular(
+                      AmbulanceFirstSpacing.radiusMd,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxHeight: 240,
+                        maxWidth: 640,
+                      ),
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemCount: options.length,
+                        itemBuilder: (context, index) {
+                          final condition = options.elementAt(index);
+                          final isCustom =
+                              query.isNotEmpty &&
+                              !_medicalConditions.any(
+                                (item) =>
+                                    item.toLowerCase() ==
+                                    condition.toLowerCase(),
+                              );
+                          return ListTile(
+                            leading: Icon(
+                              isCustom
+                                  ? Icons.add_circle_outline_rounded
+                                  : Icons.medical_information_outlined,
+                            ),
+                            title: Text(
+                              isCustom
+                                  ? 'Add custom condition: $condition'
+                                  : condition,
+                            ),
+                            onTap: () => onSelected(condition),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            DropdownMenuItem(
-              value: 'Neonatal / PICU Specialized',
-              child: Text('Neonatal / PICU Specialized'),
-            ),
-            DropdownMenuItem(
-              value: 'Post-Operative Transfer',
-              child: Text('Post-Operative Transfer'),
-            ),
-            DropdownMenuItem(
-              value: 'Trauma / Acute Decompensation',
-              child: Text('Trauma / Acute Decompensation'),
+            const SizedBox(height: 6),
+            Text(
+              'Search the list or enter the patient’s condition if it is not listed.',
+              style: AmbulanceFirstTypography.bodySm(
+                color: AmbulanceFirstColors.onSurfaceVariant,
+              ),
             ),
           ],
-          onChanged: (value) {
-            if (value != null) setState(() => _patientCondition = value);
-          },
         ),
         const SizedBox(height: 12),
         Material(
@@ -2052,36 +2253,33 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
   }
 
   Widget _buildStep4Clinical(bool isDesktop) {
-    final isRoad = _serviceCategory == 'ROAD';
+    final availableCategories = _availableAmbulanceCategories;
+    final requiresSetup = availableCategories.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _stepHeader(
-          isRoad ? 'Road Ambulance & Equipment' : 'Service Requirements',
-          isRoad
-              ? 'Select the road ambulance capability and clinical equipment required.'
+          requiresSetup
+              ? '${_serviceLabel(_serviceCategory)} & Equipment'
+              : 'Service Requirements',
+          requiresSetup
+              ? 'Select the ambulance capability and clinical equipment required.'
               : 'Select any additional medical support required for this service.',
         ),
         const SizedBox(height: 16),
-        if (isRoad) ...[
+        if (requiresSetup) ...[
           AmbulanceFirstDropdown<String>(
             label: 'Ambulance Category',
             value: _ambulanceCategory.isEmpty ? null : _ambulanceCategory,
             isRequired: true,
-            items: const [
-              DropdownMenuItem(
-                value: 'Oxygen Ambulance (BLS)',
-                child: Text('Oxygen Ambulance (BLS)'),
-              ),
-              DropdownMenuItem(
-                value: 'ICU Ambulance (ALS)',
-                child: Text('ICU Ambulance (ALS)'),
-              ),
-              DropdownMenuItem(
-                value: 'NICU Ambulance (PICU/NICU)',
-                child: Text('NICU Ambulance (PICU/NICU)'),
-              ),
-            ],
+            items: availableCategories
+                .map(
+                  (category) => DropdownMenuItem(
+                    value: category,
+                    child: Text(category),
+                  ),
+                )
+                .toList(),
             onChanged: (value) {
               if (value == null) return;
               _applyAmbulancePreset(value);
@@ -2089,7 +2287,7 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
           ),
           const SizedBox(height: 16),
         ],
-        if (isRoad && _ambulanceCategory.isNotEmpty) ...[
+        if (requiresSetup && _ambulanceCategory.isNotEmpty) ...[
           _presetRequirementsSummary(),
           const SizedBox(height: 14),
         ],
@@ -2133,6 +2331,18 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
       ],
     );
   }
+
+  List<String> get _availableAmbulanceCategories => switch (
+    _serviceCategory
+  ) {
+    'ROAD' || 'AIR' => const [
+      'ICU Ambulance (ALS)',
+      'NICU Ambulance (PICU/NICU)',
+      'Oxygen Ambulance (BLS)',
+    ],
+    'RAIL' => const ['ICU Ambulance (ALS)'],
+    _ => const [],
+  };
 
   Widget _chip(String label, bool selected, ValueChanged<bool> update) {
     return FilterChip(
@@ -2398,6 +2608,8 @@ class _BookAmbulanceWizardScreenState extends State<BookAmbulanceWizardScreen> {
           'Service: ${_serviceLabel(_serviceCategory)}',
           if (_ambulanceCategory.isNotEmpty)
             'Ambulance category: $_ambulanceCategory',
+          if (_serviceCategory == 'DEAD_BODY')
+            'Freezer: ${_freezerRequired ? 'Required' : 'Not required'}',
         ]),
         const SizedBox(height: 12),
         _reviewSection('Customer', [

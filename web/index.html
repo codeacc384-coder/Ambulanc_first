@@ -19,6 +19,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Ambulance First emergency transport and operations platform.">
+  <meta name="flutter-web-renderer" content="html">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -48,18 +49,22 @@
     const startFlutter = () => {
       const script = document.createElement('script');
       script.src = 'flutter_bootstrap.js';
-      script.async = true;
+      script.defer = true;
       document.body.appendChild(script);
     };
+
     const mapsKey = window.AmbulanceFirstMapsConfig?.apiKey || '';
     if (!mapsKey) {
       startFlutter();
     } else {
       const mapsScript = document.createElement('script');
-      mapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(mapsKey)}&v=weekly&loading=async`;
+    mapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(mapsKey)}&v=weekly&loading=async`;
       mapsScript.async = true;
       mapsScript.onload = startFlutter;
-      mapsScript.onerror = startFlutter;
+      mapsScript.onerror = () => {
+        console.warn('Google Maps failed to load; continuing without it.');
+        startFlutter();
+      };
       document.head.appendChild(mapsScript);
     }
   </script>

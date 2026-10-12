@@ -728,6 +728,7 @@ class TeamLeadStore extends ChangeNotifier {
   // Capability matching helper for Ambulances
   bool checkAmbulanceCompatibility(AmbulanceUnit ambulance, Booking booking) {
     if (booking.transportMode == 'DEAD_BODY_TRANSFER' &&
+        booking.deadBodyFreezerRequired &&
         !ambulance.hasCapability('FREEZER')) {
       return false;
     }

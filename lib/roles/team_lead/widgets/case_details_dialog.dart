@@ -147,7 +147,12 @@ class CaseDetailsDialog extends StatelessWidget {
                           if (booking.emtRequired) _capabilityChip('EMT / Paramedic', Icons.health_and_safety_rounded),
                           if (booking.stretcherRequired) _capabilityChip('Stretcher', Icons.single_bed_rounded),
                           if (booking.wheelchairRequired) _capabilityChip('Wheelchair', Icons.accessible_rounded),
-                          if (booking.transportMode == 'DEAD_BODY_TRANSFER') _capabilityChip('Cryo-Freezer Chamber', Icons.ac_unit_rounded),
+                          if (booking.transportMode == 'DEAD_BODY_TRANSFER' &&
+                              booking.deadBodyFreezerRequired)
+                            _capabilityChip(
+                              'Cryo-Freezer Chamber',
+                              Icons.ac_unit_rounded,
+                            ),
                         ],
                       ),
                       const SizedBox(height: 16),

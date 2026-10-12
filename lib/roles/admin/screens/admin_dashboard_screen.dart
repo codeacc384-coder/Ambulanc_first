@@ -521,41 +521,48 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            runSpacing: 4,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.verified_user_rounded,
-                    size: 18,
-                    color: StitchTheme.primaryContainer,
-                  ),
-                  const SizedBox(width: 6),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 230),
-                    child: Text(
-                      'Recent Governance & Audit',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: StitchTheme.headlineSm(
-                        color: StitchTheme.onSurface,
+          LayoutBuilder(
+            builder: (context, constraints) => Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 4,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.verified_user_rounded,
+                      size: 18,
+                      color: StitchTheme.primaryContainer,
+                    ),
+                    const SizedBox(width: 6),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: (constraints.maxWidth - 24).clamp(
+                          0.0,
+                          230.0,
+                        ),
+                      ),
+                      child: Text(
+                        'Recent Governance & Audit',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: StitchTheme.headlineSm(
+                          color: StitchTheme.onSurface,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Text(
-                'ENCRYPTED LOG',
-                style: StitchTheme.labelSm(
-                  color: StitchTheme.tertiary,
-                  weight: FontWeight.w700,
+                  ],
                 ),
-              ),
-            ],
+                Text(
+                  'ENCRYPTED LOG',
+                  style: StitchTheme.labelSm(
+                    color: StitchTheme.tertiary,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           for (final entry in recent) ...[
