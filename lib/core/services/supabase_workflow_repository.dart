@@ -353,6 +353,15 @@ class SupabaseWorkflowRepository {
     return _map(result);
   }
 
+  Future<void> updateCurrentDriverMedicationInventory(
+    List<String> medications,
+  ) async {
+    await _db.rpc(
+      'update_current_driver_medication_inventory',
+      params: {'p_medications': medications},
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // TEAM LEAD - AMBULANCE STATUS
   // ---------------------------------------------------------------------------

@@ -713,6 +713,12 @@ class _DriverShellState extends State<DriverShell> {
       DriverDashboardScreen(
         driver: widget.driver,
         bookings: _bookings,
+        onSaveMedicines: (medications) async {
+          await _workflowRepository.updateCurrentDriverMedicationInventory(
+            medications,
+          );
+          widget.driver.availableMedications = List<String>.from(medications);
+        },
         onAdvance: _advance,
         onOpenActiveTrip: () {
           if (active != null) _openTripConsole(active);

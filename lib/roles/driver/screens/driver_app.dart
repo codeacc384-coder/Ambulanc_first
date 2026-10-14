@@ -154,6 +154,12 @@ class _DriverAppState extends State<DriverApp> {
       totalTrips: asInt(row['total_trips']),
       locationAccuracyMeters: asDouble(row['location_accuracy_meters']),
       locationUpdatedAt: null,
+      availableMedications: row['available_medications'] is List
+          ? (row['available_medications'] as List)
+                .map((item) => item.toString().trim())
+                .where((item) => item.isNotEmpty)
+                .toList(growable: false)
+          : const <String>[],
     );
   }
 

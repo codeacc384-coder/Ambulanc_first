@@ -264,6 +264,7 @@ class TeamLeadStore extends ChangeNotifier {
               assignedAmbulanceNumber:
                   '${r['assigned_ambulance_number'] ?? r['assigned_vehicle'] ?? ''}',
               completedTrips: 0,
+              availableMedications: _stringList(r['available_medications']),
             );
           }),
         );
@@ -357,6 +358,16 @@ class TeamLeadStore extends ChangeNotifier {
         .whereType<Map>()
         .map((row) => Map<String, dynamic>.from(row))
         .toList();
+  }
+
+  List<String> _stringList(dynamic value) {
+    if (value is List) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
+          .toList(growable: false);
+    }
+    return const <String>[];
   }
 
   Future<void> refreshFromBackend({String? userId}) =>

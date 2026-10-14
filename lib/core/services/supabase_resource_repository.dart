@@ -85,12 +85,12 @@ class SupabaseResourceRepository {
         row['supported_categories'] ?? row['supported_category'],
       ),
       currentLocation: '${row['current_location'] ?? ''}',
-      assignedAmbulanceNumber:
-          '${row['assigned_ambulance_number'] ?? ''}',
+      assignedAmbulanceNumber: '${row['assigned_ambulance_number'] ?? ''}',
       status: '${row['status'] ?? 'AVAILABLE'}',
       totalTrips: _int(row['total_trips']),
       rating: _double(row['rating']),
       assignedBookingId: row['assigned_booking_id']?.toString(),
+      availableMedications: _stringList(row['available_medications']),
     );
   }
 

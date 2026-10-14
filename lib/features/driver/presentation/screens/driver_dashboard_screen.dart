@@ -1,15 +1,39 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/models/driver_models.dart';
 import '../../../../shared/booking_date_time_formatter.dart';
 import '../../theme/driver_colors.dart';
 import '../../theme/driver_text_styles.dart';
 import '../widgets/driver_duty_switcher.dart';
 
-class DriverDashboardScreen extends StatelessWidget {
+class DriverDashboardScreen extends StatefulWidget {
+  static const List<String> emergencyMedicationChecklist = [
+    'Epinephrine',
+    'Atropine',
+    'Flumazenil',
+    'Glucagon',
+    'Amiodarone',
+    'Sodium bicarbonate',
+    'Naloxone',
+    'Midazolam',
+    'Lorazepam',
+    'Diazepam',
+    'Vasopressors',
+    'Dopamine',
+    'Norepinephrine',
+    'Adenosine',
+    'Metoprolol',
+    'Chlorpheniramine',
+    'Dexamethasone',
+    'Hydrocortisone',
+    'Tramadol',
+  ];
+
   const DriverDashboardScreen({
     super.key,
     required this.driver,
     required this.bookings,
+    required this.onSaveMedicines,
     required this.onAdvance,
     required this.onOpenActiveTrip,
     required this.onOpenAssignments,
@@ -20,6 +44,7 @@ class DriverDashboardScreen extends StatelessWidget {
 
   final DriverProfile driver;
   final List<DriverBooking> bookings;
+  final Future<void> Function(List<String> medications) onSaveMedicines;
   final void Function(DriverBooking booking, String nextStatus) onAdvance;
   final VoidCallback onOpenActiveTrip;
   final VoidCallback onOpenAssignments;
@@ -27,17 +52,91 @@ class DriverDashboardScreen extends StatelessWidget {
   final DateTime? lastLocationSharedAt;
   final bool isLiveGpsSharing;
 
+  @override
+  State<DriverDashboardScreen> createState() => _DriverDashboardScreenState();
+}
+
+class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
+  final Set<String> _selectedMedicines = <String>{};
+  Set<String> _savedMedicines = <String>{};
+  bool _savingMedicines = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMedicines.addAll(widget.driver.availableMedications);
+    _savedMedicines = Set<String>.from(widget.driver.availableMedications);
+  }
+
+  @override
+  void didUpdateWidget(covariant DriverDashboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final latestSavedMedicines = Set<String>.from(
+      widget.driver.availableMedications,
+    );
+    if (!_sameMedicines(latestSavedMedicines, _savedMedicines)) {
+      final selectionWasUnchanged = _sameMedicines(
+        _selectedMedicines,
+        _savedMedicines,
+      );
+      _savedMedicines = latestSavedMedicines;
+      if (selectionWasUnchanged) {
+        _selectedMedicines
+          ..clear()
+          ..addAll(latestSavedMedicines);
+      }
+    }
+  }
+
+  bool _sameMedicines(Set<String> first, Set<String> second) =>
+      first.length == second.length && first.containsAll(second);
+
+  @override
+  void dispose() {
+    _selectedMedicines.clear();
+    _savedMedicines.clear();
+    super.dispose();
+  }
+
   DriverBooking? get _activeTrip {
-    for (final b in bookings) {
+    for (final b in widget.bookings) {
       if (b.isActive) return b;
     }
     return null;
   }
 
   List<DriverBooking> get _pendingAssignments {
-    return bookings
+    return widget.bookings
         .where((b) => b.status == 'ASSIGNED' || b.status == 'DRIVER_ASSIGNED')
         .toList();
+  }
+
+  void _toggleMedicine(String medicine) {
+    setState(() {
+      if (_selectedMedicines.contains(medicine)) {
+        _selectedMedicines.remove(medicine);
+      } else {
+        _selectedMedicines.add(medicine);
+      }
+    });
+  }
+
+  Future<void> _saveMedicines() async {
+    setState(() => _savingMedicines = true);
+    try {
+      await widget.onSaveMedicines(_selectedMedicines.toList()..sort());
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ambulance medicine inventory updated.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update medicine inventory: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _savingMedicines = false);
+    }
   }
 
   @override
@@ -73,8 +172,12 @@ class DriverDashboardScreen extends StatelessWidget {
                       radius: 26,
                       backgroundColor: DriverColors.primaryContainer,
                       child: Text(
-                        driver.name.isNotEmpty ? driver.name[0] : 'R',
-                        style: DriverTextStyles.headlineMedium.copyWith(color: Colors.white),
+                        widget.driver.name.isNotEmpty
+                            ? widget.driver.name[0]
+                            : 'R',
+                        style: DriverTextStyles.headlineMedium.copyWith(
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -82,10 +185,13 @@ class DriverDashboardScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(driver.name, style: DriverTextStyles.headlineSmall),
+                          Text(
+                            widget.driver.name,
+                            style: DriverTextStyles.headlineSmall,
+                          ),
                           const SizedBox(height: 2),
                           Text(
-                            'PILOT ID: ${driver.id}  •  ${driver.assignedAmbulanceNumber}',
+                            'PILOT ID: ${widget.driver.id}  •  ${widget.driver.assignedAmbulanceNumber}',
                             style: DriverTextStyles.telemetryMicro.copyWith(
                               color: DriverColors.primaryContainer,
                               fontWeight: FontWeight.w700,
@@ -93,24 +199,31 @@ class DriverDashboardScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'License ${driver.licenseNumber} (Exp: ${driver.licenseExpiry})',
+                            'License ${widget.driver.licenseNumber} (Exp: ${widget.driver.licenseExpiry})',
                             style: DriverTextStyles.bodySmall,
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: DriverColors.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.star_rounded, size: 14, color: DriverColors.secondary),
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 14,
+                            color: DriverColors.secondary,
+                          ),
                           const SizedBox(width: 3),
                           Text(
-                            driver.rating.toStringAsFixed(1),
+                            widget.driver.rating.toStringAsFixed(1),
                             style: DriverTextStyles.telemetryMicro.copyWith(
                               color: DriverColors.secondary,
                               fontWeight: FontWeight.w800,
@@ -122,13 +235,16 @@ class DriverDashboardScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Divider(height: 1, color: DriverColors.surfaceContainerHigh),
+                const Divider(
+                  height: 1,
+                  color: DriverColors.surfaceContainerHigh,
+                ),
                 const SizedBox(height: 14),
                 // Duty Status Switcher
                 DriverDutySwitcher(
-                  currentStatus: driver.status,
+                  currentStatus: widget.driver.status,
                   hasActiveTrip: active != null,
-                  onStatusChanged: onStatusChanged,
+                  onStatusChanged: widget.onStatusChanged,
                 ),
               ],
             ),
@@ -142,10 +258,15 @@ class DriverDashboardScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: DriverColors.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: DriverColors.primaryContainer, width: 1.5),
+                border: Border.all(
+                  color: DriverColors.primaryContainer,
+                  width: 1.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: DriverColors.primaryContainer.withValues(alpha: 0.08),
+                    color: DriverColors.primaryContainer.withValues(
+                      alpha: 0.08,
+                    ),
                     blurRadius: 10,
                     offset: const Offset(0, 3),
                   ),
@@ -155,17 +276,26 @@ class DriverDashboardScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     decoration: const BoxDecoration(
                       color: DriverColors.primaryContainer,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.navigation_rounded, color: Colors.white, size: 16),
+                            const Icon(
+                              Icons.navigation_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               'ACTIVE MISSION IN PROGRESS',
@@ -174,21 +304,25 @@ class DriverDashboardScreen extends StatelessWidget {
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            if (isLiveGpsSharing) ...[
+                            if (widget.isLiveGpsSharing) ...[
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: DriverColors.secondaryContainer,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   'GPS LIVE',
-                                  style: DriverTextStyles.telemetryMicro.copyWith(
-                                    color: DriverColors.secondary,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 9,
-                                  ),
+                                  style: DriverTextStyles.telemetryMicro
+                                      .copyWith(
+                                        color: DriverColors.secondary,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 9,
+                                      ),
                                 ),
                               ),
                             ],
@@ -196,7 +330,9 @@ class DriverDashboardScreen extends StatelessWidget {
                         ),
                         Text(
                           active.id,
-                          style: DriverTextStyles.bookingId.copyWith(color: Colors.white),
+                          style: DriverTextStyles.bookingId.copyWith(
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),
@@ -214,7 +350,10 @@ class DriverDashboardScreen extends StatelessWidget {
                               style: DriverTextStyles.titleMedium,
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: DriverColors.secondaryContainer,
                                 borderRadius: BorderRadius.circular(6),
@@ -238,7 +377,11 @@ class DriverDashboardScreen extends StatelessWidget {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Icon(Icons.location_on_outlined, size: 14, color: DriverColors.tertiary),
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: DriverColors.tertiary,
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
@@ -257,7 +400,7 @@ class DriverDashboardScreen extends StatelessWidget {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: onOpenActiveTrip,
+                            onPressed: widget.onOpenActiveTrip,
                             icon: const Icon(Icons.speed_rounded, size: 18),
                             label: const Text('OPEN ACTIVE TRIP CONSOLE'),
                             style: ElevatedButton.styleFrom(
@@ -285,20 +428,29 @@ class DriverDashboardScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: DriverColors.secondaryContainer.withValues(alpha: 0.4),
+                      color: DriverColors.secondaryContainer.withValues(
+                        alpha: 0.4,
+                      ),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(Icons.check_circle_outline_rounded, color: DriverColors.secondary, size: 28),
+                    child: const Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: DriverColors.secondary,
+                      size: 28,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Ready on Standby Depot', style: DriverTextStyles.titleMedium),
+                        Text(
+                          'Ready on Standby Depot',
+                          style: DriverTextStyles.titleMedium,
+                        ),
                         const SizedBox(height: 3),
                         Text(
-                          'Ambulance unit ${driver.assignedAmbulanceNumber} is online and operational for dispatch.',
+                          'Ambulance unit ${widget.driver.assignedAmbulanceNumber} is online and operational for dispatch.',
                           style: DriverTextStyles.bodySmall,
                         ),
                       ],
@@ -311,13 +463,111 @@ class DriverDashboardScreen extends StatelessWidget {
 
           const SizedBox(height: 20),
 
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: DriverColors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: DriverColors.surfaceContainerHigh),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.medical_services_outlined,
+                      color: DriverColors.primaryContainer,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'MEDICINES AVAILABLE WITH DRIVER',
+                      style: DriverTextStyles.headlineSmall,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Select the medicines currently stocked in your ambulance, then update the list for Team Lead.',
+                  style: DriverTextStyles.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final medicine
+                        in DriverDashboardScreen.emergencyMedicationChecklist)
+                      FilterChip(
+                        label: Text(medicine),
+                        selected: _selectedMedicines.contains(medicine),
+                        showCheckmark: true,
+                        checkmarkColor: Colors.white,
+                        selectedColor: DriverColors.primaryContainer,
+                        backgroundColor: DriverColors.secondaryContainer,
+                        side: BorderSide(
+                          color: _selectedMedicines.contains(medicine)
+                              ? DriverColors.primaryContainer
+                              : DriverColors.surfaceContainerHigh,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        labelStyle: DriverTextStyles.telemetryMicro.copyWith(
+                          color: _selectedMedicines.contains(medicine)
+                              ? Colors.white
+                              : DriverColors.secondary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        onSelected: (_) => _toggleMedicine(medicine),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    if (_selectedMedicines.isNotEmpty)
+                      Expanded(
+                        child: Text(
+                          '${_selectedMedicines.length} medicine${_selectedMedicines.length == 1 ? '' : 's'} selected',
+                          style: DriverTextStyles.bodySmall.copyWith(
+                            color: DriverColors.primaryContainer,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      )
+                    else
+                      const Spacer(),
+                    ElevatedButton.icon(
+                      onPressed: _savingMedicines ? null : _saveMedicines,
+                      icon: _savingMedicines
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.save_outlined, size: 18),
+                      label: Text(
+                        _savingMedicines ? 'Updating…' : 'Update inventory',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
           // Pending Assignments Queue
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('ASSIGNED TO YOU', style: DriverTextStyles.headlineSmall),
               TextButton.icon(
-                onPressed: onOpenAssignments,
+                onPressed: widget.onOpenAssignments,
                 icon: const Icon(Icons.arrow_forward_rounded, size: 16),
                 label: Text(
                   'View All (${pending.length})',
@@ -341,9 +591,16 @@ class DriverDashboardScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Icon(Icons.inbox_outlined, size: 36, color: DriverColors.outlineVariant),
+                  Icon(
+                    Icons.inbox_outlined,
+                    size: 36,
+                    color: DriverColors.outlineVariant,
+                  ),
                   const SizedBox(height: 8),
-                  Text('No Pending Assignments', style: DriverTextStyles.titleSmall),
+                  Text(
+                    'No Pending Assignments',
+                    style: DriverTextStyles.titleSmall,
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     'You are current on all dispatch queue orders.',
@@ -370,7 +627,11 @@ class DriverDashboardScreen extends StatelessWidget {
                         color: DriverColors.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.local_hospital_outlined, size: 20, color: DriverColors.primaryContainer),
+                      child: const Icon(
+                        Icons.local_hospital_outlined,
+                        size: 20,
+                        color: DriverColors.primaryContainer,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -382,31 +643,47 @@ class DriverDashboardScreen extends StatelessWidget {
                               Text(b.id, style: DriverTextStyles.bookingId),
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1.5,
+                                ),
                                 decoration: BoxDecoration(
                                   color: DriverColors.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  BookingDateTimeFormatter.formatTime(b.preferredTime),
+                                  BookingDateTimeFormatter.formatTime(
+                                    b.preferredTime,
+                                  ),
                                   style: DriverTextStyles.telemetryMicro,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 2),
-                          Text('${b.patientName} • ${b.pickupCity} ➔ ${b.destinationCity}', style: DriverTextStyles.bodySmall),
+                          Text(
+                            '${b.patientName} • ${b.pickupCity} ➔ ${b.destinationCity}',
+                            style: DriverTextStyles.bodySmall,
+                          ),
                         ],
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () => onAdvance(b, 'PICKUP_STARTED'),
+                      onPressed: () => widget.onAdvance(b, 'PICKUP_STARTED'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: DriverColors.primaryContainer,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      child: Text('START', style: DriverTextStyles.button.copyWith(fontSize: 12)),
+                      child: Text(
+                        'START',
+                        style: DriverTextStyles.button.copyWith(fontSize: 12),
+                      ),
                     ),
                   ],
                 ),
@@ -424,7 +701,7 @@ class DriverDashboardScreen extends StatelessWidget {
               Expanded(
                 child: _StatCard(
                   title: 'TOTAL TRANSPORTS',
-                  value: driver.totalTrips.toString(),
+                  value: widget.driver.totalTrips.toString(),
                   icon: Icons.check_circle_outline,
                   color: DriverColors.secondary,
                 ),
@@ -442,7 +719,7 @@ class DriverDashboardScreen extends StatelessWidget {
               Expanded(
                 child: _StatCard(
                   title: 'PILOT RATING',
-                  value: '${driver.rating} ★',
+                  value: '${widget.driver.rating} ★',
                   icon: Icons.star_border,
                   color: DriverColors.warning,
                 ),

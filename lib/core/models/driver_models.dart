@@ -18,6 +18,7 @@ class DriverProfile {
     required this.totalTrips,
     required this.rating,
     this.assignedBookingId,
+    this.availableMedications = const <String>[],
   });
 
   String id;
@@ -51,6 +52,8 @@ class DriverProfile {
 
   String? assignedBookingId;
 
+  List<String> availableMedications;
+
   void applyFrom(DriverProfile other) {
     id = other.id;
     name = other.name;
@@ -82,6 +85,7 @@ class DriverProfile {
     rating = other.rating;
 
     assignedBookingId = other.assignedBookingId;
+    availableMedications = List<String>.from(other.availableMedications);
   }
 }
 

@@ -1,4 +1,4 @@
-﻿enum TelemetryState { live, stale, unavailable }
+enum TelemetryState { live, stale, unavailable }
 
 class LiveTelemetry {
   const LiveTelemetry({
@@ -81,6 +81,7 @@ class DriverRosterItem {
     this.assignedBookingId,
     this.assignedAmbulanceNumber,
     this.completedTrips = 0,
+    this.availableMedications = const <String>[],
   });
 
   final String id;
@@ -96,6 +97,7 @@ class DriverRosterItem {
   String? assignedBookingId;
   String? assignedAmbulanceNumber;
   int completedTrips;
+  final List<String> availableMedications;
 
   bool get isAvailable => status == 'AVAILABLE' || status == 'ON_DUTY';
   bool get isAssigned => status == 'ASSIGNED';
@@ -230,7 +232,8 @@ class QuotationComputation {
     double discount = 0,
     double taxPercent = 5.0,
   }) {
-    final sub = (baseCharge < 0 ? 0.0 : baseCharge) +
+    final sub =
+        (baseCharge < 0 ? 0.0 : baseCharge) +
         (distanceCharge < 0 ? 0.0 : distanceCharge) +
         (doctorCharge < 0 ? 0.0 : doctorCharge) +
         (emtCharge < 0 ? 0.0 : emtCharge) +

@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+
 import '../../../core/models/booking.dart';
 import '../../../core/services/supabase_resource_repository.dart';
 import '../../../core/services/supabase_workflow_repository.dart';
@@ -15,23 +15,13 @@ import '../theme/team_lead_theme.dart';
 ///
 /// Allocation itself is performed by the canonical allocate_booking RPC.
 class AllocationModal extends StatefulWidget {
-  const AllocationModal({
-    super.key,
-    required this.booking,
-  });
+  const AllocationModal({super.key, required this.booking});
 
   final Booking booking;
 
-  static Future<bool?> show(
-    BuildContext context, {
-    required Booking booking,
-  }) {
+  static Future<bool?> show(BuildContext context, {required Booking booking}) {
     return Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => AllocationModal(
-          booking: booking,
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => AllocationModal(booking: booking)),
     );
   }
 
@@ -40,10 +30,8 @@ class AllocationModal extends StatefulWidget {
 }
 
 class _AllocationModalState extends State<AllocationModal> {
-  final SupabaseWorkflowRepository _workflow =
-      SupabaseWorkflowRepository();
-  final SupabaseResourceRepository _resources =
-      SupabaseResourceRepository();
+  final SupabaseWorkflowRepository _workflow = SupabaseWorkflowRepository();
+  final SupabaseResourceRepository _resources = SupabaseResourceRepository();
 
   bool _loading = true;
   bool _saving = false;
@@ -58,11 +46,9 @@ class _AllocationModalState extends State<AllocationModal> {
   String? _medicalCrewId;
   String? _doctorId;
 
-
   Booking get booking => widget.booking;
 
-  bool get _customerAccepted =>
-      booking.status == 'CUSTOMER_ACCEPTED';
+  bool get _customerAccepted => booking.status == 'CUSTOMER_ACCEPTED';
 
   bool get _doctorRequired => booking.doctorRequired;
 
@@ -74,10 +60,12 @@ class _AllocationModalState extends State<AllocationModal> {
     _loadRosters();
   }
 
-
   Future<void> _loadRosters() async {
     if (!mounted) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final results = await Future.wait<dynamic>([
         _resources.getAmbulances(),
@@ -101,7 +89,10 @@ class _AllocationModalState extends State<AllocationModal> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _loading = false; _error = 'Unable to load Team Lead resources from Supabase: $e'; });
+      setState(() {
+        _loading = false;
+        _error = 'Unable to load Team Lead resources from Supabase: $e';
+      });
     }
   }
 
@@ -112,9 +103,7 @@ class _AllocationModalState extends State<AllocationModal> {
 
     return rows
         .whereType<Map>()
-        .map(
-          (row) => Map<String, dynamic>.from(row),
-        )
+        .map((row) => Map<String, dynamic>.from(row))
         .toList();
   }
 
@@ -145,8 +134,9 @@ class _AllocationModalState extends State<AllocationModal> {
     if (vehicleNumber.isEmpty) return null;
 
     for (final driver in _drivers) {
-      final assignedVehicle =
-          '${driver['assigned_ambulance_number'] ?? ''}'.trim().toLowerCase();
+      final assignedVehicle = '${driver['assigned_ambulance_number'] ?? ''}'
+          .trim()
+          .toLowerCase();
       if (assignedVehicle == vehicleNumber) return driver;
     }
     return null;
@@ -181,8 +171,9 @@ class _AllocationModalState extends State<AllocationModal> {
     }
     if (!_resourceIsAvailable(pairedDriver) ||
         pairedDriver['assigned_booking_id'] != null) {
-      final driverStatus =
-          '${pairedDriver['status'] ?? 'UNKNOWN'}'.trim().toUpperCase();
+      final driverStatus = '${pairedDriver['status'] ?? 'UNKNOWN'}'
+          .trim()
+          .toUpperCase();
       return 'Paired driver is not available (status: ${driverStatus.replaceAll('_', ' ')}).';
     }
 
@@ -193,11 +184,31 @@ class _AllocationModalState extends State<AllocationModal> {
 
     requireCapability(booking.oxygenRequired, 'oxygen_capable', 'oxygen');
     requireCapability(booking.icuRequired, 'icu_capable', 'ICU');
-    requireCapability(booking.ventilatorRequired, 'ventilator_capable', 'ventilator');
-    requireCapability(booking.cardiacMonitorRequired, 'cardiac_monitor_capable', 'cardiac monitor');
-    requireCapability(booking.stretcherRequired, 'stretcher_capable', 'stretcher');
-    requireCapability(booking.wheelchairRequired, 'wheelchair_capable', 'wheelchair');
-    requireCapability(booking.pediatricPatient, 'pediatric_icu_capable', 'pediatric ICU');
+    requireCapability(
+      booking.ventilatorRequired,
+      'ventilator_capable',
+      'ventilator',
+    );
+    requireCapability(
+      booking.cardiacMonitorRequired,
+      'cardiac_monitor_capable',
+      'cardiac monitor',
+    );
+    requireCapability(
+      booking.stretcherRequired,
+      'stretcher_capable',
+      'stretcher',
+    );
+    requireCapability(
+      booking.wheelchairRequired,
+      'wheelchair_capable',
+      'wheelchair',
+    );
+    requireCapability(
+      booking.pediatricPatient,
+      'pediatric_icu_capable',
+      'pediatric ICU',
+    );
 
     return missing.isEmpty
         ? null
@@ -223,10 +234,7 @@ class _AllocationModalState extends State<AllocationModal> {
     }
 
     if (_ambulanceId == null) {
-      _showMessage(
-        'Select a compatible ambulance.',
-        isError: true,
-      );
+      _showMessage('Select a compatible ambulance.', isError: true);
       return;
     }
 
@@ -255,18 +263,12 @@ class _AllocationModalState extends State<AllocationModal> {
     final selectedCrew = _find(_medicalCrew, _medicalCrewId);
     if (_medicalCrewRequired &&
         (selectedCrew == null || !_resourceIsAvailable(selectedCrew))) {
-      _showMessage(
-        'Select an EMT / medical crew member.',
-        isError: true,
-      );
+      _showMessage('Select an EMT / medical crew member.', isError: true);
       return;
     }
 
     if (_doctorRequired && _doctorId == null) {
-      _showMessage(
-        'Select an available doctor.',
-        isError: true,
-      );
+      _showMessage('Select an available doctor.', isError: true);
       return;
     }
 
@@ -286,9 +288,7 @@ class _AllocationModalState extends State<AllocationModal> {
 
       if (!mounted) return;
 
-      _showMessage(
-        'Allocation completed successfully.',
-      );
+      _showMessage('Allocation completed successfully.');
 
       Navigator.of(context).pop(true);
     } catch (error) {
@@ -299,17 +299,11 @@ class _AllocationModalState extends State<AllocationModal> {
         _error = error.toString();
       });
 
-      _showMessage(
-        'Allocation failed: $error',
-        isError: true,
-      );
+      _showMessage('Allocation failed: $error', isError: true);
     }
   }
 
-  void _showMessage(
-    String message, {
-    bool isError = false,
-  }) {
+  void _showMessage(String message, {bool isError = false}) {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context)
@@ -317,29 +311,19 @@ class _AllocationModalState extends State<AllocationModal> {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor:
-              isError ? Colors.red.shade700 : null,
+          backgroundColor: isError ? Colors.red.shade700 : null,
         ),
       );
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedAmbulance = _find(
-      _ambulances,
-      _ambulanceId,
-    );
+    final selectedAmbulance = _find(_ambulances, _ambulanceId);
     final selectedDriver = selectedAmbulance == null
         ? null
         : _pairedDriverForAmbulance(selectedAmbulance);
-    final selectedCrew = _find(
-      _medicalCrew,
-      _medicalCrewId,
-    );
-    final selectedDoctor = _find(
-      _doctors,
-      _doctorId,
-    );
+    final selectedCrew = _find(_medicalCrew, _medicalCrewId);
+    final selectedDoctor = _find(_doctors, _doctorId);
 
     return Scaffold(
       backgroundColor: TeamLeadTheme.surfaceLow,
@@ -351,9 +335,7 @@ class _AllocationModalState extends State<AllocationModal> {
       ),
       body: SafeArea(
         child: _loading
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
+            ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
                 onRefresh: _loadRosters,
                 child: ListView(
@@ -361,8 +343,7 @@ class _AllocationModalState extends State<AllocationModal> {
                   children: [
                     _bookingHeader(),
                     const SizedBox(height: 16),
-                    if (!_customerAccepted)
-                      _lockedBanner(),
+                    if (!_customerAccepted) _lockedBanner(),
                     if (_error != null) ...[
                       const SizedBox(height: 12),
                       _errorBanner(_error!),
@@ -372,16 +353,14 @@ class _AllocationModalState extends State<AllocationModal> {
                     const SizedBox(height: 16),
                     _resourceSection(
                       title: '1. Ambulance',
-                      subtitle:
-                          'Live ambulances from Supabase are shown. Only AVAILABLE, compatible units can be selected; the allocation RPC rechecks every rule.',
+                      subtitle: 'Live ambulances from Supabase are shown. Only AVAILABLE, compatible units can be selected; the allocation RPC rechecks every rule.',
                       icon: Icons.local_shipping_rounded,
                       child: _ambulanceList(),
                     ),
                     const SizedBox(height: 16),
                     _resourceSection(
                       title: '2. Driver',
-                      subtitle:
-                          'The driver paired with the selected ambulance is assigned automatically.',
+                      subtitle: 'The driver paired with the selected ambulance is assigned automatically.',
                       icon: Icons.badge_rounded,
                       child: _assignedDriverCard(selectedAmbulance),
                     ),
@@ -389,8 +368,7 @@ class _AllocationModalState extends State<AllocationModal> {
                       const SizedBox(height: 16),
                       _resourceSection(
                         title: '3. EMT / Medical Crew',
-                        subtitle:
-                            'Live available medical crew from public.medical_crew are shown.',
+                        subtitle: 'Live available medical crew from public.medical_crew are shown.',
                         icon: Icons.medical_services_rounded,
                         child: _crewList(),
                       ),
@@ -399,8 +377,7 @@ class _AllocationModalState extends State<AllocationModal> {
                       const SizedBox(height: 16),
                       _resourceSection(
                         title: '4. Attending Doctor',
-                        subtitle:
-                            'Live available doctors from public.doctors are shown. Specialization validation is enforced by the allocation RPC.',
+                        subtitle: 'Live available doctors from public.doctors are shown. Specialization validation is enforced by the allocation RPC.',
                         icon: Icons.local_hospital_rounded,
                         child: _doctorList(),
                       ),
@@ -414,37 +391,30 @@ class _AllocationModalState extends State<AllocationModal> {
                     ),
                     const SizedBox(height: 20),
                     FilledButton.icon(
-                      onPressed:
-                          _saving ? null : _confirmAllocation,
+                      onPressed: _saving ? null : _confirmAllocation,
                       style: FilledButton.styleFrom(
-                        backgroundColor:
-                            TeamLeadTheme.operationalEmerald,
-                        minimumSize:
-                            const Size.fromHeight(54),
+                        backgroundColor: TeamLeadTheme.operationalEmerald,
+                        minimumSize: const Size.fromHeight(54),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       icon: _saving
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child:
-                                  CircularProgressIndicator(
+                              child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(
-                              Icons.check_circle_rounded,
-                            ),
+                          : const Icon(Icons.check_circle_rounded),
                       label: Text(
                         _saving
                             ? 'Allocating...'
                             : _customerAccepted
-                                ? 'Confirm Allocation & Dispatch'
-                                : 'Waiting for Customer Acceptance',
+                            ? 'Confirm Allocation & Dispatch'
+                            : 'Waiting for Customer Acceptance',
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -461,9 +431,7 @@ class _AllocationModalState extends State<AllocationModal> {
       decoration: BoxDecoration(
         color: TeamLeadTheme.surfaceLowest,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: TeamLeadTheme.borderSubtle,
-        ),
+        border: Border.all(color: TeamLeadTheme.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,18 +455,14 @@ class _AllocationModalState extends State<AllocationModal> {
             booking.patientName.isEmpty
                 ? 'Emergency Patient'
                 : booking.patientName,
-            style: TeamLeadTheme.titleMedium(
-              weight: FontWeight.w800,
-            ),
+            style: TeamLeadTheme.titleMedium(weight: FontWeight.w800),
           ),
           const SizedBox(height: 5),
           Text(
             '${booking.transportModeLabel} • '
             '${booking.serviceCategory} • '
             '${(booking.serviceSubtype ?? '').isEmpty ? 'Standard' : (booking.serviceSubtype ?? 'Standard')}',
-            style: TeamLeadTheme.small(
-              color: TeamLeadTheme.onSurfaceVariant,
-            ),
+            style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant),
           ),
           const SizedBox(height: 14),
           _infoRow(
@@ -506,16 +470,8 @@ class _AllocationModalState extends State<AllocationModal> {
             'Customer',
             booking.customerName,
           ),
-          _infoRow(
-            Icons.phone_outlined,
-            'Phone',
-            booking.mobileNumber,
-          ),
-          _infoRow(
-            Icons.trip_origin_rounded,
-            'Pickup',
-            booking.pickup,
-          ),
+          _infoRow(Icons.phone_outlined, 'Phone', booking.mobileNumber),
+          _infoRow(Icons.trip_origin_rounded, 'Pickup', booking.pickup),
           _infoRow(
             Icons.location_on_outlined,
             'Destination',
@@ -526,30 +482,19 @@ class _AllocationModalState extends State<AllocationModal> {
     );
   }
 
-  Widget _infoRow(
-    IconData icon,
-    String label,
-    String value,
-  ) {
+  Widget _infoRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 17,
-            color: TeamLeadTheme.primary,
-          ),
+          Icon(icon, size: 17, color: TeamLeadTheme.primary),
           const SizedBox(width: 9),
           SizedBox(
             width: 85,
             child: Text(
               label,
-              style: TeamLeadTheme.small(
-                color: TeamLeadTheme.textMuted,
-              ),
+              style: TeamLeadTheme.small(color: TeamLeadTheme.textMuted),
             ),
           ),
           Expanded(
@@ -573,10 +518,7 @@ class _AllocationModalState extends State<AllocationModal> {
         color: TeamLeadTheme.crimsonBg,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color:
-              TeamLeadTheme.medicalCrimson.withValues(
-            alpha: .35,
-          ),
+          color: TeamLeadTheme.medicalCrimson.withValues(alpha: .35),
         ),
       ),
       child: Row(
@@ -608,15 +550,11 @@ class _AllocationModalState extends State<AllocationModal> {
       decoration: BoxDecoration(
         color: Colors.red.withValues(alpha: .08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.red.withValues(alpha: .25),
-        ),
+        border: Border.all(color: Colors.red.withValues(alpha: .25)),
       ),
       child: Text(
         error,
-        style: TeamLeadTheme.small(
-          color: Colors.red.shade800,
-        ),
+        style: TeamLeadTheme.small(color: Colors.red.shade800),
       ),
     );
   }
@@ -662,17 +600,13 @@ class _AllocationModalState extends State<AllocationModal> {
       child: requirements.isEmpty
           ? Text(
               'No additional clinical capability requirement recorded.',
-              style: TeamLeadTheme.small(
-                color: TeamLeadTheme.textMuted,
-              ),
+              style: TeamLeadTheme.small(color: TeamLeadTheme.textMuted),
             )
           : Wrap(
               spacing: 7,
               runSpacing: 7,
               children: requirements
-                  .map(
-                    (item) => _requirementChip(item),
-                  )
+                  .map((item) => _requirementChip(item))
                   .toList(),
             ),
     );
@@ -684,19 +618,12 @@ class _AllocationModalState extends State<AllocationModal> {
     required IconData icon,
     required Widget child,
   }) {
-    return _card(
-      title: title,
-      subtitle: subtitle,
-      icon: icon,
-      child: child,
-    );
+    return _card(title: title, subtitle: subtitle, icon: icon, child: child);
   }
 
   Widget _ambulanceList() {
     if (_ambulances.isEmpty) {
-      return _emptyResource(
-        'No ambulance is currently recorded in Supabase.',
-      );
+      return _emptyResource('No ambulance is currently recorded in Supabase.');
     }
 
     final hasCompatibleAmbulance = _ambulances.any(
@@ -780,9 +707,7 @@ class _AllocationModalState extends State<AllocationModal> {
 
   Widget _assignedDriverCard(Map<String, dynamic>? ambulance) {
     if (ambulance == null) {
-      return _emptyResource(
-        'Select an ambulance to see its paired driver.',
-      );
+      return _emptyResource('Select an ambulance to see its paired driver.');
     }
 
     final driver = _pairedDriverForAmbulance(ambulance);
@@ -793,16 +718,39 @@ class _AllocationModalState extends State<AllocationModal> {
     }
 
     final status = '${driver['status'] ?? 'UNKNOWN'}'.trim().toUpperCase();
-    return _selectableTile(
-      selected: true,
-      onTap: null,
-      icon: Icons.badge_rounded,
-      title: '${driver['name'] ?? driver['full_name'] ?? 'Unnamed Driver'}',
-      subtitle:
-          '${driver['phone'] ?? 'No phone'} • '
-          'License: ${driver['license_number'] ?? 'Not provided'}',
-      trailing: _statusBadge(status),
+    final medications = _stringList(driver['available_medications']);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _selectableTile(
+          selected: true,
+          onTap: null,
+          icon: Icons.badge_rounded,
+          title: '${driver['name'] ?? driver['full_name'] ?? 'Unnamed Driver'}',
+          subtitle:
+              '${driver['phone'] ?? 'No phone'} • '
+              'License: ${driver['license_number'] ?? 'Not provided'}',
+          trailing: _statusBadge(status),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          medications.isEmpty
+              ? 'Medicines stocked: No medicines have been reported by this driver.'
+              : 'Medicines stocked: ${medications.join(', ')}',
+          style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant),
+        ),
+      ],
     );
+  }
+
+  List<String> _stringList(dynamic value) {
+    if (value is List) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+    return const <String>[];
   }
 
   Widget _crewList() {
@@ -827,8 +775,7 @@ class _AllocationModalState extends State<AllocationModal> {
                 }
               : null,
           icon: Icons.medical_services_rounded,
-          title:
-              '${crew['full_name'] ?? 'Unnamed Crew'}',
+          title: '${crew['full_name'] ?? 'Unnamed Crew'}',
           subtitle:
               '${crew['crew_type'] ?? 'Medical Crew'} • '
               '${crew['certification'] ?? 'Certification not provided'}',
@@ -862,15 +809,12 @@ class _AllocationModalState extends State<AllocationModal> {
                 }
               : null,
           icon: Icons.local_hospital_rounded,
-          title:
-              'Dr. ${doctor['full_name'] ?? 'Unknown'}',
+          title: 'Dr. ${doctor['full_name'] ?? 'Unknown'}',
           subtitle:
               '${doctor['specialization'] ?? 'Specialization not provided'}',
           trailing: Text(
             '${doctor['phone'] ?? 'No phone'}',
-            style: TeamLeadTheme.small(
-              color: TeamLeadTheme.textMuted,
-            ),
+            style: TeamLeadTheme.small(color: TeamLeadTheme.textMuted),
           ),
         );
       }).toList(),
@@ -891,16 +835,13 @@ class _AllocationModalState extends State<AllocationModal> {
         borderRadius: BorderRadius.circular(13),
         onTap: onTap,
         child: AnimatedContainer(
-          duration:
-              const Duration(milliseconds: 160),
+          duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: selected
-                ? TeamLeadTheme.primaryContainer
-                    .withValues(alpha: .45)
+                ? TeamLeadTheme.primaryContainer.withValues(alpha: .45)
                 : TeamLeadTheme.surfaceLow,
-            borderRadius:
-                BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(13),
             border: Border.all(
               color: selected
                   ? TeamLeadTheme.primary
@@ -914,38 +855,27 @@ class _AllocationModalState extends State<AllocationModal> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: TeamLeadTheme.primaryContainer
-                      .withValues(alpha: .55),
-                  borderRadius:
-                      BorderRadius.circular(11),
+                  color: TeamLeadTheme.primaryContainer.withValues(alpha: .55),
+                  borderRadius: BorderRadius.circular(11),
                 ),
-                child: Icon(
-                  icon,
-                  color: TeamLeadTheme.primaryDark,
-                  size: 20,
-                ),
+                child: Icon(icon, color: TeamLeadTheme.primaryDark, size: 20),
               ),
               const SizedBox(width: 11),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: TeamLeadTheme.body(
-                        weight: FontWeight.w700,
-                      ),
+                      style: TeamLeadTheme.body(weight: FontWeight.w700),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
                       maxLines: 2,
-                      overflow:
-                          TextOverflow.ellipsis,
+                      overflow: TextOverflow.ellipsis,
                       style: TeamLeadTheme.small(
-                        color:
-                            TeamLeadTheme.textMuted,
+                        color: TeamLeadTheme.textMuted,
                       ),
                     ),
                   ],
@@ -969,9 +899,7 @@ class _AllocationModalState extends State<AllocationModal> {
     );
   }
 
-  Widget _capabilitySummary(
-    Map<String, dynamic> ambulance,
-  ) {
+  Widget _capabilitySummary(Map<String, dynamic> ambulance) {
     final values = <String>[];
 
     if (ambulance['oxygen_capable'] == true) {
@@ -1042,22 +970,15 @@ class _AllocationModalState extends State<AllocationModal> {
     );
   }
 
-  Widget _summaryRow(
-    String label,
-    String value,
-  ) {
+  Widget _summaryRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 5,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
           Expanded(
             child: Text(
               label,
-              style: TeamLeadTheme.small(
-                color: TeamLeadTheme.textMuted,
-              ),
+              style: TeamLeadTheme.small(color: TeamLeadTheme.textMuted),
             ),
           ),
           Text(
@@ -1074,18 +995,11 @@ class _AllocationModalState extends State<AllocationModal> {
 
   Widget _requirementChip(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 9,
-        vertical: 5,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: TeamLeadTheme.primaryContainer
-            .withValues(alpha: .35),
+        color: TeamLeadTheme.primaryContainer.withValues(alpha: .35),
         borderRadius: BorderRadius.circular(9),
-        border: Border.all(
-          color: TeamLeadTheme.primary
-              .withValues(alpha: .15),
-        ),
+        border: Border.all(color: TeamLeadTheme.primary.withValues(alpha: .15)),
       ),
       child: Text(
         text,
@@ -1099,13 +1013,9 @@ class _AllocationModalState extends State<AllocationModal> {
 
   Widget _statusBadge(String status) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 9,
-        vertical: 5,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: _statusColor(status)
-            .withValues(alpha: .12),
+        color: _statusColor(status).withValues(alpha: .12),
         borderRadius: BorderRadius.circular(9),
       ),
       child: Text(
@@ -1147,31 +1057,22 @@ class _AllocationModalState extends State<AllocationModal> {
       decoration: BoxDecoration(
         color: TeamLeadTheme.surfaceLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: TeamLeadTheme.borderSubtle,
-        ),
+        border: Border.all(color: TeamLeadTheme.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: TeamLeadTheme.primaryDark,
-              ),
+              Icon(icon, size: 20, color: TeamLeadTheme.primaryDark),
               const SizedBox(width: 9),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: TeamLeadTheme.body(
-                        weight: FontWeight.w800,
-                      ),
+                      style: TeamLeadTheme.body(weight: FontWeight.w800),
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 3),
@@ -1201,9 +1102,7 @@ class _AllocationModalState extends State<AllocationModal> {
       decoration: BoxDecoration(
         color: TeamLeadTheme.surfaceLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: TeamLeadTheme.borderSubtle,
-        ),
+        border: Border.all(color: TeamLeadTheme.borderSubtle),
       ),
       child: Row(
         children: [
@@ -1215,9 +1114,7 @@ class _AllocationModalState extends State<AllocationModal> {
           Expanded(
             child: Text(
               message,
-              style: TeamLeadTheme.small(
-                color: TeamLeadTheme.textMuted,
-              ),
+              style: TeamLeadTheme.small(color: TeamLeadTheme.textMuted),
             ),
           ),
         ],
@@ -1225,10 +1122,7 @@ class _AllocationModalState extends State<AllocationModal> {
     );
   }
 
-  Map<String, dynamic>? _find(
-    List<Map<String, dynamic>> rows,
-    String? id,
-  ) {
+  Map<String, dynamic>? _find(List<Map<String, dynamic>> rows, String? id) {
     if (id == null) return null;
 
     for (final row in rows) {
