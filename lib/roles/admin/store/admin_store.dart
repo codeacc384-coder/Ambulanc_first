@@ -649,6 +649,8 @@ class AdminStore extends ChangeNotifier {
             ]),
             hasStretcher: _bool(row, ['has_stretcher', 'stretcher']),
             hasWheelchair: _bool(row, ['has_wheelchair', 'wheelchair']),
+            hasBipap: _bool(row, ['has_bipap']),
+            hasLaryngoscope: _bool(row, ['has_laryngoscope']),
           ),
         )
         .where((a) => a.id.isNotEmpty)
@@ -1128,6 +1130,8 @@ class AdminStore extends ChangeNotifier {
     required bool hasPicu,
     required bool hasIncubator,
     required bool hasFreezer,
+    required bool hasBipap,
+    required bool hasLaryngoscope,
     required int fuelPercent,
     required int oxygenPressureBar,
     required String driverId,
@@ -1213,6 +1217,8 @@ class AdminStore extends ChangeNotifier {
         hasPicu: hasPicu,
         hasIncubator: hasIncubator,
         hasFreezer: hasFreezer,
+        hasBipap: hasBipap,
+        hasLaryngoscope: hasLaryngoscope,
         driverId: driverId,
       );
 

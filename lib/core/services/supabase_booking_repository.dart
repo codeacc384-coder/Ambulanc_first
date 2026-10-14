@@ -961,6 +961,7 @@ class SupabaseBookingRepository {
           row['current_milestone'] ?? row['trip_milestone'],
         ),
         serviceCategory: _string(row['service_category'], fallback: 'ROAD'),
+        serviceSubtype: _string(row['service_subtype']),
 
         // ----------------------------------------------------------
         // PATIENT
@@ -968,7 +969,9 @@ class SupabaseBookingRepository {
         patientName: _string(row['patient_name'], fallback: 'Patient'),
         patientAge: _int(row['patient_age']),
         patientGender: _string(row['patient_gender'], fallback: 'Other'),
-        currentCondition: _string(row['patient_current_condition']),
+        currentCondition: _string(
+          row['patient_current_condition'] ?? row['current_condition'],
+        ),
         medicalConditionSummary: _string(
           row['patient_medical_summary'],
           fallback: _string(row['patient_current_condition']),
@@ -1055,6 +1058,13 @@ class SupabaseBookingRepository {
         ventilatorRequired: _bool(row['req_ventilator']),
         cardiacMonitorRequired: _bool(row['req_cardiac_monitor']),
         specialInstructions: _string(row['req_special_instructions']),
+        wheelchairRequired: _bool(row['req_wheelchair']),
+        pediatricPatient: _bool(row['req_pediatric']),
+        additionalEquipment: _strings(
+          row['additional_equipment'] ??
+              row['req_additional_equipment'] ??
+              row['equipment_required'],
+        ),
       );
     } catch (error, stackTrace) {
       debugPrint('DRIVER BOOKING MAPPING ERROR: $error');

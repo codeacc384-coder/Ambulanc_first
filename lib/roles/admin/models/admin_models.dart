@@ -415,6 +415,8 @@ class AdminAmbulance {
     this.hasCardiacMonitor = false,
     this.hasStretcher = false,
     this.hasWheelchair = false,
+    this.hasBipap = false,
+    this.hasLaryngoscope = false,
   });
 
   final String id;
@@ -455,6 +457,8 @@ class AdminAmbulance {
   bool hasCardiacMonitor;
   bool hasStretcher;
   bool hasWheelchair;
+  bool hasBipap;
+  bool hasLaryngoscope;
 }
 
 // ============================================================

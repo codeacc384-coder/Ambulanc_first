@@ -302,6 +302,8 @@ class AdminRepository {
     required bool hasPicu,
     required bool hasIncubator,
     required bool hasFreezer,
+    required bool hasBipap,
+    required bool hasLaryngoscope,
     required String driverId,
   }) async {
     final result = await _db.rpc(
@@ -319,6 +321,8 @@ class AdminRepository {
         'p_has_pediatric_icu': hasPicu,
         'p_has_incubator': hasIncubator,
         'p_has_freezer': hasFreezer,
+        'p_has_bipap': hasBipap,
+        'p_has_laryngoscope': hasLaryngoscope,
         // ALS/mobile ICU registrations should be dispatchable for the
         // common cardiac-monitor + stretcher requirements used by allocation.
         'p_has_cardiac_monitor': true,

@@ -107,6 +107,9 @@ class _AllocationModalState extends State<AllocationModal> {
         .toList();
   }
 
+  int _equipmentQuantity(dynamic value) =>
+      value is num ? value.toInt() : int.tryParse('$value') ?? 0;
+
   bool _isAvailable(String? value) {
     final status = (value ?? '').trim().toUpperCase();
 
@@ -154,6 +157,14 @@ class _AllocationModalState extends State<AllocationModal> {
     // Compare normalized values because the operational feed may render a
     // subtype as TYPE-B while the stored value is TYPE_B.
     final requiredSubtype = _normalizedSubtype(booking.serviceSubtype);
+    final requiresConfiguredEquipment = booking.additionalEquipment.any(
+      (item) =>
+          item.trim().toLowerCase() == 'bipap machine' ||
+          item.trim().toLowerCase() == 'laryngoscope with compatible blades',
+    );
+    if (requiresConfiguredEquipment && requiredSubtype.isEmpty) {
+      return 'Select an explicit booking service before allocating this equipment.';
+    }
     final serviceSubtype = ambulance['service_subtype']?.toString().trim();
     final ambulanceSubtype = _normalizedSubtype(
       serviceSubtype == null || serviceSubtype.isEmpty
@@ -163,6 +174,17 @@ class _AllocationModalState extends State<AllocationModal> {
     if (requiredSubtype.isNotEmpty && ambulanceSubtype != requiredSubtype) {
       return 'Ambulance subtype ${_subtypeLabel(ambulanceSubtype)} does not '
           'match required ${_subtypeLabel(requiredSubtype)}.';
+    }
+
+    for (final requested in booking.additionalEquipment) {
+      final canonicalName = requested.trim().toLowerCase();
+      if (canonicalName == 'bipap machine' && ambulance['has_bipap'] != true) {
+        return 'The selected ambulance is not approved/configured for BiPAP.';
+      }
+      if (canonicalName == 'laryngoscope with compatible blades' &&
+          ambulance['has_laryngoscope'] != true) {
+        return 'The selected ambulance is not approved/configured for a laryngoscope.';
+      }
     }
 
     final pairedDriver = _pairedDriverForAmbulance(ambulance);
@@ -175,6 +197,30 @@ class _AllocationModalState extends State<AllocationModal> {
           .trim()
           .toUpperCase();
       return 'Paired driver is not available (status: ${driverStatus.replaceAll('_', ' ')}).';
+    }
+
+    for (final requested in booking.additionalEquipment) {
+      final canonicalName = requested.trim().toLowerCase();
+      if (canonicalName != 'bipap machine' &&
+          canonicalName != 'laryngoscope with compatible blades') {
+        continue;
+      }
+
+      final inventory = _maps(pairedDriver['available_equipment_details']);
+      final item = inventory.cast<Map<String, dynamic>?>().firstWhere(
+        (entry) =>
+            '${entry?['name'] ?? ''}'.trim().toLowerCase() == canonicalName,
+        orElse: () => null,
+      );
+      if (item == null ||
+          item['available'] != true ||
+          _equipmentQuantity(item['quantity']) < 1 ||
+          '${item['functional_condition'] ?? ''}'.toUpperCase() !=
+              'FUNCTIONAL' ||
+          '${item['inspection_status'] ?? ''}'.toUpperCase() != 'PASSED') {
+        return 'The paired driver has no inspected, functional $requested '
+            'recorded for this ambulance configuration.';
+      }
     }
 
     final missing = <String>[];
@@ -593,6 +639,14 @@ class _AllocationModalState extends State<AllocationModal> {
             : 'Doctor: ${booking.doctorSpecialization}',
       );
     }
+    for (final equipment in booking.additionalEquipment) {
+      if (!requirements.any(
+        (requirement) =>
+            requirement.trim().toLowerCase() == equipment.trim().toLowerCase(),
+      )) {
+        requirements.add(equipment);
+      }
+    }
 
     return _card(
       title: 'Clinical Requirements',
@@ -719,6 +773,8 @@ class _AllocationModalState extends State<AllocationModal> {
 
     final status = '${driver['status'] ?? 'UNKNOWN'}'.trim().toUpperCase();
     final medications = _stringList(driver['available_medications']);
+    final equipment = _stringList(driver['available_equipment']);
+    final equipmentDetails = _maps(driver['available_equipment_details']);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -739,6 +795,25 @@ class _AllocationModalState extends State<AllocationModal> {
               : 'Medicines stocked: ${medications.join(', ')}',
           style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant),
         ),
+        const SizedBox(height: 4),
+        Text(
+          equipment.isEmpty
+              ? 'Equipment stocked: No equipment has been reported by this driver.'
+              : 'Equipment stocked: ${equipment.join(', ')}',
+          style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant),
+        ),
+        for (final item in equipmentDetails.where(
+          (entry) => entry['available'] == true,
+        ))
+          Padding(
+            padding: const EdgeInsets.only(top: 3),
+            child: Text(
+              '${item['name']} ×${item['quantity'] ?? 0} · '
+              '${item['functional_condition'] ?? 'UNKNOWN'} · '
+              '${item['inspection_status'] ?? 'NOT_INSPECTED'}',
+              style: TeamLeadTheme.small(color: TeamLeadTheme.onSurfaceVariant),
+            ),
+          ),
       ],
     );
   }
@@ -916,6 +991,12 @@ class _AllocationModalState extends State<AllocationModal> {
     }
     if (ambulance['cardiac_monitor_capable'] == true) {
       values.add('CARD');
+    }
+    if (ambulance['has_bipap'] == true) {
+      values.add('BIPAP');
+    }
+    if (ambulance['has_laryngoscope'] == true) {
+      values.add('LARYNGOSCOPE');
     }
 
     return Text(

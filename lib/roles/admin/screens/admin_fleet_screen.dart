@@ -847,6 +847,8 @@ class _AmbulanceCard extends StatelessWidget {
                       if (a.hasPicu) _CapChip(label: 'PICU'),
                       if (a.hasIncubator) _CapChip(label: 'INCUBATOR'),
                       if (a.hasFreezer) _CapChip(label: 'FREEZER'),
+                      if (a.hasBipap) _CapChip(label: 'BIPAP'),
+                      if (a.hasLaryngoscope) _CapChip(label: 'LARYNGOSCOPE'),
                     ],
                   ),
 

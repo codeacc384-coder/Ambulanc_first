@@ -47,6 +47,8 @@ void main() {
     );
     expect(switches.first.value, isTrue);
     expect(switches.skip(1).every((item) => !item.value), isTrue);
+    expect(find.text('BiPAP Machine'), findsOneWidget);
+    expect(find.text('Laryngoscope with compatible blades'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

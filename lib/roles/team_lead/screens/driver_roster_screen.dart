@@ -187,7 +187,7 @@ class _DriverRosterScreenState extends State<DriverRosterScreen> {
                         gridDelegate:
                             const SliverGridDelegateWithMaxCrossAxisExtent(
                               maxCrossAxisExtent: 440,
-                              mainAxisExtent: 230,
+                              mainAxisExtent: 255,
                               crossAxisSpacing: 14,
                               mainAxisSpacing: 14,
                             ),
@@ -311,6 +311,20 @@ class _DriverRosterScreenState extends State<DriverRosterScreen> {
             driver.availableMedications.isEmpty
                 ? 'Medicines stocked: Not reported'
                 : 'Medicines stocked: ${driver.availableMedications.join(', ')}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TeamLeadTheme.micro(color: TeamLeadTheme.textMuted),
+          ),
+          Text(
+            driver.availableEquipment.isEmpty
+                ? 'Equipment stocked: Not reported'
+                : 'Equipment stocked: ${driver.availableEquipment.join(', ')}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TeamLeadTheme.micro(color: TeamLeadTheme.textMuted),
+          ),
+          Text(
+            'Equipment checks: ${driver.equipmentDetails.where((item) => item['available'] == true).map((item) => '${item['name']} ×${item['quantity'] ?? 0} · ${item['functional_condition'] ?? 'UNKNOWN'} · ${item['inspection_status'] ?? 'NOT_INSPECTED'}').join('; ')}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TeamLeadTheme.micro(color: TeamLeadTheme.textMuted),

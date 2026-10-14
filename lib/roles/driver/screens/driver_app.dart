@@ -160,6 +160,22 @@ class _DriverAppState extends State<DriverApp> {
                 .where((item) => item.isNotEmpty)
                 .toList(growable: false)
           : const <String>[],
+      availableEquipment: row['available_equipment'] is List
+          ? (row['available_equipment'] as List)
+                .map((item) => item.toString().trim())
+                .where((item) => item.isNotEmpty)
+                .toList(growable: false)
+          : const <String>[],
+      equipmentInventory: row['available_equipment_details'] is List
+          ? (row['available_equipment_details'] as List)
+              .whereType<Map>()
+              .map(
+                (item) => EquipmentInventoryItem.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .toList(growable: false)
+          : const <EquipmentInventoryItem>[],
     );
   }
 

@@ -44,6 +44,8 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
   bool _hasPicu = false;
   bool _hasIncubator = false;
   bool _hasFreezer = false;
+  bool _hasBipap = false;
+  bool _hasLaryngoscope = false;
 
   // Step 3: Operations
   int _fuel = 100;
@@ -151,6 +153,8 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
       hasPicu: _hasPicu,
       hasIncubator: _hasIncubator,
       hasFreezer: _hasFreezer,
+      hasBipap: _hasBipap,
+      hasLaryngoscope: _hasLaryngoscope,
       fuelPercent: _fuel,
       oxygenPressureBar: _o2Pressure,
       driverId: _selectedDriverId!,
@@ -395,6 +399,22 @@ class _AdminFleetRegisterScreenState extends State<AdminFleetRegisterScreen> {
           title: const Text('Mortuary Cryogenic Freezer Pod'),
           value: _hasFreezer,
           onChanged: (v) => setState(() => _hasFreezer = v),
+        ),
+        SwitchListTile(
+          title: const Text('BiPAP Machine'),
+          subtitle: const Text(
+            'Enable only when this ambulance is configured and approved for BiPAP.',
+          ),
+          value: _hasBipap,
+          onChanged: (v) => setState(() => _hasBipap = v),
+        ),
+        SwitchListTile(
+          title: const Text('Laryngoscope with compatible blades'),
+          subtitle: const Text(
+            'Enable only when this ambulance is configured and approved for laryngoscopy.',
+          ),
+          value: _hasLaryngoscope,
+          onChanged: (v) => setState(() => _hasLaryngoscope = v),
         ),
       ],
     );

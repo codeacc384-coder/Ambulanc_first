@@ -19,6 +19,8 @@ class DriverProfile {
     required this.rating,
     this.assignedBookingId,
     this.availableMedications = const <String>[],
+    this.availableEquipment = const <String>[],
+    this.equipmentInventory = const <EquipmentInventoryItem>[],
   });
 
   String id;
@@ -53,6 +55,8 @@ class DriverProfile {
   String? assignedBookingId;
 
   List<String> availableMedications;
+  List<String> availableEquipment;
+  List<EquipmentInventoryItem> equipmentInventory;
 
   void applyFrom(DriverProfile other) {
     id = other.id;
@@ -86,8 +90,60 @@ class DriverProfile {
 
     assignedBookingId = other.assignedBookingId;
     availableMedications = List<String>.from(other.availableMedications);
+    availableEquipment = List<String>.from(other.availableEquipment);
+    equipmentInventory = List<EquipmentInventoryItem>.from(
+      other.equipmentInventory,
+    );
   }
 }
+
+class EquipmentInventoryItem {
+  const EquipmentInventoryItem({
+    required this.name,
+    required this.available,
+    required this.quantity,
+    required this.functionalCondition,
+    required this.inspectionStatus,
+    this.checks = const <String, bool>{},
+  });
+
+  final String name;
+  final bool available;
+  final int quantity;
+  final String functionalCondition;
+  final String inspectionStatus;
+  final Map<String, bool> checks;
+
+  factory EquipmentInventoryItem.fromJson(Map<String, dynamic> json) {
+    final rawChecks = json['checks'];
+    return EquipmentInventoryItem(
+      name: '${json['name'] ?? ''}',
+      available: json['available'] == true,
+      quantity: _equipmentInt(json['quantity']),
+      functionalCondition:
+          '${json['functional_condition'] ?? 'UNKNOWN'}'.toUpperCase(),
+      inspectionStatus:
+          '${json['inspection_status'] ?? 'NOT_RECORDED'}'.toUpperCase(),
+      checks: rawChecks is Map
+          ? rawChecks.map(
+              (key, value) => MapEntry(key.toString(), value == true),
+            )
+          : const <String, bool>{},
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'available': available,
+    'quantity': quantity,
+    'functional_condition': functionalCondition,
+    'inspection_status': inspectionStatus,
+    'checks': checks,
+  };
+}
+
+int _equipmentInt(dynamic value) =>
+    value is num ? value.toInt() : int.tryParse('$value') ?? 0;
 
 /// Driver-side representation of a booking.
 ///
@@ -152,6 +208,10 @@ class DriverBooking {
     required this.ventilatorRequired,
     required this.cardiacMonitorRequired,
     required this.specialInstructions,
+    this.wheelchairRequired = false,
+    this.pediatricPatient = false,
+    this.additionalEquipment = const <String>[],
+    this.serviceSubtype = '',
   });
 
   // ------------------------------------------------------------
@@ -304,6 +364,24 @@ class DriverBooking {
   final bool cardiacMonitorRequired;
 
   final String specialInstructions;
+
+  final bool wheelchairRequired;
+
+  final bool pediatricPatient;
+
+  final List<String> additionalEquipment;
+
+  final String serviceSubtype;
+
+  List<String> get requiredEquipment => {
+    if (oxygenRequired) 'Oxygen cylinder',
+    if (cardiacMonitorRequired) 'Cardiac monitor',
+    if (ventilatorRequired) 'Transport ventilator',
+    if (icuRequired) 'ICU equipment kit',
+    if (stretcherRequired) 'Stretcher',
+    if (wheelchairRequired) 'Wheelchair',
+    ...additionalEquipment,
+  }.toList();
 
   // ------------------------------------------------------------
   // STATUS HELPERS

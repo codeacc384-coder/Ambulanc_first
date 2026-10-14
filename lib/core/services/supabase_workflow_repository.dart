@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/driver_models.dart';
 import 'supabase_service.dart';
 
 /// All operational mutations go through Supabase RPCs.
@@ -353,12 +354,20 @@ class SupabaseWorkflowRepository {
     return _map(result);
   }
 
-  Future<void> updateCurrentDriverMedicationInventory(
-    List<String> medications,
-  ) async {
+  Future<void> updateCurrentDriverInventory({
+    required List<String> medications,
+    required List<String> equipment,
+    required List<EquipmentInventoryItem> equipmentDetails,
+  }) async {
     await _db.rpc(
-      'update_current_driver_medication_inventory',
-      params: {'p_medications': medications},
+      'update_current_driver_inventory',
+      params: {
+        'p_medications': medications,
+        'p_equipment': equipment,
+        'p_equipment_details': equipmentDetails
+            .map((item) => item.toJson())
+            .toList(growable: false),
+      },
     );
   }
 

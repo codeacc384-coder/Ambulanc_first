@@ -29,11 +29,41 @@ class DriverDashboardScreen extends StatefulWidget {
     'Tramadol',
   ];
 
+  static const List<String> medicalEquipmentChecklist = [
+    'Oxygen cylinder',
+    'Oxygen mask and nasal cannula',
+    'Bag-valve mask',
+    'BiPAP machine',
+    'Laryngoscope with compatible blades',
+    'Portable suction unit',
+    'Pulse oximeter',
+    'Blood pressure monitor',
+    'Cardiac monitor',
+    'AED / defibrillator',
+    'Portable ECG machine',
+    'Transport ventilator',
+    'Nebulizer',
+    'Glucometer',
+    'IV infusion pump',
+    'Syringe pump',
+    'Airway management kit',
+    'Cervical collars',
+    'Spine board',
+    'Splints',
+    'Trauma and wound-care kit',
+    'Hemorrhage-control kit',
+    'PPE and isolation kit',
+    'Burn dressing kit',
+    'Obstetric delivery kit',
+    'Neonatal transport incubator',
+    'Stretcher',
+  ];
+
   const DriverDashboardScreen({
     super.key,
     required this.driver,
     required this.bookings,
-    required this.onSaveMedicines,
+    required this.onSaveInventory,
     required this.onAdvance,
     required this.onOpenActiveTrip,
     required this.onOpenAssignments,
@@ -44,7 +74,11 @@ class DriverDashboardScreen extends StatefulWidget {
 
   final DriverProfile driver;
   final List<DriverBooking> bookings;
-  final Future<void> Function(List<String> medications) onSaveMedicines;
+  final Future<void> Function(
+    List<String> medications,
+    List<EquipmentInventoryItem> equipment,
+  )
+  onSaveInventory;
   final void Function(DriverBooking booking, String nextStatus) onAdvance;
   final VoidCallback onOpenActiveTrip;
   final VoidCallback onOpenAssignments;
@@ -58,14 +92,23 @@ class DriverDashboardScreen extends StatefulWidget {
 
 class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   final Set<String> _selectedMedicines = <String>{};
+  final Set<String> _selectedEquipment = <String>{};
+  final Map<String, EquipmentInventoryItem> _equipmentDetails = {};
   Set<String> _savedMedicines = <String>{};
-  bool _savingMedicines = false;
+  Set<String> _savedEquipment = <String>{};
+  bool _savingInventory = false;
 
   @override
   void initState() {
     super.initState();
     _selectedMedicines.addAll(widget.driver.availableMedications);
+    _selectedEquipment.addAll(widget.driver.availableEquipment);
+    for (final item in widget.driver.equipmentInventory) {
+      _equipmentDetails[item.name] = item;
+      if (item.available) _selectedEquipment.add(item.name);
+    }
     _savedMedicines = Set<String>.from(widget.driver.availableMedications);
+    _savedEquipment = Set<String>.from(widget.driver.availableEquipment);
   }
 
   @override
@@ -74,27 +117,37 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
     final latestSavedMedicines = Set<String>.from(
       widget.driver.availableMedications,
     );
-    if (!_sameMedicines(latestSavedMedicines, _savedMedicines)) {
-      final selectionWasUnchanged = _sameMedicines(
-        _selectedMedicines,
-        _savedMedicines,
-      );
+    final latestSavedEquipment = Set<String>.from(
+      widget.driver.availableEquipment,
+    );
+    final medicinesChanged = !_sameItems(latestSavedMedicines, _savedMedicines);
+    final equipmentChanged = !_sameItems(latestSavedEquipment, _savedEquipment);
+    if (medicinesChanged || equipmentChanged) {
+      final selectionWasUnchanged =
+          _sameItems(_selectedMedicines, _savedMedicines) &&
+          _sameItems(_selectedEquipment, _savedEquipment);
       _savedMedicines = latestSavedMedicines;
+      _savedEquipment = latestSavedEquipment;
       if (selectionWasUnchanged) {
         _selectedMedicines
           ..clear()
           ..addAll(latestSavedMedicines);
+        _selectedEquipment
+          ..clear()
+          ..addAll(latestSavedEquipment);
       }
     }
   }
 
-  bool _sameMedicines(Set<String> first, Set<String> second) =>
+  bool _sameItems(Set<String> first, Set<String> second) =>
       first.length == second.length && first.containsAll(second);
 
   @override
   void dispose() {
     _selectedMedicines.clear();
+    _selectedEquipment.clear();
     _savedMedicines.clear();
+    _savedEquipment.clear();
     super.dispose();
   }
 
@@ -121,21 +174,246 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
     });
   }
 
-  Future<void> _saveMedicines() async {
-    setState(() => _savingMedicines = true);
+  void _toggleEquipment(String equipment) {
+    setState(() {
+      if (_selectedEquipment.contains(equipment)) {
+        _selectedEquipment.remove(equipment);
+      } else {
+        _selectedEquipment.add(equipment);
+      }
+    });
+  }
+
+  static const Map<String, List<String>> _deviceChecks = {
+    'BiPAP machine': [
+      'Power supply and battery checked',
+      'Circuit and tubing present',
+      'Compatible mask/interface present',
+      'Filter present',
+      'Self-test and alarms checked',
+    ],
+    'Laryngoscope with compatible blades': [
+      'Handle operates',
+      'Light or power function works',
+      'Compatible blades available',
+    ],
+  };
+
+  Map<String, bool> _defaultChecks(String name) => {
+    for (final check in _deviceChecks[name] ?? const <String>[]) check: false,
+  };
+
+  EquipmentInventoryItem _inventoryItemFor(String name) {
+    final current = _equipmentDetails[name];
+    final available = _selectedEquipment.contains(name);
+    return EquipmentInventoryItem(
+      name: name,
+      available: available,
+      quantity: available ? (current?.quantity ?? 1) : 0,
+      functionalCondition: current?.functionalCondition ?? 'UNKNOWN',
+      inspectionStatus: current?.inspectionStatus ?? 'NOT_INSPECTED',
+      checks: Map<String, bool>.from(current?.checks ?? _defaultChecks(name)),
+    );
+  }
+
+  String _inventorySummaryFor(String requestedEquipment) {
+    final requested = requestedEquipment.trim().toLowerCase();
+    final inventory = widget.driver.equipmentInventory.where(
+      (item) => item.name.trim().toLowerCase() == requested,
+    );
+    if (inventory.isNotEmpty) {
+      final item = inventory.first;
+      if (!item.available || item.quantity <= 0) return 'Not stocked';
+      return '${item.quantity} available · ${item.functionalCondition} · ${item.inspectionStatus}';
+    }
+
+    final legacyAvailable = widget.driver.availableEquipment.any(
+      (name) => name.trim().toLowerCase() == requested,
+    );
+    return legacyAvailable
+        ? 'Stocked · inspection details not recorded'
+        : 'Not reported in inventory';
+  }
+
+  bool _inspectionIsComplete(EquipmentInventoryItem item) {
+    if (item.inspectionStatus != 'PASSED') return true;
+    return item.functionalCondition == 'FUNCTIONAL' &&
+        (_deviceChecks[item.name] ?? const <String>[]).every(
+          (check) => item.checks[check] == true,
+        );
+  }
+
+  Widget _inventoryDetails(String name) {
+    final item = _inventoryItemFor(name);
+
+    void update(EquipmentInventoryItem updated) {
+      setState(() => _equipmentDetails[name] = updated);
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: DriverColors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('Quantity'),
+              const SizedBox(width: 8),
+              DropdownButton<int>(
+                value: item.quantity.clamp(1, 50).toInt(),
+                items: [
+                  for (var quantity = 1; quantity <= 50; quantity++)
+                    DropdownMenuItem(
+                      value: quantity,
+                      child: Text('$quantity'),
+                    ),
+                ],
+                onChanged: (quantity) {
+                  if (quantity == null) return;
+                  update(
+                    EquipmentInventoryItem(
+                      name: name,
+                      available: true,
+                      quantity: quantity,
+                      functionalCondition: item.functionalCondition,
+                      inspectionStatus: item.inspectionStatus,
+                      checks: item.checks,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          DropdownButtonFormField<String>(
+            initialValue: item.functionalCondition,
+            decoration: const InputDecoration(
+              labelText: 'Functional condition',
+              isDense: true,
+            ),
+            items: const [
+              DropdownMenuItem(value: 'UNKNOWN', child: Text('Not checked')),
+              DropdownMenuItem(value: 'FUNCTIONAL', child: Text('Functional')),
+              DropdownMenuItem(
+                value: 'PARTIALLY_FUNCTIONAL',
+                child: Text('Partially functional'),
+              ),
+              DropdownMenuItem(
+                value: 'NON_FUNCTIONAL',
+                child: Text('Non-functional'),
+              ),
+            ],
+            onChanged: (condition) {
+              if (condition == null) return;
+              update(
+                EquipmentInventoryItem(
+                  name: name,
+                  available: true,
+                  quantity: item.quantity,
+                  functionalCondition: condition,
+                  inspectionStatus: item.inspectionStatus,
+                  checks: item.checks,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: item.inspectionStatus,
+            decoration: const InputDecoration(
+              labelText: 'Inspection status',
+              isDense: true,
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: 'NOT_INSPECTED',
+                child: Text('Not inspected'),
+              ),
+              DropdownMenuItem(value: 'PASSED', child: Text('Passed')),
+              DropdownMenuItem(
+                value: 'NEEDS_SERVICE',
+                child: Text('Needs service'),
+              ),
+              DropdownMenuItem(value: 'FAILED', child: Text('Failed')),
+            ],
+            onChanged: (status) {
+              if (status == null) return;
+              update(
+                EquipmentInventoryItem(
+                  name: name,
+                  available: true,
+                  quantity: item.quantity,
+                  functionalCondition: item.functionalCondition,
+                  inspectionStatus: status,
+                  checks: item.checks,
+                ),
+              );
+            },
+          ),
+          for (final check in _deviceChecks[name] ?? const <String>[])
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: Text(check, style: DriverTextStyles.bodySmall),
+              value: item.checks[check] ?? false,
+              onChanged: (checked) {
+                if (checked == null) return;
+                update(
+                  EquipmentInventoryItem(
+                    name: name,
+                    available: true,
+                    quantity: item.quantity,
+                    functionalCondition: item.functionalCondition,
+                    inspectionStatus: item.inspectionStatus,
+                    checks: {...item.checks, check: checked},
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveInventory() async {
+    setState(() => _savingInventory = true);
     try {
-      await widget.onSaveMedicines(_selectedMedicines.toList()..sort());
+      final medications = _selectedMedicines.toList()..sort();
+      final equipment = _selectedEquipment.toList()..sort();
+      final equipmentInventory = [
+        for (final name in DriverDashboardScreen.medicalEquipmentChecklist)
+          _inventoryItemFor(name),
+      ];
+      final incompleteInspection = equipmentInventory.where(
+        (item) => !_inspectionIsComplete(item),
+      );
+      if (incompleteInspection.isNotEmpty) {
+        throw StateError(
+          'A passed inspection requires functional condition and all device checks for ${incompleteInspection.map((item) => item.name).join(', ')}.',
+        );
+      }
+      await widget.onSaveInventory(medications, equipmentInventory);
+      widget.driver.availableMedications = medications;
+      widget.driver.availableEquipment = equipment;
+      widget.driver.equipmentInventory = equipmentInventory;
+      _savedMedicines = Set<String>.from(medications);
+      _savedEquipment = Set<String>.from(equipment);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ambulance medicine inventory updated.')),
+        const SnackBar(content: Text('Ambulance inventory updated.')),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update medicine inventory: $error')),
+        SnackBar(content: Text('Could not update ambulance inventory: $error')),
       );
     } finally {
-      if (mounted) setState(() => _savingMedicines = false);
+      if (mounted) setState(() => _savingInventory = false);
     }
   }
 
@@ -374,6 +652,58 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                           style: DriverTextStyles.bodySmall,
                           maxLines: 2,
                         ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'SERVICE & VEHICLE CONFIGURATION',
+                          style: DriverTextStyles.telemetryMicro.copyWith(
+                            color: DriverColors.primaryContainer,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Service: ${active.serviceSubtype.isEmpty ? active.serviceCategory : active.serviceSubtype} · Ambulance: ${active.vehicleNumber.isEmpty ? 'Not recorded' : active.vehicleNumber}',
+                          style: DriverTextStyles.bodySmall,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'EQUIPMENT EXPLICITLY REQUESTED IN THIS BOOKING',
+                          style: DriverTextStyles.telemetryMicro.copyWith(
+                            color: DriverColors.primaryContainer,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        if (active.requiredEquipment.isEmpty)
+                          Text(
+                            'No optional equipment was specified. Confirm requirements against the selected service and ambulance configuration.',
+                            style: DriverTextStyles.bodySmall,
+                          )
+                        else
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: [
+                                  for (final equipment
+                                      in active.requiredEquipment)
+                                    Chip(
+                                      label: Text(equipment),
+                                      visualDensity: VisualDensity.compact,
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                ],
+                              ),
+                              for (final equipment in active.requiredEquipment)
+                                Text(
+                                  '$equipment: ${_inventorySummaryFor(equipment)}',
+                                  style: DriverTextStyles.bodySmall,
+                                ),
+                            ],
+                          ),
                         const SizedBox(height: 12),
                         Row(
                           children: [
@@ -522,24 +852,95 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                Text(
+                  '${_selectedMedicines.length} medicine${_selectedMedicines.length == 1 ? '' : 's'} selected',
+                  style: DriverTextStyles.bodySmall.copyWith(
+                    color: DriverColors.primaryContainer,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: DriverColors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: DriverColors.surfaceContainerHigh),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Row(
                   children: [
-                    if (_selectedMedicines.isNotEmpty)
-                      Expanded(
-                        child: Text(
-                          '${_selectedMedicines.length} medicine${_selectedMedicines.length == 1 ? '' : 's'} selected',
-                          style: DriverTextStyles.bodySmall.copyWith(
-                            color: DriverColors.primaryContainer,
-                            fontWeight: FontWeight.w700,
-                          ),
+                    const Icon(
+                      Icons.medical_information_outlined,
+                      color: DriverColors.primaryContainer,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'MEDICAL EQUIPMENT AVAILABLE',
+                      style: DriverTextStyles.headlineSmall,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Select equipment currently stocked and operational in your ambulance.',
+                  style: DriverTextStyles.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final equipment
+                        in DriverDashboardScreen.medicalEquipmentChecklist)
+                      FilterChip(
+                        label: Text(equipment),
+                        selected: _selectedEquipment.contains(equipment),
+                        showCheckmark: true,
+                        checkmarkColor: Colors.white,
+                        selectedColor: DriverColors.primaryContainer,
+                        backgroundColor: DriverColors.secondaryContainer,
+                        side: BorderSide(
+                          color: _selectedEquipment.contains(equipment)
+                              ? DriverColors.primaryContainer
+                              : DriverColors.surfaceContainerHigh,
                         ),
-                      )
-                    else
-                      const Spacer(),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        labelStyle: DriverTextStyles.telemetryMicro.copyWith(
+                          color: _selectedEquipment.contains(equipment)
+                              ? Colors.white
+                              : DriverColors.secondary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        onSelected: (_) => _toggleEquipment(equipment),
+                      ),
+                  ],
+                ),
+                ..._selectedEquipment.map(_inventoryDetails),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${_selectedEquipment.length} equipment items selected',
+                        style: DriverTextStyles.bodySmall.copyWith(
+                          color: DriverColors.primaryContainer,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                     ElevatedButton.icon(
-                      onPressed: _savingMedicines ? null : _saveMedicines,
-                      icon: _savingMedicines
+                      onPressed: _savingInventory ? null : _saveInventory,
+                      icon: _savingInventory
                           ? const SizedBox(
                               width: 16,
                               height: 16,
@@ -550,7 +951,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                             )
                           : const Icon(Icons.save_outlined, size: 18),
                       label: Text(
-                        _savingMedicines ? 'Updating…' : 'Update inventory',
+                        _savingInventory ? 'Updating…' : 'Update inventory',
                       ),
                     ),
                   ],

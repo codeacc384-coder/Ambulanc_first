@@ -91,6 +91,8 @@ class SupabaseResourceRepository {
       rating: _double(row['rating']),
       assignedBookingId: row['assigned_booking_id']?.toString(),
       availableMedications: _stringList(row['available_medications']),
+      availableEquipment: _stringList(row['available_equipment']),
+      equipmentInventory: _equipmentInventory(row['available_equipment_details']),
     );
   }
 
@@ -118,5 +120,18 @@ class SupabaseResourceRepository {
           .toList();
     }
     return const [];
+  }
+
+  static List<EquipmentInventoryItem> _equipmentInventory(dynamic value) {
+    if (value is! List) return const <EquipmentInventoryItem>[];
+    return value
+        .whereType<Map>()
+        .map(
+          (row) => EquipmentInventoryItem.fromJson(
+            Map<String, dynamic>.from(row),
+          ),
+        )
+        .where((item) => item.name.isNotEmpty)
+        .toList(growable: false);
   }
 }

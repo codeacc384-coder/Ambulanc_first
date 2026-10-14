@@ -82,6 +82,8 @@ class DriverRosterItem {
     this.assignedAmbulanceNumber,
     this.completedTrips = 0,
     this.availableMedications = const <String>[],
+    this.availableEquipment = const <String>[],
+    this.equipmentDetails = const <Map<String, dynamic>>[],
   });
 
   final String id;
@@ -98,6 +100,8 @@ class DriverRosterItem {
   String? assignedAmbulanceNumber;
   int completedTrips;
   final List<String> availableMedications;
+  final List<String> availableEquipment;
+  final List<Map<String, dynamic>> equipmentDetails;
 
   bool get isAvailable => status == 'AVAILABLE' || status == 'ON_DUTY';
   bool get isAssigned => status == 'ASSIGNED';

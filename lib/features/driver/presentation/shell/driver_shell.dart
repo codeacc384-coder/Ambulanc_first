@@ -713,11 +713,23 @@ class _DriverShellState extends State<DriverShell> {
       DriverDashboardScreen(
         driver: widget.driver,
         bookings: _bookings,
-        onSaveMedicines: (medications) async {
-          await _workflowRepository.updateCurrentDriverMedicationInventory(
-            medications,
+        onSaveInventory: (medications, equipment) async {
+          await _workflowRepository.updateCurrentDriverInventory(
+            medications: medications,
+            equipment: [
+              for (final item in equipment)
+                if (item.available) item.name,
+            ],
+            equipmentDetails: equipment,
           );
           widget.driver.availableMedications = List<String>.from(medications);
+          widget.driver.availableEquipment = [
+            for (final item in equipment)
+              if (item.available) item.name,
+          ];
+          widget.driver.equipmentInventory = List<EquipmentInventoryItem>.from(
+            equipment,
+          );
         },
         onAdvance: _advance,
         onOpenActiveTrip: () {
