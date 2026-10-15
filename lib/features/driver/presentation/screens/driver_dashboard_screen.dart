@@ -57,6 +57,7 @@ class DriverDashboardScreen extends StatefulWidget {
     'Obstetric delivery kit',
     'Neonatal transport incubator',
     'Stretcher',
+
   ];
 
   const DriverDashboardScreen({

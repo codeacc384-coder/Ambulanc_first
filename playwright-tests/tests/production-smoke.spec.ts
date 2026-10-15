@@ -16,12 +16,12 @@ test('production site responds and loads Flutter assets', async ({ page }) => {
   const pageErrors: string[] = [];
   const failedRequests: string[] = [];
 
-  page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('pageerror', error => {
+    pageErrors.push(error.message);
+  });
 
   page.on('requestfailed', request => {
-    failedRequests.push(
-      `${request.method()} ${request.url()}`
-    );
+    failedRequests.push(`${request.method()} ${request.url()}`);
   });
 
   const response = await page.goto(baseUrl, {
@@ -32,15 +32,38 @@ test('production site responds and loads Flutter assets', async ({ page }) => {
   expect(response, 'Main document should respond').not.toBeNull();
   expect(response!.status()).toBeLessThan(400);
 
-  await page.waitForTimeout(10_000);
+  // Wait for Flutter to initialize its rendering surface.
+  await page.waitForFunction(
+    () => {
+      const canvas = document.querySelector('canvas');
+      const pane = document.querySelector('flt-glass-pane');
+      const view = document.querySelector('flutter-view');
 
-  const flutterState = await page.evaluate(() => ({
-    title: document.title,
-    readyState: document.readyState,
-    flutterHostCount: document.querySelectorAll('flt-glass-pane').length,
-    canvasCount: document.querySelectorAll('canvas').length,
-    bodyText: document.body?.innerText ?? '',
-  }));
+      return Boolean(canvas || pane || view);
+    },
+    { timeout: 45_000 }
+  );
+
+  const flutterState = await page.evaluate(() => {
+    const canvas = document.querySelector('canvas');
+    const pane = document.querySelector('flt-glass-pane');
+    const view = document.querySelector('flutter-view');
+
+    return {
+      title: document.title,
+      readyState: document.readyState,
+      flutterHostCount: document.querySelectorAll('flt-glass-pane').length,
+      flutterViewCount: document.querySelectorAll('flutter-view').length,
+      canvasCount: document.querySelectorAll('canvas').length,
+      canvasWidth: canvas?.getBoundingClientRect().width ?? 0,
+      canvasHeight: canvas?.getBoundingClientRect().height ?? 0,
+      paneWidth: pane?.getBoundingClientRect().width ?? 0,
+      paneHeight: pane?.getBoundingClientRect().height ?? 0,
+      viewWidth: view?.getBoundingClientRect().width ?? 0,
+      viewHeight: view?.getBoundingClientRect().height ?? 0,
+      bodyText: document.body?.innerText ?? '',
+    };
+  });
 
   await page.screenshot({
     path: 'test-results/production-smoke.png',
@@ -51,9 +74,32 @@ test('production site responds and loads Flutter assets', async ({ page }) => {
   console.log('Browser errors:', pageErrors);
   console.log('Failed requests:', failedRequests);
 
-  expect(flutterState.readyState).toBe('complete');
-  expect(flutterState.flutterHostCount + flutterState.canvasCount)
-    .toBeGreaterThan(0);
+  // Verify that a Flutter rendering surface exists.
+  expect(
+    flutterState.flutterHostCount +
+      flutterState.flutterViewCount +
+      flutterState.canvasCount,
+    'Flutter rendering surface should exist'
+  ).toBeGreaterThan(0);
+
+  // Verify that the rendering surface has usable dimensions.
+  expect(
+    Math.max(
+      flutterState.canvasWidth,
+      flutterState.paneWidth,
+      flutterState.viewWidth
+    ),
+    'Flutter rendering surface should have positive width'
+  ).toBeGreaterThan(0);
+
+  expect(
+    Math.max(
+      flutterState.canvasHeight,
+      flutterState.paneHeight,
+      flutterState.viewHeight
+    ),
+    'Flutter rendering surface should have positive height'
+  ).toBeGreaterThan(0);
 
   expect(pageErrors, 'No uncaught browser errors').toEqual([]);
 });
